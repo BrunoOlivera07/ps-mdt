@@ -4,6 +4,7 @@
 	import { isEnvBrowser } from "../../utils/misc";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
 	import { getReportTypesForJob } from "../../constants/index";
+	import { t } from "../../lib/i18n";
 	import type { JobType } from "../../interfaces/IUser";
 
 	interface ReportTemplate {
@@ -27,7 +28,7 @@
 	let isCreating = $state(false);
 
 	let formName = $state("");
-	let defaultType = $derived(REPORT_TYPES[0] || "Incident Report");
+	let defaultType = $derived(REPORT_TYPES[0] || t("management.templates.defaults.incident"));
 	let formType = $state("");
 	let formContent = $state("");
 
@@ -57,11 +58,11 @@
 
 	async function saveTemplate() {
 		if (!formName.trim()) {
-			showStatus("Template name is required", "error");
+			showStatus(t("management.templates.errors.nameRequired"), "error");
 			return;
 		}
 		if (!formContent.trim()) {
-			showStatus("Template content is required", "error");
+			showStatus(t("management.templates.errors.contentRequired"), "error");
 			return;
 		}
 
@@ -76,7 +77,7 @@
 				templates = [...templates, { id: Date.now(), name: formName.trim(), type: formType, content: formContent }];
 			}
 			cancelEdit();
-			showStatus("Template saved");
+			showStatus(t("management.templates.saved"));
 			return;
 		}
 
@@ -95,15 +96,15 @@
 				{ success: false },
 			);
 			if (result?.success) {
-				showStatus(editingTemplate ? "Template updated" : "Template created");
+				showStatus(editingTemplate ? t("management.templates.updated") : t("management.templates.created"));
 				cancelEdit();
 				await loadTemplates();
 			} else {
-				showStatus(result?.message || "Failed to save template", "error");
+				showStatus(result?.message || t("management.templates.failedSave"), "error");
 			}
 		} catch (error) {
 			console.error("Failed to save template:", error);
-			showStatus("Failed to save template", "error");
+			showStatus(t("management.templates.failedSave"), "error");
 		} finally {
 			isSaving = false;
 		}
@@ -112,7 +113,7 @@
 	async function deleteTemplate(id: number) {
 		if (isEnvBrowser()) {
 			templates = templates.filter((t) => t.id !== id);
-			showStatus("Template deleted");
+			showStatus(t("management.templates.deleted"));
 			return;
 		}
 
@@ -123,14 +124,14 @@
 				{ success: false },
 			);
 			if (result?.success) {
-				showStatus("Template deleted");
+				showStatus(t("management.templates.deleted"));
 				await loadTemplates();
 			} else {
-				showStatus(result?.message || "Failed to delete template", "error");
+				showStatus(result?.message || t("management.templates.failedDelete"), "error");
 			}
 		} catch (error) {
 			console.error("Failed to delete template:", error);
-			showStatus("Failed to delete template", "error");
+			showStatus(t("management.templates.failedDelete"), "error");
 		}
 	}
 
@@ -164,11 +165,11 @@
 
 	if (isEnvBrowser()) {
 		templates = [
-			{ id: 1, name: "Standard Incident", type: "Incident Report", content: "<h2>Incident Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
-			{ id: 2, name: "Traffic Stop", type: "Traffic Report", content: "<h2>Traffic Incident Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
-			{ id: 3, name: "Full Investigation", type: "Investigation Report", content: "<h2>Case Overview</h2>\n<p><strong>Case Number:</strong> [CASE #]</p>" },
-			{ id: 4, name: "Standard Arrest", type: "Arrest Report", content: "<h2>Arrest Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
-			{ id: 5, name: "Evidence Collection", type: "Evidence Report", content: "<h2>Evidence Report Summary</h2>\n<p><strong>Related Case:</strong> [CASE #]</p>" },
+			{ id: 1, name: t("management.templates.examples.standardIncident"), type: "Incident Report", content: "<h2>Incident Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
+			{ id: 2, name: t("management.templates.examples.trafficStop"), type: "Traffic Report", content: "<h2>Traffic Incident Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
+			{ id: 3, name: t("management.templates.examples.fullInvestigation"), type: "Investigation Report", content: "<h2>Case Overview</h2>\n<p><strong>Case Number:</strong> [CASE #]</p>" },
+			{ id: 4, name: t("management.templates.examples.standardArrest"), type: "Arrest Report", content: "<h2>Arrest Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
+			{ id: 5, name: t("management.templates.examples.evidenceCollection"), type: "Evidence Report", content: "<h2>Evidence Report Summary</h2>\n<p><strong>Related Case:</strong> [CASE #]</p>" },
 		];
 	}
 
@@ -180,32 +181,32 @@
 <div class="templates-page">
 	<div class="templates-card">
 		<div class="card-title-row">
-			<span class="card-label">Report Templates</span>
+			<span class="card-label">{t("management.templates.title")}</span>
 			<div class="template-actions">
 				{#if !isCreating}
 					<button class="action-btn create-btn" onclick={startCreate}>
 						<span class="material-icons" style="font-size: 11px;">add</span>
-						New Template
+						{t("management.templates.new")}
 					</button>
 				{/if}
 			</div>
 		</div>
-		<p class="card-subtitle">Configure templates available when creating reports. Each template is linked to a report type.</p>
+		<p class="card-subtitle">{t("management.templates.subtitle")}</p>
 
 		{#if isLoading}
 			<div class="templates-loading">
 				<div class="loading-spinner"></div>
-				<p>Loading templates...</p>
+				<p>{t("management.templates.loading")}</p>
 			</div>
 		{:else if isCreating}
 			<div class="template-form">
 				<div class="form-row">
 					<div class="form-group">
-						<label class="form-label" for="tmpl-name">Template Name</label>
-						<input id="tmpl-name" type="text" class="form-input" placeholder="e.g. Standard Incident" bind:value={formName} />
+						<label class="form-label" for="tmpl-name">{t("management.templates.form.name")}</label>
+						<input id="tmpl-name" type="text" class="form-input" placeholder={t("management.templates.form.namePlaceholder")} bind:value={formName} />
 					</div>
 					<div class="form-group">
-						<label class="form-label" for="tmpl-type">Report Type</label>
+						<label class="form-label" for="tmpl-type">{t("management.templates.form.type")}</label>
 						<select id="tmpl-type" class="form-select" bind:value={formType}>
 							{#each REPORT_TYPES as rt}
 								<option value={rt}>{rt}</option>
@@ -215,15 +216,15 @@
 				</div>
 
 				<div class="form-group">
-					<label class="form-label" for="tmpl-content">Template Content <span class="form-hint">(HTML)</span></label>
-					<textarea id="tmpl-content" class="form-textarea" placeholder="Enter HTML template content..." bind:value={formContent} rows={12}></textarea>
+					<label class="form-label" for="tmpl-content">{t("management.templates.form.content")} <span class="form-hint">(HTML)</span></label>
+					<textarea id="tmpl-content" class="form-textarea" placeholder={t("management.templates.form.contentPlaceholder")} bind:value={formContent} rows={12}></textarea>
 				</div>
 
 				<div class="form-actions">
-					<button class="btn-cancel" onclick={cancelEdit}>Cancel</button>
+					<button class="btn-cancel" onclick={cancelEdit}>{t("common.actions.cancel")}</button>
 					<button class="btn-save" onclick={saveTemplate} disabled={isSaving}>
 						<span class="material-icons btn-save-icon">save</span>
-						{isSaving ? "Saving..." : editingTemplate ? "Update Template" : "Create Template"}
+						{isSaving ? t("common.status.saving") : editingTemplate ? t("management.templates.update") : t("management.templates.create")}
 					</button>
 				</div>
 			</div>
@@ -232,8 +233,8 @@
 				{#if templates.length === 0}
 					<div class="empty-state">
 						<span class="material-icons" style="font-size: 20px; color: rgba(255,255,255,0.15); margin-bottom: 6px;">description</span>
-						<p>No templates configured</p>
-						<p class="empty-hint">Create a template to get started</p>
+						<p>{t("management.templates.empty")}</p>
+						<p class="empty-hint">{t("management.templates.emptyHint")}</p>
 					</div>
 				{:else}
 					<div class="templates-list">
@@ -244,10 +245,10 @@
 									<span class="template-type">{template.type}</span>
 								</div>
 								<div class="template-row-actions">
-									<button class="row-btn edit-btn" onclick={() => startEdit(template)} aria-label="Edit">
+									<button class="row-btn edit-btn" onclick={() => startEdit(template)} aria-label={t("common.actions.edit")}>
 										<span class="material-icons">edit</span>
 									</button>
-									<button class="row-btn delete-btn" onclick={() => deleteTemplate(template.id)} aria-label="Delete">
+									<button class="row-btn delete-btn" onclick={() => deleteTemplate(template.id)} aria-label={t("common.actions.delete")}>
 										<span class="material-icons">delete</span>
 									</button>
 								</div>

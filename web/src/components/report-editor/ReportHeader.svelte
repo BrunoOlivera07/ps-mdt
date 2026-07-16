@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "../../lib/i18n";
 	export let isEditing: boolean;
 	export let isSaving: boolean;
 	export let isLoading: boolean;
@@ -8,7 +9,7 @@
 
 <header class="editor-header">
 	<h1 class="editor-title">
-		{isEditing ? "Edit Report" : "Create New Report"}
+		{isEditing ? t("reportEditor.editReport") : t("reportEditor.createReport")}
 	</h1>
 	<div class="header-actions">
 		<button
@@ -16,20 +17,18 @@
 			onclick={onCancel}
 			disabled={isSaving}
 			type="button"
-			aria-label={isEditing
-				? "Cancel editing report"
-				: "Cancel creating report"}
+			aria-label={isEditing ? t("reportEditor.cancelEditing") : t("reportEditor.cancelCreating")}
 		>
-			Cancel
+			{t("common.actions.cancel")}
 		</button>
 		<button
 			class="btn btn-primary"
 			onclick={onSave}
 			disabled={isSaving || isLoading}
 			type="button"
-			aria-label={isSaving ? "Saving report..." : "Save report"}
+			aria-label={isSaving ? t("reportEditor.saving") : t("reportEditor.saveReport")}
 		>
-			{isSaving ? "Saving..." : "Save Report"}
+			{isSaving ? t("reportEditor.saving") : t("reportEditor.saveReport")}
 		</button>
 	</div>
 </header>

@@ -4,6 +4,7 @@
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
 	import { createEditorService } from "../../services/editorService.svelte";
 	import type { AuthService } from "../../services/authService.svelte";
+	import { t } from "../../lib/i18n";
 
 	interface SOPSection {
 		id: number;
@@ -149,7 +150,7 @@
 			newCategoryTitle = "";
 			newCategoryIcon = "description";
 			await loadCategories();
-			showStatus("Category created");
+			showStatus(t("management.sop.status.categoryCreated"));
 		}
 	}
 
@@ -163,7 +164,7 @@
 		if (result?.success) {
 			editingCategoryId = null;
 			await loadCategories();
-			showStatus("Category updated");
+			showStatus(t("management.sop.status.categoryUpdated"));
 		}
 	}
 
@@ -176,7 +177,7 @@
 		if (result?.success) {
 			if (selectedCategoryId === id) selectedCategoryId = null;
 			await loadCategories();
-			showStatus("Category deleted");
+			showStatus(t("management.sop.status.categoryDeleted"));
 		}
 	}
 
@@ -198,7 +199,7 @@
 		if (result?.success) {
 			newSectionTitle = "";
 			await loadCategories();
-			showStatus("Section created");
+			showStatus(t("management.sop.status.sectionCreated"));
 		}
 	}
 
@@ -222,7 +223,7 @@
 			editingSectionId = null;
 			await loadCategories();
 			sectionDirty = false;
-			showStatus("Section saved");
+			showStatus(t("management.sop.status.sectionSaved"));
 		}
 	}
 
@@ -242,7 +243,7 @@
 		if (result?.success) {
 			if (editingSectionId === id) cancelEditSection();
 			await loadCategories();
-			showStatus("Section deleted");
+			showStatus(t("management.sop.status.sectionDeleted"));
 		}
 	}
 
@@ -257,7 +258,7 @@
 		);
 		if (result?.success) {
 			missionDirty = false;
-			showStatus("Mission statement saved");
+			showStatus(t("management.sop.status.missionSaved"));
 		}
 	}
 
@@ -272,7 +273,7 @@
 		);
 		if (result?.success) {
 			introDirty = false;
-			showStatus("Introduction saved");
+			showStatus(t("management.sop.status.introductionSaved"));
 		}
 	}
 
@@ -289,7 +290,7 @@
 			if (result?.success) {
 				settings.version = result.version;
 				confirmPublish = false;
-				showStatus(`SOP published - Version ${result.version}`);
+				showStatus(t("management.sop.status.published", { version: result.version }));
 			}
 		} finally { publishing = false; }
 	}
@@ -314,30 +315,30 @@
 
 	<div class="sop-tabs">
 		<button class="sop-tab" class:active={activeTab === "mission"} onclick={() => activeTab = "mission"}>
-			<span class="material-icons">flag</span> Mission Statement
+			<span class="material-icons">flag</span> {t("management.sop.tabs.mission")}
 		</button>
 		<button class="sop-tab" class:active={activeTab === "categories"} onclick={() => activeTab = "categories"}>
-			<span class="material-icons">folder</span> Categories & Sections
+			<span class="material-icons">folder</span> {t("management.sop.tabs.categories")}
 		</button>
 		<button class="sop-tab" class:active={activeTab === "intro"} onclick={() => activeTab = "intro"}>
-			<span class="material-icons">article</span> Introduction
+			<span class="material-icons">article</span> {t("management.sop.tabs.introduction")}
 		</button>
 		<button class="sop-tab" class:active={activeTab === "publish"} onclick={() => activeTab = "publish"}>
-			<span class="material-icons">publish</span> Publish
+			<span class="material-icons">publish</span> {t("management.sop.tabs.publish")}
 		</button>
 	</div>
 
 	<div class="sop-tab-content">
 		{#if activeTab === "mission"}
 			<div class="intro-tab">
-				<p class="intro-desc">The mission statement is displayed at the top of the SOP page and in the agreement overlay. Define your department's mission, values, and M.O.S. requirements.</p>
+				<p class="intro-desc">{t("management.sop.missionDescription")}</p>
 				<div class="editor-container" bind:this={missionEditorEl}></div>
 				<div class="editor-actions">
 					<button class="btn-save" class:dirty={missionDirty} onclick={saveMission}>
-						<span class="material-icons">save</span> Save Mission Statement
+						<span class="material-icons">save</span> {t("management.sop.saveMission")}
 					</button>
 					{#if missionDirty}
-						<span class="dirty-hint">Unsaved changes</span>
+						<span class="dirty-hint">{t("management.sop.unsaved")}</span>
 					{/if}
 				</div>
 			</div>
@@ -347,22 +348,22 @@
 				<!-- Category List -->
 				<div class="cat-panel">
 					<div class="panel-header">
-						<h3>Categories</h3>
+						<h3>{t("management.sop.categories")}</h3>
 					</div>
 					<div class="cat-list">
 						{#each categories as cat}
 							{#if editingCategoryId === cat.id}
 								<div class="cat-edit-row">
-									<input type="text" bind:value={editCategoryTitle} placeholder="Category title" class="input-sm" />
+									<input type="text" bind:value={editCategoryTitle} placeholder={t("management.sop.categoryTitle")} class="input-sm" />
 									<select bind:value={editCategoryIcon} class="icon-select">
 										{#each ICON_OPTIONS as icon}
 											<option value={icon}>{icon}</option>
 										{/each}
 									</select>
-									<button class="btn-icon-sm" onclick={saveCategory} title="Save">
+									<button class="btn-icon-sm" onclick={saveCategory} title={t("common.actions.save")}>
 										<span class="material-icons">check</span>
 									</button>
-									<button class="btn-icon-sm cancel" onclick={() => editingCategoryId = null} title="Cancel">
+									<button class="btn-icon-sm cancel" onclick={() => editingCategoryId = null} title={t("common.actions.cancel")}>
 										<span class="material-icons">close</span>
 									</button>
 								</div>
@@ -377,10 +378,10 @@
 									<span class="material-icons cat-row-icon">{cat.icon || 'description'}</span>
 									<span class="cat-row-title">{cat.title}</span>
 									<span class="cat-row-count">{cat.sections.length}</span>
-									<button class="btn-icon-xs" onclick={(e) => { e.stopPropagation(); startEditCategory(cat); }} title="Edit">
+									<button class="btn-icon-xs" onclick={(e) => { e.stopPropagation(); startEditCategory(cat); }} title={t("common.actions.edit")}>
 										<span class="material-icons">edit</span>
 									</button>
-									<button class="btn-icon-xs danger" onclick={(e) => { e.stopPropagation(); deleteCategory(cat.id); }} title="Delete">
+									<button class="btn-icon-xs danger" onclick={(e) => { e.stopPropagation(); deleteCategory(cat.id); }} title={t("common.actions.delete")}>
 										<span class="material-icons">delete</span>
 									</button>
 								</div>
@@ -388,7 +389,7 @@
 						{/each}
 					</div>
 					<div class="add-row">
-						<input type="text" bind:value={newCategoryTitle} placeholder="New category..." class="input-sm" onkeydown={(e) => e.key === 'Enter' && createCategory()} />
+						<input type="text" bind:value={newCategoryTitle} placeholder={t("management.sop.newCategory")} class="input-sm" onkeydown={(e) => e.key === 'Enter' && createCategory()} />
 						<select bind:value={newCategoryIcon} class="icon-select">
 							{#each ICON_OPTIONS as icon}
 								<option value={icon}>{icon}</option>
@@ -405,7 +406,7 @@
 					{#if !selectedCategory}
 						<div class="panel-empty">
 							<span class="material-icons">arrow_back</span>
-							<p>Select a category to manage its sections</p>
+							<p>{t("management.sop.selectCategory")}</p>
 						</div>
 					{:else}
 						<div class="panel-header">
@@ -418,17 +419,17 @@
 						{#if editingSectionId}
 							<!-- Section Editor -->
 							<div class="section-editor">
-								<input type="text" bind:value={editSectionTitle} placeholder="Section title" class="input-full" />
+								<input type="text" bind:value={editSectionTitle} placeholder={t("management.sop.sectionTitle")} class="input-full" />
 								<div class="editor-container" bind:this={sectionEditorEl}></div>
 								<div class="editor-actions">
 									<button class="btn-save" class:dirty={sectionDirty} onclick={saveSection}>
-										<span class="material-icons">check</span> Save Section
+										<span class="material-icons">check</span> {t("management.sop.saveSection")}
 									</button>
 									<button class="btn-cancel" onclick={cancelEditSection}>
-										<span class="material-icons">close</span> Cancel
+										<span class="material-icons">close</span> {t("common.actions.cancel")}
 									</button>
 									{#if sectionDirty}
-										<span class="dirty-hint">Unsaved changes</span>
+										<span class="dirty-hint">{t("management.sop.unsaved")}</span>
 									{/if}
 								</div>
 							</div>
@@ -438,20 +439,20 @@
 									<div class="sec-row">
 										<span class="sec-num">{i + 1}.</span>
 										<span class="sec-title">{section.title}</span>
-										<button class="btn-icon-xs" onclick={() => startEditSection(section)} title="Edit">
+										<button class="btn-icon-xs" onclick={() => startEditSection(section)} title={t("common.actions.edit")}>
 											<span class="material-icons">edit</span>
 										</button>
-										<button class="btn-icon-xs danger" onclick={() => deleteSection(section.id)} title="Delete">
+										<button class="btn-icon-xs danger" onclick={() => deleteSection(section.id)} title={t("common.actions.delete")}>
 											<span class="material-icons">delete</span>
 										</button>
 									</div>
 								{/each}
 								{#if selectedCategory.sections.length === 0}
-									<div class="sec-empty">No sections yet. Add one below.</div>
+									<div class="sec-empty">{t("management.sop.noSections")}</div>
 								{/if}
 							</div>
 							<div class="add-row">
-								<input type="text" bind:value={newSectionTitle} placeholder="New section title..." class="input-sm" onkeydown={(e) => e.key === 'Enter' && createSection()} />
+								<input type="text" bind:value={newSectionTitle} placeholder={t("management.sop.newSection")} class="input-sm" onkeydown={(e) => e.key === 'Enter' && createSection()} />
 								<button class="btn-add" onclick={createSection} disabled={!newSectionTitle.trim()}>
 									<span class="material-icons">add</span>
 								</button>
@@ -463,14 +464,14 @@
 
 		{:else if activeTab === "intro"}
 			<div class="intro-tab">
-				<p class="intro-desc">This introduction is shown to officers when they are required to acknowledge the SOP. Use it to summarize key policies and expectations.</p>
+				<p class="intro-desc">{t("management.sop.introductionDescription")}</p>
 				<div class="editor-container" bind:this={introEditorEl}></div>
 				<div class="editor-actions">
 					<button class="btn-save" class:dirty={introDirty} onclick={saveIntro}>
-						<span class="material-icons">save</span> Save Introduction
+						<span class="material-icons">save</span> {t("management.sop.saveIntroduction")}
 					</button>
 					{#if introDirty}
-						<span class="dirty-hint">Unsaved changes</span>
+						<span class="dirty-hint">{t("management.sop.unsaved")}</span>
 					{/if}
 				</div>
 			</div>
@@ -479,26 +480,26 @@
 			<div class="publish-tab">
 				<div class="publish-card">
 					<span class="material-icons publish-icon">publish</span>
-					<h3>Publish SOP</h3>
-					<p class="publish-version">Current Version: <strong>{settings.version || 'Not published'}</strong></p>
+					<h3>{t("management.sop.publishTitle")}</h3>
+					<p class="publish-version">{t("management.sop.currentVersion")} <strong>{settings.version || t("management.sop.notPublished")}</strong></p>
 					{#if settings.updated_by}
-						<p class="publish-meta">Last published by {settings.updated_by}</p>
+						<p class="publish-meta">{t("management.sop.lastPublishedBy", { name: settings.updated_by })}</p>
 					{/if}
 					<p class="publish-warning">
-						Publishing will increment the SOP version and <strong>require all officers to re-acknowledge</strong> the SOP before they can access the MDT.
+						{t("management.sop.publishWarning")}
 					</p>
 					{#if !confirmPublish}
 						<button class="btn-publish" onclick={() => confirmPublish = true}>
-							<span class="material-icons">publish</span> Publish New Version
+							<span class="material-icons">publish</span> {t("management.sop.publishNewVersion")}
 						</button>
 					{:else}
 						<div class="confirm-box">
-							<p>Are you sure? All officers will be required to re-acknowledge.</p>
+							<p>{t("management.sop.publishConfirm")}</p>
 							<div class="confirm-actions">
 								<button class="btn-confirm" onclick={publishSOP} disabled={publishing}>
-									{#if publishing}Publishing...{:else}Yes, Publish{/if}
+									{#if publishing}{t("management.sop.publishing")}{:else}{t("management.sop.yesPublish")}{/if}
 								</button>
-								<button class="btn-cancel-sm" onclick={() => confirmPublish = false}>Cancel</button>
+								<button class="btn-cancel-sm" onclick={() => confirmPublish = false}>{t("common.actions.cancel")}</button>
 							</div>
 						</div>
 					{/if}
@@ -892,14 +893,6 @@
 		font-size: 13px;
 		line-height: 1.6;
 		outline: none;
-	}
-
-	.editor-container :global(.tiptap p.is-editor-empty:first-child::before) {
-		content: 'Start writing...';
-		color: rgba(255, 255, 255, 0.25);
-		float: left;
-		pointer-events: none;
-		height: 0;
 	}
 
 	.editor-actions {

@@ -9,6 +9,7 @@
 	import { queryClient } from "./utils/query-client";
 	import { onMount } from "svelte";
 	import { setupInputDebug } from "./utils/debugInputBlocker";
+	import { locale } from "./lib/i18n";
 
 	let cleanupInputDebug: (() => void) | undefined;
 	let showComplaintForm = $state(false);
@@ -45,11 +46,13 @@
 
 
 <QueryClientProvider client={queryClient}>
-	<VisibilityProvider>
-		<MDT />
-	</VisibilityProvider>
-	<MugshotCamera />
-	<ComplaintForm show={showComplaintForm} onClose={() => { showComplaintForm = false; }} />
-	<ImpoundForm show={showImpoundForm} vehicle={impoundVehicle} onClose={() => { showImpoundForm = false; impoundVehicle = null; }} />
-	<SvelteQueryDevtools />
+	{#key $locale}
+		<VisibilityProvider>
+			<MDT />
+		</VisibilityProvider>
+		<MugshotCamera />
+		<ComplaintForm show={showComplaintForm} onClose={() => { showComplaintForm = false; }} />
+		<ImpoundForm show={showImpoundForm} vehicle={impoundVehicle} onClose={() => { showImpoundForm = false; impoundVehicle = null; }} />
+		<SvelteQueryDevtools />
+	{/key}
 </QueryClientProvider>

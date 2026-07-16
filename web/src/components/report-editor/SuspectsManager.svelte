@@ -5,6 +5,7 @@
 	import { globalNotifications } from "../../services/notificationService.svelte";
 	import { fetchNui } from "../../utils/fetchNui";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
+	import { t } from "../../lib/i18n";
 
 	let photoModalOpen = $state(false);
 	let photoUrlInput = $state("");
@@ -32,17 +33,17 @@
 			const result = await fetchNui<{ success: boolean; message?: string }>(
 				NUI_EVENTS.CITIZEN.UPLOAD_SUSPECT_PHOTO,
 				{ citizenid: photoTargetSuspect.citizenid, image: url },
-				{ success: true, message: "Photo updated" },
+				{ success: true, message: t("reportEditor.suspects.photoUpdated") },
 			);
 			if (result.success) {
 				onUpdate({ ...photoTargetSuspect, profileImage: url });
-				globalNotifications.success(result.message || "Photo updated successfully");
+				globalNotifications.success(result.message || t("reportEditor.suspects.photoUpdatedSuccessfully"));
 				closePhotoModal();
 			} else {
-				globalNotifications.error(result.message || "Failed to update photo");
+				globalNotifications.error(result.message || t("reportEditor.suspects.photoUpdateFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to update photo");
+			globalNotifications.error(t("reportEditor.suspects.photoUpdateFailed"));
 		} finally {
 			photoSaving = false;
 		}
@@ -83,22 +84,22 @@
 	}
 </script>
 
-<PersonnelSection title="Suspects" {onAdd}>
+<PersonnelSection title={t("reportEditor.suspects.title")} {onAdd}>
 	{#each suspects as suspect}
 		{#if !suspect.profileImage}
 			<div class="image-warning">
 				<svg class="warning-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-				<span class="warning-text">No Picture on file for <strong>{suspect.fullName}</strong>.</span>
+				<span class="warning-text">{t("reportEditor.suspects.noPicture", { name: suspect.fullName })}</span>
 				<div class="warning-actions">
 					<button
 						class="warning-action-btn"
 						onclick={() => openPhotoModal(suspect)}
 						disabled={!suspect.citizenid}
 						type="button"
-						title="Upload a photo"
+						title={t("reportEditor.suspects.uploadPhoto")}
 					>
 						<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-						Upload a photo
+						{t("reportEditor.suspects.uploadPhoto")}
 					</button>
 				</div>
 			</div>
@@ -106,7 +107,7 @@
 		{#if !suspect.fingerprint}
 			<div class="image-warning fingerprint-warning">
 				<svg class="warning-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-				<span class="warning-text">No fingerprint on file for <strong>{suspect.fullName}</strong>.</span>
+				<span class="warning-text">{t("reportEditor.suspects.noFingerprint", { name: suspect.fullName })}</span>
 				<div class="warning-actions">
 					{#if onAddFingerprint}
 						<button
@@ -114,10 +115,10 @@
 							onclick={() => onAddFingerprint(suspect)}
 							disabled={!suspect.citizenid}
 							type="button"
-							title="Add fingerprint to suspect's record"
+							title={t("reportEditor.suspects.addFingerprintTitle")}
 						>
 							<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839-1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
-							Add Fingerprint
+							{t("reportEditor.suspects.addFingerprint")}
 						</button>
 					{/if}
 				</div>
@@ -126,7 +127,7 @@
 		<PersonnelCard
 			id={suspect.id}
 			fullName={suspect.fullName}
-			secondaryInfo={`ID: ${suspect.citizenid}`}
+			secondaryInfo={`${t("reportEditor.id")}: ${suspect.citizenid}`}
 			notes={suspect.notes}
 			{onRemove}
 			onUpdate={updateSuspect}
@@ -138,9 +139,9 @@
 						onclick={() => onIssueWarrant(suspect)}
 						disabled={!suspect.citizenid}
 						type="button"
-						aria-label="Issue warrant"
+						aria-label={t("reportEditor.suspects.issueWarrant")}
 					>
-						Issue Warrant
+						{t("reportEditor.suspects.issueWarrant")}
 					</button>
 					{#if onIssueBenchWarrant}
 						<button
@@ -148,9 +149,9 @@
 							onclick={() => onIssueBenchWarrant(suspect)}
 							disabled={!suspect.citizenid}
 							type="button"
-							aria-label="Issue bench warrant"
+							aria-label={t("reportEditor.suspects.issueBenchWarrant")}
 						>
-							Issue Bench Warrant
+							{t("reportEditor.suspects.issueBenchWarrant")}
 						</button>
 					{/if}
 					{#if onIssueBolo}
@@ -159,9 +160,9 @@
 							onclick={() => onIssueBolo(suspect)}
 							disabled={!suspect.citizenid}
 							type="button"
-							aria-label="Issue BOLO"
+							aria-label={t("reportEditor.suspects.issueBolo")}
 						>
-							Issue BOLO
+							{t("reportEditor.suspects.issueBolo")}
 						</button>
 					{/if}
 				</div>
@@ -175,14 +176,14 @@
 		<div class="modal-overlay" onclick={(e) => { if (e.target === e.currentTarget) closePhotoModal(); }}>
 			<div class="modal-card photo-modal" onclick={(e) => e.stopPropagation()} role="dialog">
 				<div class="modal-header">
-					<h3>Set Profile Photo</h3>
-					<button class="modal-close" onclick={closePhotoModal}>
+					<h3>{t("reportEditor.suspects.setProfilePhoto")}</h3>
+					<button class="modal-close" onclick={closePhotoModal} aria-label={t("common.actions.close")}>
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 					</button>
 				</div>
 				<div class="modal-body photo-modal-body">
 					<div class="photo-form-group">
-						<span class="photo-label">Image URL</span>
+						<span class="photo-label">{t("reportEditor.suspects.imageUrl")}</span>
 						<input
 							class="photo-input"
 							type="url"
@@ -193,9 +194,9 @@
 					</div>
 				</div>
 				<div class="modal-footer-row">
-					<button class="photo-cancel-btn" onclick={closePhotoModal} disabled={photoSaving}>Cancel</button>
+					<button class="photo-cancel-btn" onclick={closePhotoModal} disabled={photoSaving}>{t("common.actions.cancel")}</button>
 					<button class="photo-confirm-btn" onclick={confirmPhotoUrl} disabled={photoSaving || !photoUrlInput.trim()}>
-						{photoSaving ? "Saving…" : "Set Photo"}
+						{photoSaving ? t("reportEditor.saving") : t("reportEditor.suspects.setPhoto")}
 					</button>
 				</div>
 			</div>

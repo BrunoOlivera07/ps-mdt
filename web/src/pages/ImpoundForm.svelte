@@ -10,6 +10,7 @@
 	import { fetchNui } from "../utils/fetchNui";
 	import ImpoundFormFields from "../components/impound/ImpoundFormFields.svelte";
 	import type { ImpoundReason, ImpoundLot, ImpoundDuration } from "../interfaces/IImpound";
+	import { t } from "../lib/i18n";
 
 	let { show = false, vehicle = null, onClose = () => {} }: {
 		show: boolean;
@@ -81,7 +82,7 @@
 			duration = durations.some((d) => d.id === rec) ? rec : defaultDuration;
 				loaded = true;
 			} catch {
-				error = "Could not load impound settings";
+				error = t("pages.impoundForm.settingsLoadFailed");
 			}
 		})();
 	});
@@ -109,7 +110,7 @@
 					photo: photo.trim() || undefined,
 					onSite: true,
 				},
-				{ success: true, message: "Impounded" },
+				{ success: true, message: t("pages.impoundForm.impounded") },
 			);
 
 			if (res?.success) {
@@ -118,10 +119,10 @@
 				// close callback here would cancel the sequence it just started.
 				onClose();
 			} else {
-				error = res?.message || "Failed to impound vehicle";
+				error = res?.message || t("pages.impoundForm.impoundFailed");
 			}
 		} catch {
-			error = "Failed to impound vehicle";
+			error = t("pages.impoundForm.impoundFailed");
 		} finally {
 			busy = false;
 		}
@@ -134,8 +135,8 @@
 	<div class="modal-backdrop">
 		<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
 			<div class="modal-header">
-				<h3>Impound {vehicle.plate}</h3>
-				<button class="close-btn" aria-label="Close" onclick={close}>
+				<h3>{t("pages.impoundForm.title", { plate: vehicle.plate })}</h3>
+				<button class="close-btn" aria-label={t("common.actions.close")} onclick={close}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<line x1="18" y1="6" x2="6" y2="18"/>
 						<line x1="6" y1="6" x2="18" y2="18"/>
@@ -155,11 +156,11 @@
 						</svg>
 						<span>
 							{#if vehicle.stolen && vehicle.bolo}
-								Reported stolen and has an active BOLO — impounding will resolve the BOLO.
+								{t("pages.impoundForm.stolenAndBolo")}
 							{:else if vehicle.stolen}
-								This vehicle is reported stolen.
+								{t("pages.impoundForm.stolen")}
 							{:else}
-								Active BOLO on this vehicle — impounding will resolve it.
+								{t("pages.impoundForm.activeBolo")}
 							{/if}
 						</span>
 					</div>
@@ -177,7 +178,7 @@
 							{/if}
 							{#if (vehicle.priorImpounds ?? 0) > 0}
 								<span class="vs-prior" class:vs-repeat={(vehicle.priorImpounds ?? 0) >= 3}>
-									{vehicle.priorImpounds} prior impound{vehicle.priorImpounds === 1 ? "" : "s"}
+									{t(vehicle.priorImpounds === 1 ? "pages.impoundForm.priorOne" : "pages.impoundForm.priorMany", { count: vehicle.priorImpounds })}
 								</span>
 							{/if}
 						</div>
@@ -197,13 +198,13 @@
 			<div class="modal-footer">
 				<span class="modal-hint">
 					{fee > 0
-						? `${money(fee)} is charged to the owner on release`
-						: "No fee will be charged"}
+						? t("pages.impoundForm.feeCharged", { fee: money(fee) })
+						: t("pages.impoundForm.noFee")}
 				</span>
 				<div class="modal-footer-right">
-					<button class="cancel-btn" disabled={busy} onclick={close}>Cancel</button>
+					<button class="cancel-btn" disabled={busy} onclick={close}>{t("common.actions.cancel")}</button>
 					<button class="danger-btn" disabled={busy || !reason} onclick={submit}>
-						{busy ? "Impounding…" : "Impound"}
+						{busy ? t("pages.impoundForm.impounding") : t("pages.impoundForm.impound")}
 					</button>
 				</div>
 			</div>

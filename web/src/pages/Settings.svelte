@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { getLocale, setLocale, t } from "../lib/i18n";
 
 	const STORAGE_KEY = "ps-mdt-preferences";
+	const LOCALE_STORAGE_KEY = "ps-mdt-locale";
 
 	// Appearance
 	let theme = $state("dark");
 	let notificationSounds = $state(true);
 	let uiZoom = $state(130);
+	let locale = $state(getLocale());
 
 	// Map
 	let defaultZoom = $state(5);
@@ -24,7 +27,7 @@
 	// topbar can show an "Unsaved changes" hint.
 	let savedSnapshot = $state("");
 	function snapshot(): string {
-		return JSON.stringify({ theme, notificationSounds, uiZoom, defaultZoom, showOfficers, showVehicles, showBodycams, patrolZoneNotifications });
+		return JSON.stringify({ theme, notificationSounds, uiZoom, locale, defaultZoom, showOfficers, showVehicles, showBodycams, patrolZoneNotifications });
 	}
 	let isDirty = $derived(savedSnapshot !== "" && snapshot() !== savedSnapshot);
 
@@ -67,6 +70,10 @@
 			if (data.theme) theme = data.theme;
 			if (data.notificationSounds !== undefined) notificationSounds = data.notificationSounds;
 			if (data.uiZoom !== undefined) uiZoom = data.uiZoom;
+			if (data.locale) {
+				locale = data.locale;
+				setLocale(locale);
+			}
 			if (data.defaultZoom !== undefined) defaultZoom = data.defaultZoom;
 			if (data.showOfficers !== undefined) showOfficers = data.showOfficers;
 			if (data.showVehicles !== undefined) showVehicles = data.showVehicles;
@@ -83,6 +90,7 @@
 				theme,
 				notificationSounds,
 				uiZoom,
+				locale,
 				defaultZoom,
 				showOfficers,
 				showVehicles,
@@ -90,6 +98,7 @@
 				patrolZoneNotifications,
 			};
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+			localStorage.setItem(LOCALE_STORAGE_KEY, locale);
 			savedSnapshot = snapshot();
 
 			// Immediately sync patrol zone pref to Lua client
@@ -99,9 +108,9 @@
 				body: JSON.stringify({ enabled: patrolZoneNotifications }),
 			}).catch(() => {});
 
-			showSaveStatus("Preferences saved");
+			showSaveStatus(t("settings.saved"));
 		} catch {
-			showSaveStatus("Failed to save");
+			showSaveStatus(t("settings.failedSave"));
 		}
 	}
 
@@ -124,21 +133,27 @@
 	function resetZoom() {
 		applyZoom(130);
 	}
+
+	function changeLocale(value: string) {
+		if (value === locale) return;
+		locale = value;
+		setLocale(value);
+	}
 </script>
 
 <div class="settings-page">
 	<div class="topbar">
-		<span class="page-title">Settings</span>
-		<span class="topbar-hint">Preferences are saved locally on this device</span>
+		<span class="page-title">{t("settings.title")}</span>
+		<span class="topbar-hint">{t("settings.subtitle")}</span>
 		<div class="topbar-right">
 			{#if saveStatus}
 				<span class="save-status">{saveStatus}</span>
 			{:else if isDirty}
-				<span class="dirty-hint">Unsaved changes</span>
+				<span class="dirty-hint">{t("settings.unsaved")}</span>
 			{/if}
 			<button class="btn-save" class:dirty={isDirty} onclick={savePreferences}>
 				<span class="material-icons btn-save-icon">save</span>
-				Save Preferences
+				{t("common.actions.save")}
 			</button>
 		</div>
 	</div>
@@ -148,22 +163,22 @@
 			<div class="settings-card">
 				<div class="card-head">
 					<span class="material-icons card-icon">palette</span>
-					<span class="card-label">Appearance</span>
+					<span class="card-label">{t("settings.appearance.title")}</span>
 				</div>
 				<div class="setting-row">
 					<div class="setting-info">
-						<span class="setting-label">Theme</span>
-						<span class="setting-desc">Select the MDT color theme</span>
+						<span class="setting-label">{t("settings.appearance.theme")}</span>
+						<span class="setting-desc">{t("settings.appearance.themeDesc")}</span>
 					</div>
 					<select class="setting-select" bind:value={theme}>
-						<option value="dark">Dark</option>
-						<option value="light">Light</option>
+						<option value="dark">{t("settings.appearance.dark")}</option>
+						<option value="light">{t("settings.appearance.light")}</option>
 					</select>
 				</div>
 				<div class="setting-row">
 					<div class="setting-info">
-						<span class="setting-label">Notification Sounds</span>
-						<span class="setting-desc">Play sounds for dispatch alerts and messages</span>
+						<span class="setting-label">{t("settings.appearance.sounds")}</span>
+						<span class="setting-desc">{t("settings.appearance.soundsDesc")}</span>
 					</div>
 					<label class="toggle">
 						<input type="checkbox" bind:checked={notificationSounds} />
@@ -172,8 +187,8 @@
 				</div>
 				<div class="setting-row">
 					<div class="setting-info">
-						<span class="setting-label">UI Zoom</span>
-						<span class="setting-desc">Adjust the overall MDT interface size</span>
+						<span class="setting-label">{t("settings.appearance.zoom")}</span>
+						<span class="setting-desc">{t("settings.appearance.zoomDesc")}</span>
 					</div>
 					<div class="zoom-control">
 						<input
@@ -187,21 +202,31 @@
 						/>
 						<span class="zoom-value">{uiZoom}%</span>
 						{#if uiZoom !== 130}
-							<button class="zoom-reset" onclick={resetZoom} type="button">Reset</button>
+							<button class="zoom-reset" onclick={resetZoom} type="button">{t("settings.appearance.reset")}</button>
 						{/if}
 					</div>
+				</div>
+				<div class="setting-row">
+					<div class="setting-info">
+						<span class="setting-label">{t("settings.appearance.language")}</span>
+						<span class="setting-desc">{t("settings.appearance.languageDesc")}</span>
+					</div>
+					<select class="setting-select" bind:value={locale} onchange={(e) => changeLocale((e.currentTarget as HTMLSelectElement).value)}>
+						<option value="pt-BR">{t("settings.appearance.languages.ptBR")}</option>
+						<option value="en-US">{t("settings.appearance.languages.enUS")}</option>
+					</select>
 				</div>
 			</div>
 
 			<div class="settings-card">
 				<div class="card-head">
 					<span class="material-icons card-icon">map</span>
-					<span class="card-label">Map</span>
+					<span class="card-label">{t("settings.map.title")}</span>
 				</div>
 				<div class="setting-row">
 					<div class="setting-info">
-						<span class="setting-label">Default Zoom Level</span>
-						<span class="setting-desc">Zoom level when opening the map (3-10)</span>
+						<span class="setting-label">{t("settings.map.defaultZoom")}</span>
+						<span class="setting-desc">{t("settings.map.defaultZoomDesc")}</span>
 					</div>
 					<input
 						type="number"
@@ -213,8 +238,8 @@
 				</div>
 				<div class="setting-row">
 					<div class="setting-info">
-						<span class="setting-label">Show Officers</span>
-						<span class="setting-desc">Display officer positions on the map</span>
+						<span class="setting-label">{t("settings.map.showOfficers")}</span>
+						<span class="setting-desc">{t("settings.map.showOfficersDesc")}</span>
 					</div>
 					<label class="toggle">
 						<input type="checkbox" bind:checked={showOfficers} />
@@ -223,8 +248,8 @@
 				</div>
 				<div class="setting-row">
 					<div class="setting-info">
-						<span class="setting-label">Show Vehicles</span>
-						<span class="setting-desc">Display tracked vehicles on the map</span>
+						<span class="setting-label">{t("settings.map.showVehicles")}</span>
+						<span class="setting-desc">{t("settings.map.showVehiclesDesc")}</span>
 					</div>
 					<label class="toggle">
 						<input type="checkbox" bind:checked={showVehicles} />
@@ -233,8 +258,8 @@
 				</div>
 				<div class="setting-row">
 					<div class="setting-info">
-						<span class="setting-label">Show Bodycams</span>
-						<span class="setting-desc">Display bodycam feeds on the map</span>
+						<span class="setting-label">{t("settings.map.showBodycams")}</span>
+						<span class="setting-desc">{t("settings.map.showBodycamsDesc")}</span>
 					</div>
 					<label class="toggle">
 						<input type="checkbox" bind:checked={showBodycams} />
@@ -246,12 +271,12 @@
 			<div class="settings-card settings-card--full">
 				<div class="card-head">
 					<span class="material-icons card-icon">route</span>
-					<span class="card-label">Patrol</span>
+					<span class="card-label">{t("settings.patrol.title")}</span>
 				</div>
 				<div class="setting-row">
 					<div class="setting-info">
-						<span class="setting-label">Zone Notifications</span>
-						<span class="setting-desc">Notify when you enter or leave your assigned patrol zone</span>
+						<span class="setting-label">{t("settings.patrol.zoneNotifications")}</span>
+						<span class="setting-desc">{t("settings.patrol.zoneNotificationsDesc")}</span>
 					</div>
 					<label class="toggle">
 						<input type="checkbox" bind:checked={patrolZoneNotifications} />

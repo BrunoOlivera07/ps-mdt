@@ -3,6 +3,7 @@
 	import { NUI_EVENTS } from "../constants/nuiEvents";
 	import { APP_INFO } from "../constants";
 	import type { AuthService } from "../services/authService.svelte";
+	import { t } from "../lib/i18n";
 
 	interface Props {
 		authService: AuthService;
@@ -48,8 +49,8 @@
 
 		<!-- Title area -->
 		<div class="sop-header">
-			<h2 class="sop-title">Standard Operating Procedures</h2>
-			<p class="sop-subtitle">Review the following before accessing the terminal</p>
+			<h2 class="sop-title">{t("sopAgreement.title")}</h2>
+			<p class="sop-subtitle">{t("sopAgreement.subtitle")}</p>
 		</div>
 
 		<!-- Scrollable content -->
@@ -58,7 +59,7 @@
 				<div class="sop-section mission-section">
 					<div class="section-label">
 						<span class="material-icons label-icon">flag</span>
-						<span>Mission Statement</span>
+						<span>{t("sopAgreement.mission")}</span>
 					</div>
 					<div class="section-card">
 						<div class="section-content">
@@ -72,7 +73,7 @@
 				<div class="sop-section intro-section">
 					<div class="section-label">
 						<span class="material-icons label-icon">gavel</span>
-						<span>Terms of Access</span>
+						<span>{t("sopAgreement.terms")}</span>
 					</div>
 					<div class="section-card intro-card">
 						<div class="section-content">
@@ -84,11 +85,11 @@
 				<div class="sop-section intro-section">
 					<div class="section-label">
 						<span class="material-icons label-icon">gavel</span>
-						<span>Terms of Access</span>
+						<span>{t("sopAgreement.terms")}</span>
 					</div>
 					<div class="section-card intro-card">
 						<div class="section-content">
-							<p>The Standard Operating Procedures have been updated. By acknowledging below, you confirm that you have read, understand, and agree to comply with all department policies and procedures.</p>
+							<p>{t("sopAgreement.defaultTerms")}</p>
 						</div>
 					</div>
 				</div>
@@ -99,7 +100,7 @@
 		<div class="sop-footer">
 			<label class="sop-agree-row">
 				<input type="checkbox" bind:checked={agreed} class="sop-checkbox" />
-				<span class="agree-text">I have read, understand, and agree to abide by the Standard Operating Procedures</span>
+				<span class="agree-text">{t("sopAgreement.agree")}</span>
 			</label>
 
 			<button
@@ -110,10 +111,10 @@
 			>
 				{#if submitting}
 					<div class="btn-spinner"></div>
-					Processing...
+					{t("sopAgreement.processing")}
 				{:else}
 					<span class="material-icons btn-icon">verified</span>
-					Acknowledge & Continue
+					{t("sopAgreement.acknowledge")}
 				{/if}
 			</button>
 		</div>

@@ -10,6 +10,7 @@
 	import { getReportTypesForJob } from "../../constants/index";
 	import { formatDate as fmtDate, formatTime as fmtTime } from "../../utils/datetime";
 	import type { JobType } from "../../interfaces/IUser";
+	import { t } from "../../lib/i18n";
 
 	interface Props {
 		title: string;
@@ -70,12 +71,16 @@
 	function formatTime(timestamp: number): string {
 		return fmtTime(timestamp);
 	}
+
+	function reportTypeLabel(reportType: string): string {
+		return t(`reportEditor.metadata.types.${reportType.toLowerCase().replace(/\s+/g, "_")}`);
+	}
 </script>
 
 <div class="report-info">
 	<input
 		type="text"
-		placeholder="Report Title"
+		placeholder={t("reportEditor.metadata.reportTitle")}
 		bind:value={localTitle}
 		oninput={handleTitleInput}
 		class="title-input"
@@ -87,10 +92,10 @@
 			<span class="metadata-value">{reportId}</span>
 		</div>
 		<div class="metadata-item">
-			<span class="metadata-label">Officer</span>
+			<span class="metadata-label">{t("reportMetadata.officer")}</span>
 			<span class="metadata-value officer-value">
 				{#if officer.startsWith('NO CALLSIGN')}
-					<span class="officer-badge no-callsign">NO CALLSIGN</span>
+					<span class="officer-badge no-callsign">{t("reportEditor.metadata.noCallsign")}</span>
 					<span>{officer.replace('NO CALLSIGN', '').trim()}</span>
 				{:else if officer.includes(' ')}
 					<span class="officer-badge">{officer.split(' ')[0]}</span>
@@ -101,7 +106,7 @@
 			</span>
 		</div>
 		<div class="metadata-item">
-			<label for="type-select" class="metadata-label">Type</label>
+			<label for="type-select" class="metadata-label">{t("reportMetadata.type")}</label>
 			<select
 				id="type-select"
 				bind:value={localType}
@@ -109,17 +114,17 @@
 				class="type-select"
 			>
 				{#each reportTypes as reportType}
-					<option value={reportType}>{reportType}</option>
+					<option value={reportType}>{reportTypeLabel(reportType)}</option>
 				{/each}
 			</select>
 		</div>
 		{#if onInsertTemplate && matchingTemplates.length > 0}
 			<div class="metadata-item template-item">
-				<span class="metadata-label">Template</span>
+				<span class="metadata-label">{t("reportEditor.metadata.template")}</span>
 				<div class="template-wrapper">
 					<button class="template-btn" onclick={onInsertTemplate} type="button">
 						<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-						{matchingTemplates.length === 1 ? "Insert" : "Insert..."}
+						{matchingTemplates.length === 1 ? t("reportEditor.metadata.insert") : t("reportEditor.metadata.insertMenu")}
 					</button>
 					{#if showTemplateMenu && matchingTemplates.length > 1 && onSelectTemplate}
 						<div class="template-dropdown">
@@ -134,7 +139,7 @@
 			</div>
 		{/if}
 		<div class="metadata-item">
-			<span class="metadata-label">Created</span>
+			<span class="metadata-label">{t("reportMetadata.created")}</span>
 			<span class="metadata-value">
 				{formatDate(created)} {formatTime(created)}
 			</span>

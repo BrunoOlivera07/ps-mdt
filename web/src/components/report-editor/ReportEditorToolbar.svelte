@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Editor } from "@tiptap/core";
+	import { t } from "../../lib/i18n";
 
 	interface Props {
 		editor: Editor;
@@ -11,11 +12,11 @@
 <div class="editor-toolbar">
 	<div class="toolbar-group">
 		<button
-			aria-label="Bold"
+			aria-label={t("reportEditor.toolbar.bold")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().toggleBold().run()}
 			class:active={editor.isActive("bold")}
-			title="Bold (Ctrl+B)"
+			title={t("reportEditor.toolbar.boldShortcut")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -25,11 +26,11 @@
 		</button>
 
 		<button
-			aria-label="Italic"
+			aria-label={t("reportEditor.toolbar.italic")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().toggleItalic().run()}
 			class:active={editor.isActive("italic")}
-			title="Italic (Ctrl+I)"
+			title={t("reportEditor.toolbar.italicShortcut")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" />
@@ -37,11 +38,11 @@
 		</button>
 
 		<button
-			aria-label="Underline"
+			aria-label={t("reportEditor.toolbar.underline")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().toggleUnderline().run()}
 			class:active={editor.isActive("underline")}
-			title="Underline (Ctrl+U)"
+			title={t("reportEditor.toolbar.underlineShortcut")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -51,11 +52,11 @@
 		</button>
 
 		<button
-			aria-label="Highlight"
+			aria-label={t("reportEditor.toolbar.highlight")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().toggleHighlight().run()}
 			class:active={editor.isActive("highlight")}
-			title="Highlight"
+			title={t("reportEditor.toolbar.highlight")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -67,11 +68,11 @@
 
 	<div class="toolbar-group">
 		<button
-			aria-label="Align Left"
+			aria-label={t("reportEditor.toolbar.alignLeft")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().setTextAlign("left").run()}
 			class:active={editor.isActive({ textAlign: "left" })}
-			title="Align Left"
+			title={t("reportEditor.toolbar.alignLeft")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -81,11 +82,11 @@
 		</button>
 
 		<button
-			aria-label="Align Center"
+			aria-label={t("reportEditor.toolbar.alignCenter")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().setTextAlign("center").run()}
 			class:active={editor.isActive({ textAlign: "center" })}
-			title="Align Center"
+			title={t("reportEditor.toolbar.alignCenter")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -95,11 +96,11 @@
 		</button>
 
 		<button
-			aria-label="Align Right"
+			aria-label={t("reportEditor.toolbar.alignRight")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().setTextAlign("right").run()}
 			class:active={editor.isActive({ textAlign: "right" })}
-			title="Align Right"
+			title={t("reportEditor.toolbar.alignRight")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -111,11 +112,11 @@
 
 	<div class="toolbar-group">
 		<button
-			aria-label="Bullet List"
+			aria-label={t("reportEditor.toolbar.bulletList")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().toggleBulletList().run()}
 			class:active={editor.isActive("bulletList")}
-			title="Bullet List"
+			title={t("reportEditor.toolbar.bulletList")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -125,11 +126,11 @@
 		</button>
 
 		<button
-			aria-label="Numbered List"
+			aria-label={t("reportEditor.toolbar.numberedList")}
 			class="toolbar-btn"
 			onclick={() => editor.chain().focus().toggleOrderedList().run()}
 			class:active={editor.isActive("orderedList")}
-			title="Numbered List"
+			title={t("reportEditor.toolbar.numberedList")}
 		>
 			<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -141,34 +142,34 @@
 
 	<div class="toolbar-group">
 		<button
-			aria-label="Heading 1"
+			aria-label={t("reportEditor.toolbar.heading1")}
 			class="toolbar-btn"
 			onclick={() =>
 				editor.chain().focus().toggleHeading({ level: 1 }).run()}
 			class:active={editor.isActive("heading", { level: 1 })}
-			title="Heading 1"
+			title={t("reportEditor.toolbar.heading1")}
 		>
 			H1
 		</button>
 
 		<button
-			aria-label="Heading 2"
+			aria-label={t("reportEditor.toolbar.heading2")}
 			class="toolbar-btn"
 			onclick={() =>
 				editor.chain().focus().toggleHeading({ level: 2 }).run()}
 			class:active={editor.isActive("heading", { level: 2 })}
-			title="Heading 2"
+			title={t("reportEditor.toolbar.heading2")}
 		>
 			H2
 		</button>
 
 		<button
-			aria-label="Heading 3"
+			aria-label={t("reportEditor.toolbar.heading3")}
 			class="toolbar-btn"
 			onclick={() =>
 				editor.chain().focus().toggleHeading({ level: 3 }).run()}
 			class:active={editor.isActive("heading", { level: 3 })}
-			title="Heading 3"
+			title={t("reportEditor.toolbar.heading3")}
 		>
 			H3
 		</button>

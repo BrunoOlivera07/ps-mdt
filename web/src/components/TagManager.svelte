@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "../lib/i18n";
 	export let tags: string[];
 	export let availableTags: string[];
 	export let onAddTag: (tag: string) => void;
@@ -25,17 +26,17 @@
 	}
 </script>
 
-<section class="tag-manager" aria-label="Report tags">
+<section class="tag-manager" aria-label={t("tagManager.reportTags")}>
 	<div class="tag-header">
-		<h3 class="tag-title">Tags</h3>
+		<h3 class="tag-title">{t("tagManager.tags")}</h3>
 		<div class="tag-input-group">
-			<label for="new-tag-input" class="sr-only">Add new tag</label>
+			<label for="new-tag-input" class="sr-only">{t("tagManager.addNew")}</label>
 			<input
 				id="new-tag-input"
 				type="text"
 				bind:value={newTag}
 				on:keydown={handleKeydown}
-				placeholder="Add tag..."
+				placeholder={t("tagManager.addPlaceholder")}
 				class="tag-input"
 				aria-describedby="tag-instructions"
 			/>
@@ -44,20 +45,19 @@
 				on:click={addTag}
 				disabled={!newTag.trim()}
 				class="add-tag-btn"
-				aria-label="Add tag"
+				aria-label={t("tagManager.add")}
 			>
-				Add
+				{t("common.actions.add")}
 			</button>
 		</div>
 	</div>
 
 	<div id="tag-instructions" class="sr-only">
-		Press Enter or click Add button to add a new tag. Click the X button to
-		remove tags.
+		{t("tagManager.instructions")}
 	</div>
 
 	{#if tags.length > 0}
-		<div class="tags-container" role="list" aria-label="Current tags">
+		<div class="tags-container" role="list" aria-label={t("tagManager.current")}>
 			{#each tags as tag}
 				<div class="tag" role="listitem">
 					<span class="tag-text">{tag}</span>
@@ -65,7 +65,7 @@
 						type="button"
 						on:click={() => removeTag(tag)}
 						class="remove-tag-btn"
-						aria-label="Remove {tag} tag"
+						aria-label={t("tagManager.remove", { tag })}
 					>
 						×
 					</button>
@@ -73,16 +73,16 @@
 			{/each}
 		</div>
 	{:else}
-		<p class="no-tags">No tags added</p>
+		<p class="no-tags">{t("tagManager.none")}</p>
 	{/if}
 
 	{#if availableTags.length > 0}
 		<div class="suggested-tags">
-			<h4 class="suggested-title">Suggested Tags</h4>
+			<h4 class="suggested-title">{t("tagManager.suggested")}</h4>
 			<div
 				class="suggested-container"
 				role="list"
-				aria-label="Suggested tags"
+				aria-label={t("tagManager.suggested")}
 			>
 				{#each availableTags as tag}
 					<button
@@ -90,7 +90,7 @@
 						on:click={() => onAddTag(tag)}
 						class="suggested-tag"
 						disabled={tags.includes(tag)}
-						aria-label="Add suggested tag: {tag}"
+						aria-label={t("tagManager.addSuggested", { tag })}
 					>
 						{tag}
 					</button>

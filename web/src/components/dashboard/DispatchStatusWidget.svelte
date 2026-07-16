@@ -8,6 +8,7 @@
 	import { onMount, onDestroy } from "svelte";
 	import { fetchNui } from "../../utils/fetchNui";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
+	import { t } from "../../lib/i18n";
 
 	interface StatusCount {
 		id: string;
@@ -49,7 +50,7 @@
 </script>
 
 {#if breakdown.statuses.length > 0}
-	<div class="dispatch-status" aria-label="Officer status breakdown">
+	<div class="dispatch-status" aria-label={t("dashboardComponents.dispatchStatusLabel")}>
 		{#each breakdown.statuses as s (s.id)}
 			<div class="ds-chip" class:ds-muted={s.count === 0}>
 				<span class="ds-dot" style="background:{s.color}"></span>

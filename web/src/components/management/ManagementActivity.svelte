@@ -4,6 +4,7 @@
 	import { formatDate, formatTime, formatDateTime, formatRelative, toDate } from "../../utils/datetime";
 	import { isEnvBrowser } from "../../utils/misc";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
+	import { t } from "../../lib/i18n";
 	import Pagination from "../Pagination.svelte";
 
 	interface AuditLog {
@@ -25,77 +26,77 @@
 
 	const ACTION_LABELS: Record<string, string> = {
 		// Authentication
-		mdt_login:  "Logged into MDT",
-		mdt_logout: "Logged out of MDT",
+		mdt_login:  t("management.activity.labels.loggedIn"),
+		mdt_logout: t("management.activity.labels.loggedOut"),
 		// Reports
-		report_created: "Created a report",
-		report_updated: "Updated a report",
-		report_deleted: "Deleted a report",
+		report_created: t("management.activity.labels.reportCreated"),
+		report_updated: t("management.activity.labels.reportUpdated"),
+		report_deleted: t("management.activity.labels.reportDeleted"),
 		// Warrants
-		warrant_issued: "Issued a warrant",
-		warrant_closed: "Closed a warrant",
+		warrant_issued: t("management.activity.labels.warrantIssued"),
+		warrant_closed: t("management.activity.labels.warrantClosed"),
 		// Cases
-		case_created:              "Created a case",
-		case_updated:              "Updated a case",
-		case_deleted:              "Deleted a case",
-		case_officer_assigned:     "Assigned officer to case",
-		case_officer_removed:      "Removed officer from case",
-		case_attachment_added:     "Added case attachment",
-		case_attachment_removed:   "Removed case attachment",
-		case_attachment_uploaded:  "Uploaded case attachment",
+		case_created:              t("management.activity.labels.caseCreated"),
+		case_updated:              t("management.activity.labels.caseUpdated"),
+		case_deleted:              t("management.activity.labels.caseDeleted"),
+		case_officer_assigned:     t("management.activity.labels.caseOfficerAssigned"),
+		case_officer_removed:      t("management.activity.labels.caseOfficerRemoved"),
+		case_attachment_added:     t("management.activity.labels.caseAttachmentAdded"),
+		case_attachment_removed:   t("management.activity.labels.caseAttachmentRemoved"),
+		case_attachment_uploaded:  t("management.activity.labels.caseAttachmentUploaded"),
 		// Evidence
-		evidence_added:            "Added evidence",
-		evidence_updated:          "Updated evidence",
-		evidence_deleted:          "Deleted evidence",
-		evidence_transferred:      "Transferred evidence custody",
-		evidence_image_added:      "Added evidence image",
-		evidence_image_removed:    "Removed evidence image",
-		evidence_linked_case:      "Linked evidence to case",
-		case_created_from_evidence:"Created case from evidence",
+		evidence_added:            t("management.activity.labels.evidenceAdded"),
+		evidence_updated:          t("management.activity.labels.evidenceUpdated"),
+		evidence_deleted:          t("management.activity.labels.evidenceDeleted"),
+		evidence_transferred:      t("management.activity.labels.evidenceTransferred"),
+		evidence_image_added:      t("management.activity.labels.evidenceImageAdded"),
+		evidence_image_removed:    t("management.activity.labels.evidenceImageRemoved"),
+		evidence_linked_case:      t("management.activity.labels.evidenceLinkedCase"),
+		case_created_from_evidence:t("management.activity.labels.caseCreatedFromEvidence"),
 		// Weapons
-		weapon_created: "Registered a weapon",
-		weapon_updated: "Updated weapon record",
-		weapon_deleted: "Deleted weapon record",
+		weapon_created: t("management.activity.labels.weaponCreated"),
+		weapon_updated: t("management.activity.labels.weaponUpdated"),
+		weapon_deleted: t("management.activity.labels.weaponDeleted"),
 		// Vehicles
-		vehicle_updated:    "Updated vehicle record",
-		vehicle_impounded:  "Impounded a vehicle",
-		vehicle_released:   "Released vehicle from impound",
-		vehicle_impound_fee_paid: "Collected an impound fee",
+		vehicle_updated:    t("management.activity.labels.vehicleUpdated"),
+		vehicle_impounded:  t("management.activity.labels.vehicleImpounded"),
+		vehicle_released:   t("management.activity.labels.vehicleReleased"),
+		vehicle_impound_fee_paid: t("management.activity.labels.vehicleImpoundFeePaid"),
 		// Searches
-		search_citizens: "Searched citizens",
-		search_players:  "Searched players",
-		search_officers: "Searched officers",
+		search_citizens: t("management.activity.labels.searchCitizens"),
+		search_players:  t("management.activity.labels.searchPlayers"),
+		search_officers: t("management.activity.labels.searchOfficers"),
 		// Charges / Fines / Sentencing
-		fine_processed:  "Processed a fine",
-		charge_updated:  "Updated a charge",
-		arrest_logged:   "Logged an arrest",
-		sent_to_jail:    "Sent citizen to jail",
+		fine_processed:  t("management.activity.labels.fineProcessed"),
+		charge_updated:  t("management.activity.labels.chargeUpdated"),
+		arrest_logged:   t("management.activity.labels.arrestLogged"),
+		sent_to_jail:    t("management.activity.labels.sentToJail"),
 		// Officers / Dispatch
-		callsign_changed:      "Changed officer callsign",
-		signal100_activated:   "Activated Signal 100",
-		signal100_deactivated: "Deactivated Signal 100",
-		icu_deleted:           "Deleted ICU record",
+		callsign_changed:      t("management.activity.labels.callsignChanged"),
+		signal100_activated:   t("management.activity.labels.signal100Activated"),
+		signal100_deactivated: t("management.activity.labels.signal100Deactivated"),
+		icu_deleted:           t("management.activity.labels.icuDeleted"),
 		// Cameras / Bodycams
-		camera_viewed:  "Viewed camera footage",
-		bodycam_viewed: "Viewed bodycam footage",
+		camera_viewed:  t("management.activity.labels.cameraViewed"),
+		bodycam_viewed: t("management.activity.labels.bodycamViewed"),
 		// ── Patrols ──────────────────────────────────────────────────────────
-		patrol_created:          "Created a patrol",
-		patrol_deleted:          "Deleted a patrol",
-		patrol_renamed:          "Renamed a patrol",
-		patrol_zone_created:     "Drew patrol zone",
-		patrol_zone_updated:     "Updated patrol zone",
-		patrol_zone_cleared:     "Cleared patrol zone",
-		patrol_officer_assigned: "Assigned officer to patrol",
-		patrol_officer_removed:  "Removed officer from patrol",
-		patrols_reordered:       "Reordered patrols",
+		patrol_created:          t("management.activity.labels.patrolCreated"),
+		patrol_deleted:          t("management.activity.labels.patrolDeleted"),
+		patrol_renamed:          t("management.activity.labels.patrolRenamed"),
+		patrol_zone_created:     t("management.activity.labels.patrolZoneCreated"),
+		patrol_zone_updated:     t("management.activity.labels.patrolZoneUpdated"),
+		patrol_zone_cleared:     t("management.activity.labels.patrolZoneCleared"),
+		patrol_officer_assigned: t("management.activity.labels.patrolOfficerAssigned"),
+		patrol_officer_removed:  t("management.activity.labels.patrolOfficerRemoved"),
+		patrols_reordered:       t("management.activity.labels.patrolsReordered"),
 		// ── Dispatch calls ───────────────────────────────────────────────────
-		dispatch_create:         "Created a call",
-		dispatch_dismiss:        "Dismissed a call",
-		dispatch_note_add:       "Added a call note",
-		dispatch_note_edit:      "Edited a call note",
-		dispatch_note_delete:    "Removed a call note",
-		dispatch_attach_units:   "Assigned units to a call",
-		dispatch_detach_units:   "Removed units from a call",
+		dispatch_create:         t("management.activity.labels.dispatchCreate"),
+		dispatch_dismiss:        t("management.activity.labels.dispatchDismiss"),
+		dispatch_note_add:       t("management.activity.labels.dispatchNoteAdd"),
+		dispatch_note_edit:      t("management.activity.labels.dispatchNoteEdit"),
+		dispatch_note_delete:    t("management.activity.labels.dispatchNoteDelete"),
+		dispatch_attach_units:   t("management.activity.labels.dispatchAttachUnits"),
+		dispatch_detach_units:   t("management.activity.labels.dispatchDetachUnits"),
 	};
 
 	const ACTION_ICONS: Record<string, { icon: string; color: string }> = {
@@ -317,18 +318,18 @@
 	<div class="activity-topbar">
 		<input
 			type="text"
-			placeholder="Search activity..."
+			placeholder={t("management.activity.searchPlaceholder")}
 			value={searchQuery}
 			oninput={handleSearch}
 			class="search-input"
 		/>
-		<span class="result-count">{totalItems} entries</span>
+		<span class="result-count">{totalItems} {t("management.activity.entries")}</span>
 	</div>
 
 	{#if isLoading}
 		<div class="empty-state">
 			<div class="loading-spinner"></div>
-			<p>Loading activity...</p>
+			<p>{t("common.status.loading")}</p>
 		</div>
 	{:else}
 		<div class="activity-list">
@@ -352,7 +353,7 @@
 						{/if}
 					</div>
 					<div class="activity-meta">
-						<span class="activity-officer">{log.actor_name || "Unknown"}</span>
+						<span class="activity-officer">{log.actor_name || t("management.activity.unknown")}</span>
 						<span class="activity-time" title={formatFullTimestamp(log.created_at)}>
 							{formatTimestamp(log.created_at)}<span class="time-sep">●</span><span class="time-exact">{formatExactTimestamp(log.created_at)}</span>
 						</span>
@@ -360,7 +361,7 @@
 				</div>
 			{:else}
 				<div class="empty-state">
-					{searchQuery ? "No results matching your search." : "No recent activity."}
+					{searchQuery ? t("management.activity.noResults") : t("management.activity.noActivity")}
 				</div>
 			{/each}
 		</div>

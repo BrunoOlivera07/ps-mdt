@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { APP_INFO } from "../constants";
 	import type { AuthService } from "../services/authService.svelte";
+	import { t } from "../lib/i18n";
 
 	interface Props {
 		authService: AuthService;
@@ -22,43 +23,43 @@
 		{#if authService.isCheckingAuth}
 			<div class="login-body">
 				<div class="loading-spinner"></div>
-				<span class="body-title">Authenticating</span>
-				<span class="body-desc">Verifying credentials...</span>
+				<span class="body-title">{t("login.authenticating")}</span>
+				<span class="body-desc">{t("login.verifying")}</span>
 			</div>
 		{:else if !authService.isLEO}
 			<div class="login-body">
 				<span class="material-icons status-icon error">block</span>
-				<span class="body-title error">Access Denied</span>
-				<span class="body-desc">This terminal is restricted to authorized personnel</span>
+				<span class="body-title error">{t("login.accessDenied")}</span>
+				<span class="body-desc">{t("login.restricted")}</span>
 				<div class="login-actions">
 					<button class="btn btn-outline" onclick={authService.closeUI}>
-						Close Terminal
+						{t("login.closeTerminal")}
 					</button>
 				</div>
 			</div>
 		{:else if authService.isLEO && !authService.onDuty}
 			<div class="login-body">
 				<span class="material-icons status-icon warning">warning_amber</span>
-				<span class="body-title warning">Off Duty</span>
-				<span class="body-desc">You must be on duty to access the MDT system</span>
+				<span class="body-title warning">{t("login.offDuty")}</span>
+				<span class="body-desc">{t("login.mustBeOnDuty")}</span>
 				<div class="login-actions">
 					<button class="btn btn-primary" onclick={authService.goOnDuty}>
 						<span class="material-icons btn-icon">login</span>
-						Go On Duty
+						{t("login.goOnDuty")}
 					</button>
 					<button class="btn btn-outline" onclick={authService.closeUI}>
-						Close Terminal
+						{t("login.closeTerminal")}
 					</button>
 				</div>
 			</div>
 		{:else}
 			<div class="login-body">
 				<span class="material-icons status-icon error">error_outline</span>
-				<span class="body-title error">Authentication Error</span>
+				<span class="body-title error">{t("login.authenticationError")}</span>
 				<span class="body-desc">{authService.authError}</span>
 				<div class="login-actions">
 					<button class="btn btn-outline" onclick={authService.closeUI}>
-						Close Terminal
+						{t("login.closeTerminal")}
 					</button>
 				</div>
 			</div>

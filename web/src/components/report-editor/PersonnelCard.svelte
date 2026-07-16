@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { OFFICER_TYPES, VICTIM_TYPES } from "../../constants";
 	import type { Snippet } from "svelte";
+	import { t } from "../../lib/i18n";
 	interface Props {
 		id: string;
 		fullName: string;
@@ -24,6 +25,10 @@
 		onUpdate,
 		actions,
 	}: Props = $props();
+
+	function typeLabel(value: string): string {
+		return t(`reportEditor.personnel.types.${value.toLowerCase()}`);
+	}
 </script>
 
 <div class="person-card">
@@ -35,7 +40,7 @@
 		<button
 			class="remove-btn"
 			onclick={() => onRemove(id)}
-			aria-label="Remove person"
+			aria-label={t("reportEditor.personnel.remove")}
 		>
 			<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
 				<path
@@ -52,13 +57,13 @@
 				class="detail-select"
 			>
 				{#each typeOptions as option}
-					<option value={option}>{option}</option>
+					<option value={option}>{typeLabel(option)}</option>
 				{/each}
 			</select>
 		{/if}
 		{#if notes !== undefined}
 			<textarea
-				placeholder="Notes"
+				placeholder={t("reportEditor.involved.notes")}
 				value={notes}
 				oninput={(e) => onUpdate(id, "notes", e.currentTarget.value)}
 				class="notes-input"

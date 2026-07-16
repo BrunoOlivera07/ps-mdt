@@ -19,6 +19,7 @@
 		EventCategory,
 	} from "../../interfaces/ICourt";
 	import PersonSearchModal from "../../components/report-editor/PersonSearchModal.svelte";
+	import { t } from "../../lib/i18n";
 
 	interface Props {
 		tabService: ReturnType<typeof createTabService>;
@@ -59,20 +60,18 @@
 
 	// Title / location placeholders, department-appropriate.
 	const titlePlaceholder = $derived(
-		isEms ? "e.g. CPR training / Team meeting" : "e.g. Firearms training / Hearing Smith",
+		isEms ? t("pages.doj.courtCalendar.placeholders.emsTitle") : t("pages.doj.courtCalendar.placeholders.policeTitle"),
 	);
 	const locationPlaceholder = $derived(
-		isEms ? "e.g. Pillbox HQ / Training room" : "e.g. Courtroom 1 / Range",
+		isEms ? t("pages.doj.courtCalendar.placeholders.emsLocation") : t("pages.doj.courtCalendar.placeholders.policeLocation"),
 	);
 
 	// When viewing an existing event the officer can't edit, the modal is read-only.
 	let formReadOnly = $state(false);
 
 	const CATEGORY_LABELS: Record<EventCategory, string> = {
-		court: "Court",
-		training: "Training",
-		meeting: "Meeting",
-		other: "Other",
+		court: t("pages.doj.courtCalendar.categories.court"), training: t("pages.doj.courtCalendar.categories.training"),
+		meeting: t("pages.doj.courtCalendar.categories.meeting"), other: t("pages.doj.courtCalendar.categories.other"),
 	};
 	const CATEGORY_ICONS: Record<EventCategory, string> = {
 		court: "gavel",
@@ -81,7 +80,7 @@
 		other: "event",
 	};
 
-	const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+	const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((day) => t(`pages.doj.courtCalendar.weekdays.${day}`));
 
 	// Single masked 24h time field (HH:MM). Digits only, colon auto-inserted,
 	// normalised to a valid 24h value on blur. No AM/PM, ever.
@@ -105,35 +104,20 @@
 		let total = ((h * 60 + mi + deltaMin) % 1440 + 1440) % 1440;
 		form.time = `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 	}
-	const MONTHS = [
-		"January", "February", "March", "April", "May", "June",
-		"July", "August", "September", "October", "November", "December",
-	];
+	const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"].map((month) => t(`pages.doj.courtCalendar.months.${month}`));
 	const TYPE_LABELS: Record<HearingType, string> = {
-		arraignment: "Arraignment",
-		trial: "Trial",
-		sentencing: "Sentencing",
-		appeal: "Appeal",
-		motion: "Motion",
-		hearing: "Hearing",
-		other: "Other",
+		arraignment: t("pages.doj.courtCalendar.types.arraignment"), trial: t("pages.doj.courtCalendar.types.trial"),
+		sentencing: t("pages.doj.courtCalendar.types.sentencing"), appeal: t("pages.doj.courtCalendar.types.appeal"),
+		motion: t("pages.doj.courtCalendar.types.motion"), hearing: t("pages.doj.courtCalendar.types.hearing"), other: t("pages.doj.courtCalendar.types.other"),
 	};
 	const STATUS_LABELS: Record<HearingStatus, string> = {
-		scheduled: "Scheduled",
-		in_session: "In session",
-		completed: "Completed",
-		adjourned: "Adjourned",
-		cancelled: "Cancelled",
+		scheduled: t("pages.doj.courtCalendar.statuses.scheduled"), in_session: t("pages.doj.courtCalendar.statuses.inSession"),
+		completed: t("pages.doj.courtCalendar.statuses.completed"), adjourned: t("pages.doj.courtCalendar.statuses.adjourned"), cancelled: t("pages.doj.courtCalendar.statuses.cancelled"),
 	};
 	const ROLE_LABELS: Record<AttendeeRole, string> = {
-		prosecutor: "Prosecution",
-		defense: "Defense",
-		officer: "Officer",
-		witness: "Witness",
-		judge: "Judge",
-		trainee: "Trainee",
-		instructor: "Instructor",
-		attendee: "Guest",
+		prosecutor: t("pages.doj.courtCalendar.roles.prosecutor"), defense: t("pages.doj.courtCalendar.roles.defense"),
+		officer: t("pages.doj.courtCalendar.roles.officer"), witness: t("pages.doj.courtCalendar.roles.witness"), judge: t("pages.doj.courtCalendar.roles.judge"),
+		trainee: t("pages.doj.courtCalendar.roles.trainee"), instructor: t("pages.doj.courtCalendar.roles.instructor"), attendee: t("pages.doj.courtCalendar.roles.attendee"),
 	};
 
 	// Which categories are currently shown (filter chips)
@@ -325,8 +309,8 @@
 
 	async function saveHearing() {
 		normalizeTime(); // guarantee a valid 24h HH:MM even without a blur
-		if (!form.title.trim()) { globalNotifications.error("Title is required"); return; }
-		if (!form.date || !form.time) { globalNotifications.error("Date/time is required"); return; }
+		if (!form.title.trim()) { globalNotifications.error(t("pages.doj.courtCalendar.messages.titleRequired")); return; }
+		if (!form.date || !form.time) { globalNotifications.error(t("pages.doj.courtCalendar.messages.dateTimeRequired")); return; }
 		saving = true;
 
 		const base = {
@@ -355,18 +339,18 @@
 					})),
 				});
 				if (res.success) {
-					globalNotifications.success("Event created");
+					globalNotifications.success(t("pages.doj.courtCalendar.messages.created"));
 					closeModal();
 				} else {
-					globalNotifications.error(court.state.lastError || "Failed to create event");
+					globalNotifications.error(court.state.lastError || t("pages.doj.courtCalendar.messages.createFailed"));
 				}
 			} else {
 				const res = await court.updateHearing(form.id, base);
 				if (res.success) {
-					globalNotifications.success("Event updated");
+					globalNotifications.success(t("pages.doj.courtCalendar.messages.updated"));
 					closeModal();
 				} else {
-					globalNotifications.error((res as { error?: string }).error || "Failed to update event");
+					globalNotifications.error((res as { error?: string }).error || t("pages.doj.courtCalendar.messages.updateFailed"));
 				}
 			}
 		} finally {
@@ -379,10 +363,10 @@
 		if (confirmDeleteId == null) return;
 		const ok = await court.deleteHearing(confirmDeleteId);
 		if (ok) {
-			globalNotifications.success("Event deleted");
+			globalNotifications.success(t("pages.doj.courtCalendar.messages.deleted"));
 			if (showModal) closeModal();
 		} else {
-			globalNotifications.error("Failed to delete event");
+			globalNotifications.error(t("pages.doj.courtCalendar.messages.deleteFailed"));
 		}
 		confirmDeleteId = null;
 	}
@@ -411,14 +395,14 @@
 		try {
 			const res = await court.getGroupMembers(group.id);
 			if (!res.success) {
-				globalNotifications.error(res.error || "Could not resolve group");
+				globalNotifications.error(res.error || t("pages.doj.courtCalendar.messages.groupFailed"));
 				return;
 			}
 			// Only people not already on the list.
 			const existing = new Set(modalAttendees.map((a) => a.citizenid));
 			const fresh = res.members.filter((m) => !existing.has(m.citizenid));
 			if (fresh.length === 0) {
-				globalNotifications.info(`${group.label}: everyone is already added`);
+				globalNotifications.info(t("pages.doj.courtCalendar.messages.groupAlreadyAdded", { group: group.label }));
 				return;
 			}
 
@@ -435,9 +419,9 @@
 							role: a.role,
 						})),
 					];
-					globalNotifications.success(`${group.label}: ${bulk.added.length} added`);
+					globalNotifications.success(t("pages.doj.courtCalendar.messages.groupAdded", { group: group.label, count: bulk.added.length }));
 				} else {
-					globalNotifications.error("Bulk add failed");
+					globalNotifications.error(t("pages.doj.courtCalendar.messages.bulkAddFailed"));
 				}
 			} else {
 				// New hearing → stage locally, persisted on save.
@@ -450,7 +434,7 @@
 						role: m.role,
 					})),
 				];
-				globalNotifications.success(`${group.label}: ${fresh.length} added`);
+				globalNotifications.success(t("pages.doj.courtCalendar.messages.groupAdded", { group: group.label, count: fresh.length }));
 			}
 		} finally {
 			groupBusy = null;
@@ -513,15 +497,15 @@
 			const res = await court.setStatus(form.id, target);
 			if (res.success) {
 				if (res.deleted) {
-					globalNotifications.success("Hearing completed and removed");
+					globalNotifications.success(t("pages.doj.courtCalendar.messages.completedRemoved"));
 					closeModal();
 				} else {
 					form.status = res.status ?? target;
 					formReadOnly = !canEditCat(form.category) || form.status === "in_session" || form.status === "completed";
-					globalNotifications.success(`Status: ${STATUS_LABELS[res.status ?? target]}`);
+					globalNotifications.success(t("pages.doj.courtCalendar.messages.status", { status: STATUS_LABELS[res.status ?? target] }));
 				}
 			} else {
-				globalNotifications.error(res.error || "Could not change status");
+				globalNotifications.error(res.error || t("pages.doj.courtCalendar.messages.statusFailed"));
 			}
 		} finally {
 			statusBusy = false;
@@ -536,20 +520,20 @@
 	<div class="header">
 		<div class="title-row">
 			<span class="material-icons">calendar_month</span>
-			<h1>Calendar</h1>
+			<h1>{t("pages.doj.courtCalendar.title")}</h1>
 		</div>
 		<div class="controls">
-			<button class="nav-btn" onclick={prevMonth} aria-label="Previous month">
+			<button class="nav-btn" onclick={prevMonth} aria-label={t("pages.doj.courtCalendar.previousMonth")}>
 				<span class="material-icons">chevron_left</span>
 			</button>
-			<button class="today-btn" onclick={goToday}>Today</button>
+			<button class="today-btn" onclick={goToday}>{t("pages.doj.courtCalendar.today")}</button>
 			<span class="month-label">{MONTHS[viewDate.getMonth()]} {viewDate.getFullYear()}</span>
-			<button class="nav-btn" onclick={nextMonth} aria-label="Next month">
+			<button class="nav-btn" onclick={nextMonth} aria-label={t("pages.doj.courtCalendar.nextMonth")}>
 				<span class="material-icons">chevron_right</span>
 			</button>
 			{#if canCreateAny}
 				<button class="primary-btn" onclick={() => openCreate()}>
-					<span class="material-icons">add</span> Event
+					<span class="material-icons">add</span> {t("pages.doj.courtCalendar.event")}
 				</button>
 			{/if}
 		</div>
@@ -593,7 +577,7 @@
 								</span>
 							{/each}
 							{#if dayHearings.length > 3}
-								<span class="chip more">+{dayHearings.length - 3} more</span>
+								<span class="chip more">{t("pages.doj.courtCalendar.more", { count: dayHearings.length - 3 })}</span>
 							{/if}
 						</div>
 					</button>
@@ -603,11 +587,11 @@
 
 		<aside class="side">
 			{#if court.state.isLoading}
-				<div class="side-empty">Loading events…</div>
+				<div class="side-empty">{t("pages.doj.courtCalendar.loading")}</div>
 			{:else if !selectedDayKey}
 				<div class="side-empty">
 					<span class="material-icons">event</span>
-					<p>Select a day to see events.</p>
+					<p>{t("pages.doj.courtCalendar.selectDay")}</p>
 				</div>
 			{:else}
 				<div class="side-head">
@@ -619,7 +603,7 @@
 					{/if}
 				</div>
 				{#if selectedDayHearings.length === 0}
-					<div class="side-empty"><p>No events on this day.</p></div>
+					<div class="side-empty"><p>{t("pages.doj.courtCalendar.noEvents")}</p></div>
 				{:else}
 					<div class="day-list">
 						{#each selectedDayHearings as h}
@@ -651,26 +635,26 @@
 	<div class="overlay" onclick={closeModal} role="presentation">
 		<div class="modal" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1">
 			<div class="modal-head">
-				<h2>{form.id == null ? "New event" : (formReadOnly ? "View event" : "Edit event")}</h2>
-				<button class="icon-btn" onclick={closeModal}><span class="material-icons">close</span></button>
+				<h2>{form.id == null ? t("pages.doj.courtCalendar.newEvent") : (formReadOnly ? t("pages.doj.courtCalendar.viewEvent") : t("pages.doj.courtCalendar.editEvent"))}</h2>
+				<button class="icon-btn" onclick={closeModal} aria-label={t("common.actions.close")}><span class="material-icons">close</span></button>
 			</div>
 
 			<div class="modal-body">
 				{#if form.id != null && form.status === "in_session"}
 					<div class="lock-banner">
 						<span class="material-icons">lock</span>
-						This hearing is in session and locked. Mark it completed when it's over.
+						{t("pages.doj.courtCalendar.lockedHearing")}
 					</div>
 				{/if}
 
 				<label class="field">
-					<span>Title *</span>
+					<span>{t("pages.doj.courtCalendar.fields.titleRequired")}</span>
 					<input type="text" bind:value={form.title} placeholder={titlePlaceholder} readonly={formReadOnly} />
 				</label>
 
 				<div class="field-row">
 					<label class="field">
-						<span>Category</span>
+						<span>{t("pages.doj.courtCalendar.fields.category")}</span>
 						<select bind:value={form.category} disabled={formReadOnly}>
 							{#each allCategories as c}
 								{#if canCreateCat(c) || c === form.category}
@@ -681,7 +665,7 @@
 					</label>
 					{#if form.category === "court"}
 						<label class="field">
-							<span>Type</span>
+							<span>{t("pages.doj.courtCalendar.fields.type")}</span>
 							<select bind:value={form.hearing_type} disabled={formReadOnly}>
 								{#each Object.keys(TYPE_LABELS) as t}
 									<option value={t}>{TYPE_LABELS[t as HearingType]}</option>
@@ -691,24 +675,24 @@
 					{/if}
 					{#if form.id != null}
 						<div class="field">
-							<span>Status</span>
+							<span>{t("pages.doj.courtCalendar.fields.status")}</span>
 							<div class="status-row">
 								<span class="status-badge status-{form.status}">{STATUS_LABELS[form.status]}</span>
 								{#if canManageStatus}
 									{#if form.status === "scheduled"}
 										<button class="mini-btn start" disabled={statusBusy} onclick={() => changeStatus("in_session")}>
-											<span class="material-icons">play_arrow</span> Start
+											<span class="material-icons">play_arrow</span> {t("pages.doj.courtCalendar.actions.start")}
 										</button>
-										<button class="mini-btn" disabled={statusBusy} onclick={() => changeStatus("adjourned")}>Adjourn</button>
-										<button class="mini-btn" disabled={statusBusy} onclick={() => changeStatus("cancelled")}>Cancel</button>
+										<button class="mini-btn" disabled={statusBusy} onclick={() => changeStatus("adjourned")}>{t("pages.doj.courtCalendar.actions.adjourn")}</button>
+										<button class="mini-btn" disabled={statusBusy} onclick={() => changeStatus("cancelled")}>{t("common.actions.cancel")}</button>
 									{:else if form.status === "in_session"}
 										<button class="mini-btn done" disabled={statusBusy}
 											onclick={() => changeStatus("completed")}>
-											<span class="material-icons">check</span> Complete &amp; remove
+											<span class="material-icons">check</span> {t("pages.doj.courtCalendar.actions.completeRemove")}
 										</button>
 									{:else if form.status === "cancelled" || form.status === "adjourned"}
 										<button class="mini-btn" disabled={statusBusy} onclick={() => changeStatus("scheduled")}>
-											<span class="material-icons">undo</span> Reopen
+											<span class="material-icons">undo</span> {t("pages.doj.courtCalendar.actions.reopen")}
 										</button>
 									{/if}
 								{/if}
@@ -719,11 +703,11 @@
 
 				<div class="field-row">
 					<label class="field">
-						<span>Date *</span>
+						<span>{t("pages.doj.courtCalendar.fields.dateRequired")}</span>
 						<input type="date" bind:value={form.date} readonly={formReadOnly} />
 					</label>
 					<label class="field">
-						<span>Time *</span>
+						<span>{t("pages.doj.courtCalendar.fields.timeRequired")}</span>
 						<div class="time-pick">
 							<button type="button" class="time-step" disabled={formReadOnly} title="-15 min" onclick={() => nudgeTime(-15)}>
 								<span class="material-icons">remove</span>
@@ -745,38 +729,38 @@
 						</div>
 					</label>
 					<label class="field">
-						<span>Duration (min)</span>
+						<span>{t("pages.doj.courtCalendar.fields.duration")}</span>
 						<input type="number" min="5" step="5" bind:value={form.duration_minutes} readonly={formReadOnly} />
 					</label>
 				</div>
 
 				<div class="field-row">
 					<label class="field">
-						<span>Location</span>
+						<span>{t("pages.doj.courtCalendar.fields.location")}</span>
 						<input type="text" bind:value={form.location} placeholder={locationPlaceholder} readonly={formReadOnly} />
 					</label>
 					{#if form.category === "court"}
 						<label class="field">
-							<span>Judge</span>
-							<input type="text" bind:value={form.judge_name} placeholder="Name" readonly={formReadOnly} />
+							<span>{t("pages.doj.courtCalendar.fields.judge")}</span>
+							<input type="text" bind:value={form.judge_name} placeholder={t("pages.doj.courtCalendar.placeholders.name")} readonly={formReadOnly} />
 						</label>
 						<label class="field">
-							<span>Case ID</span>
-							<input type="number" bind:value={form.case_id} placeholder="optional" readonly={formReadOnly} />
+							<span>{t("pages.doj.courtCalendar.fields.caseId")}</span>
+							<input type="number" bind:value={form.case_id} placeholder={t("pages.doj.courtCalendar.placeholders.optional")} readonly={formReadOnly} />
 						</label>
 					{:else}
 						<label class="field">
-							<span>Lead</span>
-							<input type="text" bind:value={form.judge_name} placeholder="Instructor / Organizer" readonly={formReadOnly} />
+							<span>{t("pages.doj.courtCalendar.fields.lead")}</span>
+							<input type="text" bind:value={form.judge_name} placeholder={t("pages.doj.courtCalendar.placeholders.lead")} readonly={formReadOnly} />
 						</label>
 					{/if}
 				</div>
 
 				{#if form.category === "court"}
 					<div class="field">
-						<span>Defendant</span>
+						<span>{t("pages.doj.courtCalendar.fields.defendant")}</span>
 						<div class="person-pick">
-							<input type="text" readonly value={form.defendant_name} placeholder="No person selected" />
+							<input type="text" readonly value={form.defendant_name} placeholder={t("pages.doj.courtCalendar.placeholders.noPerson")} />
 							{#if !formReadOnly}
 								<button class="ghost-btn" onclick={() => { searchResults = []; showDefendantSearch = true; }}>
 									<span class="material-icons">person_search</span>
@@ -792,14 +776,14 @@
 				{/if}
 
 				<div class="field">
-					<span>{form.category === "court" ? "Summoned people" : "Attendees"}</span>
+					<span>{form.category === "court" ? t("pages.doj.courtCalendar.summonedPeople") : t("pages.doj.courtCalendar.attendees")}</span>
 					<div class="attendees">
 						{#each modalAttendees as a}
 							<span class="attendee-chip role-{a.role}">
 								{a.display_name || a.citizenid}
 								<small>{ROLE_LABELS[a.role]}</small>
 								{#if !formReadOnly}
-									<button class="chip-x" onclick={() => removeAttendee(a)} aria-label="Remove">
+									<button class="chip-x" onclick={() => removeAttendee(a)} aria-label={t("common.actions.remove")}>
 										<span class="material-icons">close</span>
 									</button>
 								{/if}
@@ -813,16 +797,16 @@
 									{/each}
 								</select>
 								<button class="ghost-btn" onclick={() => { searchResults = []; showAttendeeSearch = true; }}>
-									<span class="material-icons">group_add</span> Add
+									<span class="material-icons">group_add</span> {t("common.actions.add")}
 								</button>
 							</div>
 						{:else if modalAttendees.length === 0}
-							<span class="empty-hint">No attendees</span>
+							<span class="empty-hint">{t("pages.doj.courtCalendar.noAttendees")}</span>
 						{/if}
 					</div>
 					{#if !formReadOnly && attendeeGroups.length > 0}
 						<div class="group-add">
-							<span class="group-add-label">Quick add:</span>
+							<span class="group-add-label">{t("pages.doj.courtCalendar.quickAdd")}</span>
 							{#each attendeeGroups as g}
 								<button
 									class="group-chip"
@@ -842,22 +826,22 @@
 				</div>
 
 				<label class="field">
-					<span>Notes</span>
-					<textarea rows="3" bind:value={form.notes} placeholder="Optional notes…" readonly={formReadOnly}></textarea>
+					<span>{t("pages.doj.courtCalendar.fields.notes")}</span>
+					<textarea rows="3" bind:value={form.notes} placeholder={t("pages.doj.courtCalendar.placeholders.notes")} readonly={formReadOnly}></textarea>
 				</label>
 			</div>
 
 			<div class="modal-foot">
 				{#if form.id != null && canDeleteCat(form.category)}
 					<button class="danger-btn" onclick={() => (confirmDeleteId = form.id)}>
-						<span class="material-icons">delete</span> Delete
+						<span class="material-icons">delete</span> {t("common.actions.delete")}
 					</button>
 				{/if}
 				<div class="spacer"></div>
-				<button class="ghost-btn" onclick={closeModal}>{formReadOnly ? "Close" : "Cancel"}</button>
+				<button class="ghost-btn" onclick={closeModal}>{formReadOnly ? t("common.actions.close") : t("common.actions.cancel")}</button>
 				{#if (form.id == null && canCreateCat(form.category)) || (form.id != null && !formReadOnly && canEditCat(form.category))}
 					<button class="primary-btn" onclick={saveHearing} disabled={saving}>
-						{saving ? "Saving…" : "Save"}
+						{saving ? t("common.status.saving") : t("common.actions.save")}
 					</button>
 				{/if}
 			</div>
@@ -869,10 +853,10 @@
 	<div class="overlay" onclick={() => (confirmDeleteId = null)} role="presentation">
 		<div class="confirm" onclick={(e) => e.stopPropagation()} role="dialog" tabindex="-1">
 			<span class="material-icons warn">warning</span>
-			<p>Really delete this event?</p>
+			<p>{t("pages.doj.courtCalendar.confirmDelete")}</p>
 			<div class="confirm-actions">
-				<button class="ghost-btn" onclick={() => (confirmDeleteId = null)}>Cancel</button>
-				<button class="danger-btn" onclick={confirmDelete}>Delete</button>
+				<button class="ghost-btn" onclick={() => (confirmDeleteId = null)}>{t("common.actions.cancel")}</button>
+				<button class="danger-btn" onclick={confirmDelete}>{t("common.actions.delete")}</button>
 			</div>
 		</div>
 	</div>
@@ -880,7 +864,7 @@
 
 <PersonSearchModal
 	show={showDefendantSearch}
-	title="Search defendant"
+	title={t("pages.doj.courtCalendar.searchDefendant")}
 	searchResults={searchResults}
 	onClose={() => { showDefendantSearch = false; searchResults = []; }}
 	onSearch={runSearch}
@@ -889,7 +873,7 @@
 
 <PersonSearchModal
 	show={showAttendeeSearch}
-	title="Summon person"
+	title={t("pages.doj.courtCalendar.summonPerson")}
 	searchResults={searchResults}
 	onClose={() => { showAttendeeSearch = false; searchResults = []; }}
 	onSearch={runSearch}

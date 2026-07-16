@@ -3,6 +3,7 @@
 	import { fetchNui } from "../../utils/fetchNui";
 	import { isEnvBrowser } from "../../utils/misc";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
+	import { t } from "../../lib/i18n";
 	import type { JobType } from "../../interfaces/IUser";
 
 	type JobTypeFilter = "leo" | "ems" | "all";
@@ -27,28 +28,28 @@
 	}
 
 	const TAG_COLORS = [
-		{ value: "#3b82f6", label: "Blue" },
-		{ value: "#10b981", label: "Green" },
-		{ value: "#f59e0b", label: "Amber" },
-		{ value: "#ef4444", label: "Red" },
-		{ value: "#8b5cf6", label: "Purple" },
-		{ value: "#ec4899", label: "Pink" },
-		{ value: "#06b6d4", label: "Cyan" },
-		{ value: "#f97316", label: "Orange" },
-		{ value: "#6b7280", label: "Gray" },
+		{ value: "#3b82f6", label: t("management.tags.colors.blue") },
+		{ value: "#10b981", label: t("management.tags.colors.green") },
+		{ value: "#f59e0b", label: t("management.tags.colors.amber") },
+		{ value: "#ef4444", label: t("management.tags.colors.red") },
+		{ value: "#8b5cf6", label: t("management.tags.colors.purple") },
+		{ value: "#ec4899", label: t("management.tags.colors.pink") },
+		{ value: "#06b6d4", label: t("management.tags.colors.cyan") },
+		{ value: "#f97316", label: t("management.tags.colors.orange") },
+		{ value: "#6b7280", label: t("management.tags.colors.gray") },
 	];
 
 	// Three clear targets: where the tag attaches. Officers are "Personnel" for EMS.
 	let TAG_TYPES = $derived([
-		{ value: "report", label: "Report" },
-		{ value: "officer", label: isEMS ? "Personnel" : "Officer" },
-		{ value: "citizen", label: "Citizen" },
+		{ value: "report", label: t("management.tags.types.report") },
+		{ value: "officer", label: isEMS ? t("management.tags.types.personnel") : t("management.tags.types.officer") },
+		{ value: "citizen", label: t("management.tags.types.citizen") },
 	]);
 
 	const JOB_TYPES = [
-		{ value: "all", label: "All" },
-		{ value: "leo", label: "LEO" },
-		{ value: "ems", label: "EMS" },
+		{ value: "all", label: t("management.tags.jobTypes.all") },
+		{ value: "leo", label: t("management.tags.jobTypes.leo") },
+		{ value: "ems", label: t("management.tags.jobTypes.ems") },
 	];
 
 	let tags: Tag[] = $state([]);
@@ -102,7 +103,7 @@
 		const name = newTagName.trim();
 		if (!name) return;
 		if (name.length > 25) {
-			showStatus("Tag name must be 25 characters or less", "error");
+			showStatus(t("management.tags.errors.nameLength"), "error");
 			return;
 		}
 
@@ -121,15 +122,15 @@
 				{ success: false },
 			);
 			if (result?.success) {
-				showStatus("Tag created");
+				showStatus(t("management.tags.created"));
 				newTagName = "";
 				await loadTags();
 			} else {
-				showStatus(result?.message || "Failed to create tag", "error");
+				showStatus(result?.message || t("management.tags.failedCreate"), "error");
 			}
 		} catch (error) {
 			console.error("Failed to create tag:", error);
-			showStatus("Failed to create tag", "error");
+			showStatus(t("management.tags.failedCreate"), "error");
 		} finally {
 			isSubmitting = false;
 		}
@@ -140,7 +141,7 @@
 		const name = editName.trim();
 		if (!name) return;
 		if (name.length > 25) {
-			showStatus("Tag name must be 25 characters or less", "error");
+			showStatus(t("management.tags.errors.nameLength"), "error");
 			return;
 		}
 
@@ -158,15 +159,15 @@
 				{ success: false },
 			);
 			if (result?.success) {
-				showStatus("Tag updated");
+				showStatus(t("management.tags.updated"));
 				editingTag = null;
 				await loadTags();
 			} else {
-				showStatus(result?.message || "Failed to update tag", "error");
+				showStatus(result?.message || t("management.tags.failedUpdate"), "error");
 			}
 		} catch (error) {
 			console.error("Failed to update tag:", error);
-			showStatus("Failed to update tag", "error");
+			showStatus(t("management.tags.failedUpdate"), "error");
 		} finally {
 			isSubmitting = false;
 		}
@@ -185,15 +186,15 @@
 				{ success: false },
 			);
 			if (result?.success) {
-				showStatus("Tag deleted");
+				showStatus(t("management.tags.deleted"));
 				if (editingTag?.id === tag.id) editingTag = null;
 				await loadTags();
 			} else {
-				showStatus(result?.message || "Failed to delete tag", "error");
+				showStatus(result?.message || t("management.tags.failedDelete"), "error");
 			}
 		} catch (error) {
 			console.error("Failed to delete tag:", error);
-			showStatus("Failed to delete tag", "error");
+			showStatus(t("management.tags.failedDelete"), "error");
 		}
 	}
 
@@ -246,10 +247,10 @@
 	<!-- Create new tag -->
 	<div class="new-tag-section">
 		<div class="new-tag-row">
-			<input
+	<input
 				class="tag-name-input"
 				type="text"
-				placeholder="New tag name..."
+				placeholder={t("management.tags.placeholders.name")}
 				bind:value={newTagName}
 				maxlength="25"
 				onkeydown={(e) => e.key === "Enter" && handleCreate()}
@@ -257,7 +258,7 @@
 			<input
 				class="tag-name-input"
 				type="text"
-				placeholder="Description (optional)..."
+				placeholder={t("management.tags.placeholders.description")}
 				bind:value={newTagDescription}
 				maxlength="120"
 			/>
@@ -289,7 +290,7 @@
 				onclick={handleCreate}
 				disabled={!newTagName.trim() || isSubmitting}
 			>
-				{isSubmitting ? "..." : "+ Add"}
+				{isSubmitting ? "..." : `+ ${t("common.actions.add")}`}
 			</button>
 		</div>
 	</div>
@@ -299,30 +300,30 @@
 		<input
 			class="search-input"
 			type="text"
-			placeholder="Search tags..."
+			placeholder={t("common.actions.search")}
 			bind:value={searchQuery}
 		/>
 		<div class="filter-pills">
-			<button class="filter-pill" class:active={filterType === "all"} onclick={() => (filterType = "all")}>All</button>
-			<button class="filter-pill" class:active={filterType === "report"} onclick={() => (filterType = "report")}>Report</button>
-			<button class="filter-pill" class:active={filterType === "officer"} onclick={() => (filterType = "officer")}>{isEMS ? 'Personnel' : 'Officer'}</button>
-			<button class="filter-pill" class:active={filterType === "citizen"} onclick={() => (filterType = "citizen")}>Citizen</button>
+			<button class="filter-pill" class:active={filterType === "all"} onclick={() => (filterType = "all")}>{t("common.filters.all")}</button>
+			<button class="filter-pill" class:active={filterType === "report"} onclick={() => (filterType = "report")}>{t("management.tags.types.report")}</button>
+			<button class="filter-pill" class:active={filterType === "officer"} onclick={() => (filterType = "officer")}>{isEMS ? t("management.tags.types.personnel") : t("management.tags.types.officer")}</button>
+			<button class="filter-pill" class:active={filterType === "citizen"} onclick={() => (filterType = "citizen")}>{t("management.tags.types.citizen")}</button>
 		</div>
 		{#if !isEMS}
 			<div class="filter-pills">
-				<button class="filter-pill" class:active={filterJobType === "all"} onclick={() => (filterJobType = "all")}>All</button>
-				<button class="filter-pill" class:active={filterJobType === "leo"} onclick={() => (filterJobType = "leo")}>LEO</button>
-				<button class="filter-pill" class:active={filterJobType === "ems"} onclick={() => (filterJobType = "ems")}>EMS</button>
+				<button class="filter-pill" class:active={filterJobType === "all"} onclick={() => (filterJobType = "all")}>{t("common.filters.all")}</button>
+				<button class="filter-pill" class:active={filterJobType === "leo"} onclick={() => (filterJobType = "leo")}>{t("management.tags.jobTypes.leo")}</button>
+				<button class="filter-pill" class:active={filterJobType === "ems"} onclick={() => (filterJobType = "ems")}>{t("management.tags.jobTypes.ems")}</button>
 			</div>
 		{/if}
-		<span class="tag-count">{filteredTags.length} tag{filteredTags.length !== 1 ? "s" : ""}</span>
+		<span class="tag-count">{filteredTags.length} {filteredTags.length === 1 ? t("management.tags.count.one") : t("management.tags.count.many")}</span>
 	</div>
 
 	<!-- Tags list -->
 	{#if isLoading}
 		<div class="empty-state">
 			<div class="loading-spinner"></div>
-			<p>Loading tags...</p>
+			<p>{t("management.tags.loading")}</p>
 		</div>
 	{:else}
 		<div class="tags-list">
@@ -343,7 +344,7 @@
 								<input
 									class="tag-name-input edit"
 									type="text"
-									placeholder="Description (optional)..."
+									placeholder={t("management.tags.placeholders.description")}
 									bind:value={editDescription}
 									maxlength="120"
 								/>
@@ -373,8 +374,8 @@
 									{/each}
 								</div>
 								<div class="edit-actions">
-									<button class="btn-save" onclick={handleUpdate} disabled={!editName.trim() || isSubmitting}>Save</button>
-									<button class="btn-cancel" onclick={cancelEdit}>Cancel</button>
+									<button class="btn-save" onclick={handleUpdate} disabled={!editName.trim() || isSubmitting}>{t("common.actions.save")}</button>
+									<button class="btn-cancel" onclick={cancelEdit}>{t("common.actions.cancel")}</button>
 								</div>
 							</div>
 						</div>
@@ -388,13 +389,13 @@
 							<span class="tag-type-badge job-{tag.job_type || 'all'}">{getJobTypeLabel(tag.job_type || 'all')}</span>
 						</div>
 						{#if tag.usage_count !== undefined}
-							<span class="tag-usage" title="Times used">{tag.usage_count} uses</span>
+							<span class="tag-usage" title={t("management.tags.usageTitle")}>{tag.usage_count} {t("management.tags.uses")}</span>
 						{/if}
 						<div class="tag-actions">
-							<button class="action-btn edit-btn" onclick={() => startEdit(tag)} title="Edit">
+							<button class="action-btn edit-btn" onclick={() => startEdit(tag)} title={t("common.actions.edit")}>
 								<span class="material-icons">edit</span>
 							</button>
-							<button class="action-btn delete-btn" onclick={() => handleDelete(tag)} title="Delete">
+							<button class="action-btn delete-btn" onclick={() => handleDelete(tag)} title={t("common.actions.delete")}>
 								<span class="material-icons">delete</span>
 							</button>
 						</div>
@@ -403,9 +404,9 @@
 			{:else}
 				<div class="empty-state">
 					{#if searchQuery || filterType !== "all"}
-						No tags match your filter.
+						{t("management.tags.emptyFiltered")}
 					{:else}
-						No tags created yet. Add one above.
+						{t("management.tags.empty")}
 					{/if}
 				</div>
 			{/each}

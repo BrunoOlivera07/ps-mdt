@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
+	import { t } from "../../lib/i18n";
 
 	interface Props {
 		title: string;
@@ -16,9 +17,9 @@
 		<button
 			class="add-btn"
 			onclick={onAdd}
-			title="Add {title}"
-			aria-label="Add {title}"
-		>+ Add</button>
+			title={t("reportEditor.personnel.add", { title })}
+			aria-label={t("reportEditor.personnel.add", { title })}
+		>+ {t("common.actions.add")}</button>
 	</div>
 	{@render children()}
 </div>

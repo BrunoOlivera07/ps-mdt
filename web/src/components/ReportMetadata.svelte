@@ -1,39 +1,45 @@
 <script lang="ts">
 	import { REPORT_TYPES } from "../constants";
 	import type { Report } from "../interfaces/IReportEditor";
+	import { t } from "../lib/i18n";
 
 	export let report: Report;
 	export let formatDate: (timestamp: number) => string;
 	export let formatTime: (timestamp: number) => string;
+
+	function reportTypeLabel(type: string): string {
+		const key = type.replace(/ Report$/, "").toLowerCase();
+		return t(`reportMetadata.types.${key}`);
+	}
 </script>
 
-<section class="report-metadata" aria-label="Report information">
+<section class="report-metadata" aria-label={t("reportMetadata.information")}>
 	<div class="metadata-row">
 		<div class="metadata-item">
-			<label for="report-id" class="metadata-label">Report ID</label>
+			<label for="report-id" class="metadata-label">{t("reportMetadata.reportId")}</label>
 			<span id="report-id" class="metadata-value">{report.reportId}</span>
 		</div>
 		<div class="metadata-item">
-			<label for="report-officer" class="metadata-label">Officer</label>
+			<label for="report-officer" class="metadata-label">{t("reportMetadata.officer")}</label>
 			<span id="report-officer" class="metadata-value"
 				>{report.officer}</span
 			>
 		</div>
 		<div class="metadata-item">
-			<label for="report-type" class="metadata-label">Type</label>
+			<label for="report-type" class="metadata-label">{t("reportMetadata.type")}</label>
 			<select
 				id="report-type"
 				bind:value={report.type}
 				class="type-select"
-				aria-label="Report type"
+				aria-label={t("reportMetadata.reportType")}
 			>
 				{#each REPORT_TYPES as type}
-					<option value={type}>{type}</option>
+					<option value={type}>{reportTypeLabel(type)}</option>
 				{/each}
 			</select>
 		</div>
 		<div class="metadata-item">
-			<label for="report-created" class="metadata-label">Created</label>
+			<label for="report-created" class="metadata-label">{t("reportMetadata.created")}</label>
 			<span id="report-created" class="metadata-value">
 				{formatDate(report.created)}
 				{formatTime(report.created)}
@@ -41,7 +47,7 @@
 		</div>
 		<div class="metadata-item">
 			<label for="report-updated" class="metadata-label"
-				>Last Updated</label
+				>{t("reportMetadata.lastUpdated")}</label
 			>
 			<span id="report-updated" class="metadata-value">
 				{formatDate(report.lastUpdated)}

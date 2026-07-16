@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Evidence } from "../../interfaces/IReportEditor";
+	import { t } from "../../lib/i18n";
 
 	interface EvidenceWithImages extends Omit<Evidence, "images"> {
     	images: string[];
@@ -38,39 +39,43 @@
 		"Other",
 	];
 
+	function getEvidenceTypeLabel(type: string) {
+		return t(`reportEditor.evidence.types.${type.toLowerCase()}`);
+	}
+
 		function getSerialPlaceholder(type: string) {
 		switch (type) {
-			case "Physical": return "Item ID / Description";
-			case "Digital": return "File Hash / ID";
-			case "Document": return "Document Number";
-			case "Weapon": return "Weapon Serial Number";
-			case "Drug": return "Batch / Substance ID";
-			case "Vehicle": return "VIN / License Plate";
-			default: return "Reference ID";
+			case "Physical": return t("reportEditor.evidence.serial.physical");
+			case "Digital": return t("reportEditor.evidence.serial.digital");
+			case "Document": return t("reportEditor.evidence.serial.document");
+			case "Weapon": return t("reportEditor.evidence.serial.weapon");
+			case "Drug": return t("reportEditor.evidence.serial.drug");
+			case "Vehicle": return t("reportEditor.evidence.serial.vehicle");
+			default: return t("reportEditor.evidence.serial.other");
 		}
 	}
 
 	function getNotesPlaceholder(type: string) {
 		switch (type) {
-			case "Physical": return "Describe the physical evidence...";
-			case "Digital": return "Describe the digital evidence...";
-			case "Document": return "Document details...";
-			case "Weapon": return "Weapon condition, caliber, etc...";
-			case "Drug": return "Type, quantity, packaging...";
-			case "Vehicle": return "Vehicle condition, location...";
-			default: return "Additional notes...";
+			case "Physical": return t("reportEditor.evidence.notes.physical");
+			case "Digital": return t("reportEditor.evidence.notes.digital");
+			case "Document": return t("reportEditor.evidence.notes.document");
+			case "Weapon": return t("reportEditor.evidence.notes.weapon");
+			case "Drug": return t("reportEditor.evidence.notes.drug");
+			case "Vehicle": return t("reportEditor.evidence.notes.vehicle");
+			default: return t("reportEditor.evidence.notes.other");
 		}
 	}
 	
 	function getTitlePlaceholder(type: string) {
 		switch (type) {
-			case "Physical": return "Item name (e.g. Blood-stained shirt)";
-			case "Digital": return "File name (e.g. chat_log.txt)";
-			case "Document": return "Document title (e.g. Contract)";
-			case "Weapon": return "Weapon name + Serial Number (e.g. Glock 17)";
-			case "Drug": return "Substance name (e.g. Cocaine)";
-			case "Vehicle": return "Vehicle (e.g. Sultan RS)";
-			default: return "Evidence title";
+			case "Physical": return t("reportEditor.evidence.titlePlaceholders.physical");
+			case "Digital": return t("reportEditor.evidence.titlePlaceholders.digital");
+			case "Document": return t("reportEditor.evidence.titlePlaceholders.document");
+			case "Weapon": return t("reportEditor.evidence.titlePlaceholders.weapon");
+			case "Drug": return t("reportEditor.evidence.titlePlaceholders.drug");
+			case "Vehicle": return t("reportEditor.evidence.titlePlaceholders.vehicle");
+			default: return t("reportEditor.evidence.titlePlaceholders.other");
 		}
 	}
 
@@ -130,8 +135,8 @@
 	>
 		<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
 			<div class="modal-header">
-				<h3>Add Image</h3>
-				<button class="close-btn" aria-label="Close" onclick={() => (addImgOpen = false)}>
+				<h3>{t("reportEditor.evidence.addImage")}</h3>
+				<button class="close-btn" aria-label={t("common.actions.close")} onclick={() => (addImgOpen = false)}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
 					</svg>
@@ -139,7 +144,7 @@
 			</div>
 			<div class="modal-body form-body">
 				<div class="form-group">
-					<span class="field-label">Image URL</span>
+					<span class="field-label">{t("reportEditor.evidence.imageUrl")}</span>
 					<input
 						class="form-input"
 						type="url"
@@ -151,14 +156,14 @@
 							<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 								<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
 							</svg>
-							Use <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> to make sure your links persist forever.
+							{t("reportEditor.evidence.persistHintBefore")} <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> {t("reportEditor.evidence.persistHintAfter")}
 						</span>
 					{/if}
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button class="cancel-btn" onclick={() => (addImgOpen = false)}>Cancel</button>
-				<button class="primary-btn" onclick={confirmAddImage}>Add Image</button>
+				<button class="cancel-btn" onclick={() => (addImgOpen = false)}>{t("common.actions.cancel")}</button>
+				<button class="primary-btn" onclick={confirmAddImage}>{t("reportEditor.evidence.addImage")}</button>
 			</div>
 		</div>
 	</div>
@@ -174,15 +179,15 @@
 	>
 		<div class="modal lightbox-modal" role="dialog" aria-modal="true" tabindex="-1">
 			<div class="modal-header">
-				<h3>Evidence Image</h3>
-				<button class="close-btn" aria-label="Close" onclick={() => (lightboxOpen = false)}>
+				<h3>{t("reportEditor.evidence.evidenceImage")}</h3>
+				<button class="close-btn" aria-label={t("common.actions.close")} onclick={() => (lightboxOpen = false)}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
 					</svg>
 				</button>
 			</div>
 			<div class="modal-body lightbox-body">
-				<img class="lightbox-img" src={lightboxUrl} alt="Evidence" />
+				<img class="lightbox-img" src={lightboxUrl} alt={t("reportEditor.evidence.imageAlt")} />
 			</div>
 		</div>
 	</div>
@@ -190,8 +195,8 @@
 
 <div class="metadata-section">
 	<div class="section-header">
-		<span class="section-label">EVIDENCE</span>
-		<button class="add-btn" onclick={onAddEvidence} aria-label="Add Evidence">+ Add</button>
+		<span class="section-label">{t("reportEditor.evidence.title")}</span>
+		<button class="add-btn" onclick={onAddEvidence} aria-label={t("reportEditor.evidence.addEvidence")}>+ {t("common.actions.add")}</button>
 	</div>
 
 	{#each evidence as item}
@@ -209,14 +214,14 @@
 						{#if onNavigateToCases}
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<span class="case-badge nav-link" role="button" tabindex="-1" onclick={onNavigateToCases}>
-								Case #{item.caseId}
+								{t("reportEditor.evidence.caseNumber", { id: item.caseId })}
 							</span>
 						{:else}
-							<span class="case-badge">Case #{item.caseId}</span>
+							<span class="case-badge">{t("reportEditor.evidence.caseNumber", { id: item.caseId })}</span>
 						{/if}
 					{/if}
 				</div>
-				<button class="remove-btn" onclick={() => onRemoveEvidence(item.id)} aria-label="Remove evidence">
+				<button class="remove-btn" onclick={() => onRemoveEvidence(item.id)} aria-label={t("reportEditor.evidence.removeEvidence")}>
 					<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
 						<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
 					</svg>
@@ -231,7 +236,7 @@
 						class="field-select"
 					>
 						{#each evidenceTypes as type}
-							<option value={type}>{type}</option>
+							<option value={type}>{getEvidenceTypeLabel(type)}</option>
 						{/each}
 					</select>
 					<input
@@ -253,11 +258,11 @@
 			<div class="card-actions">
 				<div class="image-actions">
 					<button class="action-btn" onclick={() => openAddImage(item.id)}>
-						Add Image
+						{t("reportEditor.evidence.addImage")}
 					</button>
 					{#if item.images.length > 0}
 						<span class="image-count">
-							{item.images.length} image{item.images.length > 1 ? "s" : ""}
+							{t(item.images.length === 1 ? "reportEditor.evidence.imageCountOne" : "reportEditor.evidence.imageCountMany", { count: item.images.length })}
 						</span>
 					{/if}
 				</div>
@@ -274,11 +279,11 @@
 							onclick={() => openLightbox(image)}
 							onkeydown={(e) => e.key === "Enter" && openLightbox(image)}
 						>
-							<img src={image} alt={"Evidence"} class="evidence-image" />
+							<img src={image} alt={t("reportEditor.evidence.imageAlt")} class="evidence-image" />
 							<button
 								class="image-remove-btn"
 								onclick={(e) => { e.stopPropagation(); onRemoveImage(item.id, imageIndex); }}
-								aria-label="Remove image"
+								aria-label={t("reportEditor.evidence.removeImage")}
 							>
 								<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
 									<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />

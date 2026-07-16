@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from "svelte";
 	import { isEnvBrowser } from "../utils/misc";
 	import { GetParentResourceName } from "../utils/fivem";
+	import { t } from "../lib/i18n";
 
 	let visible = $state(false);
 	let zoomLevel = $state(1.0);
@@ -24,7 +25,7 @@
 		if (action === "showMugshotCamera") {
 			visible = true;
 			zoomLevel = 1.0;
-			citizenName = data?.name || "SUBJECT";
+			citizenName = data?.name || t("management.colors.labels.citizen");
 			flashActive = false;
 		} else if (action === "hideMugshotCamera") {
 			visible = false;
@@ -127,7 +128,7 @@
 				<span class="timestamp">{timestamp}</span>
 			</div>
 			<div class="status-center">
-				<span class="subject-label">MUGSHOT - {citizenName}</span>
+				<span class="subject-label">{t("management.mugshot.title")} - {citizenName}</span>
 			</div>
 			<div class="status-right">
 				<span class="dept-label">LSPD</span>
@@ -137,39 +138,39 @@
 		<!-- Bottom info bar -->
 		<div class="status-bar bottom">
 			<div class="status-left">
-				<span class="cam-spec">FULL HD</span>
-				<span class="cam-spec">PNG</span>
-				<span class="cam-spec">ISO 200</span>
+				<span class="cam-spec">{t("management.mugshot.specs.fullHd")}</span>
+				<span class="cam-spec">{t("management.mugshot.specs.png")}</span>
+				<span class="cam-spec">{t("management.mugshot.specs.iso200")}</span>
 			</div>
 			<div class="status-center">
 				<div class="zoom-controls">
-					<button class="zoom-btn" onclick={zoomOut} disabled={zoomLevel <= 1.0}>
+					<button class="zoom-btn" onclick={zoomOut} disabled={zoomLevel <= 1.0} aria-label={t("management.mugshot.zoomOut")}>
 						<span class="material-icons">remove</span>
 					</button>
 					<span class="zoom-display">
 						<span class="material-icons zoom-icon">search</span>
-						{zoomDisplay} ZOOM
+						{zoomDisplay} {t("management.mugshot.zoom")}
 					</span>
-					<button class="zoom-btn" onclick={zoomIn} disabled={zoomLevel >= 5.0}>
+					<button class="zoom-btn" onclick={zoomIn} disabled={zoomLevel >= 5.0} aria-label={t("management.mugshot.zoomIn")}>
 						<span class="material-icons">add</span>
 					</button>
 				</div>
 			</div>
 			<div class="status-right">
-				<span class="hint">SCROLL to zoom</span>
+				<span class="hint">{t("management.mugshot.scrollToZoom")}</span>
 			</div>
 		</div>
 
 		<!-- Action buttons -->
 		<div class="action-bar">
-			<button class="action-btn capture-btn" onclick={capture}>
+			<button class="action-btn capture-btn" onclick={capture} aria-label={t("management.mugshot.capture")}>
 				<span class="shutter-ring">
 					<span class="shutter-inner"></span>
 				</span>
 			</button>
 			<button class="action-btn cancel-btn" onclick={cancel}>
 				<span class="material-icons">close</span>
-				<span>ESC</span>
+				<span>{t("management.mugshot.esc")}</span>
 			</button>
 		</div>
 

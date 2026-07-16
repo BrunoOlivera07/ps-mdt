@@ -3,6 +3,7 @@
 	import PersonnelSection from "./PersonnelSection.svelte";
 	import PersonnelCard from "./PersonnelCard.svelte";
 	import { OFFICER_TYPES } from "../../constants";
+	import { t } from "../../lib/i18n";
 
 	interface Props {
 		officers: Officer[];
@@ -12,7 +13,7 @@
 		title?: string;
 	}
 
-	let { officers, onAdd, onRemove, onUpdate, title = "Officers" }: Props = $props();
+	let { officers, onAdd, onRemove, onUpdate, title = t("reportEditor.involved.officers") }: Props = $props();
 
 	function updateOfficer(id: string, field: string, value: any) {
 		const officer = officers.find((o) => o.id === id);
@@ -28,7 +29,7 @@
 		<PersonnelCard
 			id={officer.id}
 			fullName={officer.fullName}
-			secondaryInfo={`Badge: ${officer.badgeId}`}
+			secondaryInfo={`${t("reportEditor.badge")}: ${officer.badgeId}`}
 			notes={officer.notes}
 			type={officer.type}
 			typeOptions={OFFICER_TYPES}

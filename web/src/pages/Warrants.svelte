@@ -9,6 +9,7 @@
 	import type { createTabService } from "../services/tabService.svelte";
 	import type { AuthService } from "../services/authService.svelte";
 	import { globalNotifications } from "../services/notificationService.svelte";
+	import { t } from "../lib/i18n";
 
 	let { tabService, authService }: {
 		tabService: ReturnType<typeof createTabService>;
@@ -47,24 +48,24 @@
 	});
 
 	function formatExpiry(value: string): string {
-		return formatDate(value, "Unknown");
+		return formatDate(value, t("pages.warrants.unknown"));
 	}
 
 	type ExpiryLevel = "expired" | "critical" | "soon" | "normal" | "unknown";
 
 	function expiryInfo(value: string): { label: string; level: ExpiryLevel } {
-		if (!value) return { label: "Unknown", level: "unknown" };
+		if (!value) return { label: t("pages.warrants.unknown"), level: "unknown" };
 		const date = new Date(value);
 		if (Number.isNaN(date.getTime())) return { label: value, level: "unknown" };
 		const diffMs = date.getTime() - Date.now();
-		if (diffMs <= 0) return { label: "Expired", level: "expired" };
+		if (diffMs <= 0) return { label: t("pages.warrants.expired"), level: "expired" };
 		const hours = diffMs / 3600000;
 		if (hours < 24) {
 			const h = Math.max(1, Math.round(hours));
-			return { label: `in ${h}h`, level: "critical" };
+			return { label: t(h === 1 ? "pages.warrants.inHourOne" : "pages.warrants.inHours", { count: h }), level: "critical" };
 		}
 		const days = Math.round(hours / 24);
-		return { label: `in ${days}d`, level: days <= 3 ? "soon" : "normal" };
+		return { label: t(days === 1 ? "pages.warrants.inDayOne" : "pages.warrants.inDays", { count: days }), level: days <= 3 ? "soon" : "normal" };
 	}
 
 	async function handleCloseWarrant(warrant: Warrant) {
@@ -79,12 +80,12 @@
 				warrants = warrants.filter(
 					(w) => !(w.reportid === warrant.reportid && w.citizenid === warrant.citizenid),
 				);
-				globalNotifications.success(`Warrant closed for ${warrant.name}`);
+				globalNotifications.success(t("pages.warrants.closedFor", { name: warrant.name }));
 			} else {
-				globalNotifications.error(result.error || "Failed to close warrant");
+				globalNotifications.error(result.error || t("pages.warrants.closeFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to close warrant");
+			globalNotifications.error(t("pages.warrants.closeFailed"));
 		}
 		confirmingKey = null;
 		isLoading = false;
@@ -117,7 +118,7 @@
 			);
 			warrants = Array.isArray(response) ? response : [];
 		} catch (error) {
-			globalNotifications.error("Failed to load warrants");
+			globalNotifications.error(t("pages.warrants.loadFailed"));
 			warrants = [];
 		} finally {
 			isLoading = false;
@@ -149,37 +150,37 @@
 	<div class="topbar">
 		<input
 			type="text"
-			placeholder="Search by name, ID, or report..."
+			placeholder={t("pages.warrants.searchPlaceholder")}
 			bind:value={searchQuery}
 			class="search-input"
 		/>
 		<div class="topbar-actions">
-			<span class="result-count">{filteredWarrants.length} warrant{filteredWarrants.length !== 1 ? "s" : ""}</span>
+			<span class="result-count">{t(filteredWarrants.length === 1 ? "pages.warrants.countOne" : "pages.warrants.countMany", { count: filteredWarrants.length })}</span>
 			<button
 				class="btn-secondary"
 				onclick={loadWarrants}
 				disabled={isLoading}
 			>
-				{isLoading ? "Loading..." : "Refresh"}
+				{isLoading ? t("common.status.loading") : t("pages.bodycams.refresh")}
 			</button>
 			<button
 				class="btn-primary"
 				onclick={createWarrantReport}
 			>
-				New Warrant
+				{t("pages.warrants.newWarrant")}
 			</button>
 		</div>
 	</div>
 
 	<div class="list-panel">
 		<div class="table-header">
-			<span>Name</span>
-			<span>Citizen ID</span>
-			<span>Report</span>
-			<span>Felonies</span>
-			<span>Misdemeanors</span>
-			<span>Infractions</span>
-			<span>Expires</span>
+			<span>{t("pages.warrants.name")}</span>
+			<span>{t("pages.warrants.citizenId")}</span>
+			<span>{t("pages.warrants.report")}</span>
+			<span>{t("pages.warrants.felonies")}</span>
+			<span>{t("pages.warrants.misdemeanors")}</span>
+			<span>{t("pages.warrants.infractions")}</span>
+			<span>{t("pages.warrants.expires")}</span>
 			<span></span>
 		</div>
 
@@ -187,15 +188,15 @@
 			{#if isLoading && warrants.length === 0}
 				<div class="empty-state">
 					<div class="loading-spinner"></div>
-					<p>Loading warrants...</p>
+					<p>{t("pages.warrants.loading")}</p>
 				</div>
 			{:else if filteredWarrants.length === 0}
 				<div class="empty-state">
-					<p class="empty-title">No Warrants Found</p>
+					<p class="empty-title">{t("pages.warrants.noneFound")}</p>
 					<p class="empty-sub">
 						{searchQuery
-							? "No warrants match your search criteria."
-							: "No active warrants available."}
+							? t("pages.warrants.noSearchMatches")
+							: t("pages.warrants.noneActive")}
 					</p>
 				</div>
 			{:else}
@@ -236,16 +237,16 @@
 						<span class="cell-action">
 							{#if canClose}
 								{#if confirmingKey === warrantKey(warrant)}
-									<button class="icon-btn confirm" title="Confirm close" aria-label="Confirm close warrant" disabled={isLoading}
+									<button class="icon-btn confirm" title={t("pages.warrants.confirmClose")} aria-label={t("pages.warrants.confirmClose")} disabled={isLoading}
 										onclick={(e) => { e.stopPropagation(); handleCloseWarrant(warrant); }}>
 										<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 									</button>
-									<button class="icon-btn cancel" title="Cancel" aria-label="Cancel" disabled={isLoading}
+									<button class="icon-btn cancel" title={t("common.actions.cancel")} aria-label={t("common.actions.cancel")} disabled={isLoading}
 										onclick={(e) => { e.stopPropagation(); confirmingKey = null; }}>
 										<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 									</button>
 								{:else}
-									<button class="icon-btn close" title="Close warrant" aria-label="Close warrant"
+									<button class="icon-btn close" title={t("pages.warrants.closeWarrant")} aria-label={t("pages.warrants.closeWarrant")}
 										onclick={(e) => { e.stopPropagation(); confirmingKey = warrantKey(warrant); }}>
 										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
 									</button>

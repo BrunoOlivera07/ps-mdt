@@ -3,6 +3,7 @@
 	import { fetchNui } from "../../utils/fetchNui";
 	import { isEnvBrowser } from "../../utils/misc";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
+	import { t } from "../../lib/i18n";
 
 	// ── Types ──────────────────────────────────────────────────
 
@@ -45,10 +46,10 @@
 	// ── Category state ─────────────────────────────────────────
 
 	const DEFAULT_CATEGORIES: BulletinCategory[] = [
-		{ value: 'announcement', label: 'Announcements', icon: 'campaign',     color: '#3B82F6', is_default: true },
-		{ value: 'operations',   label: 'Operations',    icon: 'local_police', color: '#8B5CF6', is_default: true },
-		{ value: 'training',     label: 'Training',      icon: 'school',       color: '#10B981', is_default: true },
-		{ value: 'general',      label: 'General',       icon: 'forum',        color: '#6B7280', is_default: true },
+		{ value: 'announcement', label: t("management.bulletins.defaultCategories.announcements"), icon: 'campaign',     color: '#3B82F6', is_default: true },
+		{ value: 'operations',   label: t("management.bulletins.defaultCategories.operations"),    icon: 'local_police', color: '#8B5CF6', is_default: true },
+		{ value: 'training',     label: t("management.bulletins.defaultCategories.training"),      icon: 'school',       color: '#10B981', is_default: true },
+		{ value: 'general',      label: t("management.bulletins.defaultCategories.general"),       icon: 'forum',        color: '#6B7280', is_default: true },
 	];
 
 	const ICON_SUGGESTIONS = [
@@ -217,8 +218,8 @@
 			const result = await fetchNui<{ success: boolean; message?: string }>(
 				CB.CREATE_BULLETIN, { content: fullContent }, { success: false }
 			);
-			if (result?.success) { showStatus('Bulletin posted'); newTitle = ''; newContent = ''; await loadBulletins(); }
-			else showStatus(result?.message || 'Failed to post bulletin', 'error');
+			if (result?.success) { showStatus(t("management.bulletins.posted")); newTitle = ''; newContent = ''; await loadBulletins(); }
+			else showStatus(result?.message || t("management.bulletins.failedPost"), 'error');
 		} finally { isSubmitting = false; }
 	}
 
@@ -227,9 +228,9 @@
 		if (isEnvBrowser()) { bulletins = bulletins.filter(b => b.id !== id); return; }
 		try {
 			const result = await fetchNui<{ success: boolean; message?: string }>(CB.DELETE_BULLETIN, { id }, { success: false });
-			if (result?.success) { showStatus('Bulletin deleted'); await loadBulletins(); }
-			else showStatus(result?.message || 'Failed to delete bulletin', 'error');
-		} catch { showStatus('Failed to delete bulletin', 'error'); }
+			if (result?.success) { showStatus(t("management.bulletins.deleted")); await loadBulletins(); }
+			else showStatus(result?.message || t("management.bulletins.failedDelete"), 'error');
+		} catch { showStatus(t("management.bulletins.failedDelete"), 'error'); }
 	}
 
 	// ── Categories ─────────────────────────────────────────────
@@ -244,14 +245,14 @@
 	}
 
 	async function saveCategory(cat: BulletinCategory) {
-		if (isEnvBrowser()) { showStatus(`"${cat.label}" saved`); return; }
+		if (isEnvBrowser()) { showStatus(`"${cat.label}" ${t("management.bulletins.saved")}`); return; }
 		savingCat = cat.value;
 		try {
 			const result = await fetchNui<{ success: boolean; message?: string }>(
 				CB.UPDATE_CATEGORY, { value: cat.value, label: cat.label, icon: cat.icon, color: cat.color }, { success: false }
 			);
-			if (result?.success) showStatus(`"${cat.label}" updated`);
-			else showStatus(result?.message || 'Failed to save', 'error');
+			if (result?.success) showStatus(`"${cat.label}" ${t("management.bulletins.updated")}`);
+			else showStatus(result?.message || t("management.bulletins.failedSave"), 'error');
 		} finally { savingCat = null; }
 	}
 
@@ -259,35 +260,35 @@
 		const label = newCatLabel.trim();
 		if (!label) return;
 		const value = slugify(label);
-		if (!value)                            { showStatus('Label needs at least one letter or number', 'error'); return; }
-		if (categories.find(c => c.value === value)) { showStatus(`Key "${value}" already exists`, 'error'); return; }
-		if (categories.length >= 20)           { showStatus('Maximum of 20 categories reached', 'error'); return; }
+		if (!value)                            { showStatus(t("management.bulletins.labelInvalid"), 'error'); return; }
+		if (categories.find(c => c.value === value)) { showStatus(t("management.bulletins.keyExists").replace("{key}", value), 'error'); return; }
+		if (categories.length >= 20)           { showStatus(t("management.bulletins.maxCategories"), 'error'); return; }
 
 		if (isEnvBrowser()) {
 			categories = [...categories, { value, label, icon: newCatIcon, color: newCatColor, is_default: false }];
-			showStatus(`"${label}" added`); resetAddForm(); return;
+			showStatus(`"${label}" ${t("management.bulletins.added")}`); resetAddForm(); return;
 		}
 
 		addingCat = true;
 		try {
 			const payload = { label, icon: newCatIcon, color: newCatColor };
 			const result  = await fetchNui<{ success: boolean; message?: string }>(CB.ADD_CATEGORY, payload, { success: false });
-			if (result?.success) { showStatus(`"${label}" added`); resetAddForm(); await loadCategories(); }
-			else showStatus(result?.message || 'Failed to add category', 'error');
-		} catch { showStatus('Failed to add category', 'error'); }
+			if (result?.success) { showStatus(`"${label}" ${t("management.bulletins.added")}`); resetAddForm(); await loadCategories(); }
+			else showStatus(result?.message || t("management.bulletins.failedAddCategory"), 'error');
+		} catch { showStatus(t("management.bulletins.failedAddCategory"), 'error'); }
 		finally { addingCat = false; }
 	}
 
 	async function removeCategory(value: string) {
 		const cat = categories.find(c => c.value === value);
 		if (!cat) return;
-		if (categories.length <= 1) { showStatus('Cannot remove the last category', 'error'); return; }
-		if (isEnvBrowser()) { categories = categories.filter(c => c.value !== value); showStatus(`"${cat.label}" removed`); return; }
+		if (categories.length <= 1) { showStatus(t("management.bulletins.cannotRemoveLast"), 'error'); return; }
+		if (isEnvBrowser()) { categories = categories.filter(c => c.value !== value); showStatus(`"${cat.label}" ${t("management.bulletins.removed")}`); return; }
 		removingCat = value;
 		try {
 			const result = await fetchNui<{ success: boolean; message?: string }>(CB.REMOVE_CATEGORY, { value }, { success: false });
-			if (result?.success) { showStatus(`"${cat.label}" removed`); await loadCategories(); }
-			else showStatus(result?.message || 'Failed to remove', 'error');
+			if (result?.success) { showStatus(`"${cat.label}" ${t("management.bulletins.removed")}`); await loadCategories(); }
+			else showStatus(result?.message || t("management.bulletins.failedRemove"), 'error');
 		} finally { removingCat = null; }
 	}
 
@@ -302,23 +303,23 @@
 	<!-- ════════════════════════ MotD ═══════════════════════════ -->
 	<div class="section">
 		<div class="section-title-row">
-			<span class="section-title">Message of the Day</span>
+			<span class="section-title">{t("management.bulletins.motd")}</span>
 		</div>
 
 		<div class="new-bulletin">
 			<div class="bulletin-fields">
 				<input class="bulletin-title-input" type="text"
-					placeholder="Title (e.g. TRAINING, BOLO REMINDER)" bind:value={newTitle} />
-				<textarea class="bulletin-input" placeholder="Write a bulletin..." rows="2" bind:value={newContent}></textarea>
+					placeholder={t("management.bulletins.titlePlaceholder")} bind:value={newTitle} />
+				<textarea class="bulletin-input" placeholder={t("management.bulletins.contentPlaceholder")} rows="2" bind:value={newContent}></textarea>
 			</div>
 			<button class="btn-post" onclick={handleSubmit}
 				disabled={(!newContent.trim() && !newTitle.trim()) || isSubmitting}>
-				{isSubmitting ? 'Posting...' : 'Post'}
+				{isSubmitting ? t("management.bulletins.posting") : t("management.bulletins.post")}
 			</button>
 		</div>
 
 		{#if isLoading}
-			<div class="empty-state"><div class="loading-spinner"></div><p>Loading bulletins...</p></div>
+			<div class="empty-state"><div class="loading-spinner"></div><p>{t("management.bulletins.loading")}</p></div>
 		{:else}
 			<div class="bulletins-list">
 				{#each bulletins as bulletin (bulletin.id || bulletin.content)}
@@ -333,7 +334,7 @@
 							{/if}
 						</div>
 						{#if bulletin.id}
-							<button class="delete-btn" onclick={() => deleteBulletin(bulletin.id)} aria-label="Delete">
+							<button class="delete-btn" onclick={() => deleteBulletin(bulletin.id)} aria-label={t("common.actions.delete")}>
 								<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 									<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
 								</svg>
@@ -341,7 +342,7 @@
 						{/if}
 					</div>
 				{:else}
-					<div class="empty-state">No bulletins posted.</div>
+					<div class="empty-state">{t("management.bulletins.empty")}</div>
 				{/each}
 			</div>
 		{/if}
@@ -351,29 +352,30 @@
 	<div class="section">
 		<div class="section-title-row">
 			<span class="section-title">
-				Bulletin Board Categories
+				{t("management.bulletins.categoriesTitle")}
 				<span class="cat-count-badge">{categories.length}/20</span>
 			</span>
 			<button class="btn-add-cat"
 				onclick={() => { showAddForm = !showAddForm; showIconPicker = null; }}
 				disabled={categories.length >= 20}
-				title={categories.length >= 20 ? 'Maximum categories reached' : 'Add new category'}>
+				title={categories.length >= 20 ? t("management.bulletins.maxCategories") : t("management.bulletins.addCategory")}>
 				<span class="material-icons" style="font-size:13px;">add</span>
-				Add Category
+				{t("management.bulletins.addCategory")}
 			</button>
 		</div>
 
 		<p class="section-hint">
-			Drag <span class="hint-icon">⠿</span> to reorder &nbsp;·&nbsp; Click icon circle to change icon &nbsp;·&nbsp;
-			Click color dot to pick color &nbsp;·&nbsp;
-			<a href="https://fonts.google.com/icons" target="_blank" rel="noreferrer">Icon reference</a>
+			{t("management.bulletins.hintDrag")} <span class="hint-icon">⠿</span> {t("management.bulletins.hintReorder")} &nbsp;·&nbsp;
+			{t("management.bulletins.hintIcon")} &nbsp;·&nbsp;
+			{t("management.bulletins.hintColor")} &nbsp;·&nbsp;
+			<a href="https://fonts.google.com/icons" target="_blank" rel="noreferrer">{t("management.bulletins.iconReference")}</a>
 		</p>
 
 		<!-- ── Add Form ── -->
 		{#if showAddForm}
 			<div class="add-cat-form">
 				<div class="add-cat-row">
-					<div class="add-color-wrap" title="Pick color">
+					<div class="add-color-wrap" title={t("management.bulletins.categoryColor")}>
 						<input type="color" bind:value={newCatColor} class="color-input-hidden" id="new-cat-color" />
 						<label for="new-cat-color" class="color-swatch-lg" style="background:{newCatColor};">
 							<span class="material-icons" style="font-size:11px;color:rgba(255,255,255,0.65);">colorize</span>
@@ -382,13 +384,13 @@
 					<div class="add-icon-preview" style="border-color:{newCatColor}55;color:{newCatColor};">
 						<span class="material-icons">{newCatIcon || 'help_outline'}</span>
 					</div>
-					<input class="cat-input cat-input-mono add-icon-input" type="text"
-						placeholder="icon name..." bind:value={newCatIcon} maxlength="48" />
+						<input class="cat-input cat-input-mono add-icon-input" type="text"
+						placeholder={t("management.bulletins.iconNamePlaceholder")} bind:value={newCatIcon} maxlength="48" />
 					<input class="cat-input add-label-input" type="text"
-						placeholder="Category label (e.g. Warrants)" bind:value={newCatLabel} maxlength="48"
+						placeholder={t("management.bulletins.categoryLabelPlaceholder")} bind:value={newCatLabel} maxlength="48"
 						onkeydown={(e) => e.key === 'Enter' && addCategory()} />
 					{#if newCatLabel.trim()}
-						<span class="key-preview" title="Will be saved as this key">{slugify(newCatLabel)}</span>
+						<span class="key-preview" title={t("management.bulletins.savedAsKey")}>{slugify(newCatLabel)}</span>
 					{/if}
 				</div>
 
@@ -402,12 +404,12 @@
 				</div>
 
 				<div class="add-cat-actions">
-					<button class="btn-cancel-add" onclick={resetAddForm}>Cancel</button>
+					<button class="btn-cancel-add" onclick={resetAddForm}>{t("common.actions.cancel")}</button>
 					<button class="btn-confirm-add" onclick={addCategory}
 						disabled={addingCat || !newCatLabel.trim()}>
 						{#if addingCat}<div class="spinner-xs"></div>
 						{:else}<span class="material-icons" style="font-size:12px;">add</span>{/if}
-						Save
+						{t("common.actions.save")}
 					</button>
 				</div>
 			</div>
@@ -416,7 +418,7 @@
 		<!-- ── Category List ── -->
 		{#if categoriesLoading}
 			<div class="empty-state" style="min-height:80px;">
-				<div class="loading-spinner"></div><p>Loading categories...</p>
+				<div class="loading-spinner"></div><p>{t("management.bulletins.loadingCategories")}</p>
 			</div>
 		{:else}
 			<div class="categories-list" class:no-select={isDragging}>
@@ -428,12 +430,12 @@
 						data-cat-idx={idx}
 					>
 						<!-- Mouse-drag handle -->
-						<div class="drag-handle" title="Drag to reorder"
-							role="button" tabindex="-1" aria-label="Drag to reorder"
+						<div class="drag-handle" title={t("management.bulletins.dragToReorder")}
+							role="button" tabindex="-1" aria-label={t("management.bulletins.dragToReorder")}
 							onmousedown={(e) => onHandleMouseDown(e, idx)}>⠿</div>
 
 						<!-- Color picker -->
-						<div class="color-wrap" title="Category color">
+						<div class="color-wrap" title={t("management.bulletins.categoryColor")}>
 							<input type="color" bind:value={cat.color} class="color-input-hidden" id="color-{cat.value}" />
 							<label for="color-{cat.value}" class="color-dot" style="background:{cat.color};"></label>
 						</div>
@@ -442,34 +444,34 @@
 						<button class="cat-icon-circle"
 							style="border-color:{cat.color}50;color:{cat.color};"
 							onclick={() => showIconPicker = showIconPicker === cat.value ? null : cat.value}
-							title="Click to change icon">
+							title={t("management.bulletins.changeIcon")}>
 							<span class="material-icons">{cat.icon || 'help_outline'}</span>
 						</button>
 
 						<!-- Label field -->
 						<div class="cat-field">
-							<span class="cat-field-label">Label</span>
-							<input class="cat-input" type="text" placeholder="Category label..."
+							<span class="cat-field-label">{t("management.bulletins.label")}</span>
+							<input class="cat-input" type="text" placeholder={t("management.bulletins.categoryLabelPlaceholder")}
 								bind:value={cat.label} maxlength="48" />
 						</div>
 
 						<!-- Icon name field -->
 						<div class="cat-field cat-field-icon">
-							<span class="cat-field-label">Icon</span>
+							<span class="cat-field-label">{t("management.bulletins.icon")}</span>
 							<input class="cat-input cat-input-mono" type="text"
-								placeholder="icon name..." bind:value={cat.icon} maxlength="48" />
+								placeholder={t("management.bulletins.iconNamePlaceholder")} bind:value={cat.icon} maxlength="48" />
 						</div>
 
 						<!-- DB key badge -->
-						<div class="cat-value-badge" title="Database key (read-only)">{cat.value}</div>
+						<div class="cat-value-badge" title={t("management.bulletins.databaseKey")}>{cat.value}</div>
 
 						{#if cat.is_default}
-							<span class="default-badge" title="Built-in default">default</span>
+							<span class="default-badge" title={t("management.bulletins.builtInDefault")}>{t("management.bulletins.default")}</span>
 						{/if}
 
 						<!-- Save -->
 						<button class="btn-row-icon btn-save" onclick={() => saveCategory(cat)}
-							disabled={savingCat === cat.value} title="Save changes">
+							disabled={savingCat === cat.value} title={t("common.actions.save")}>
 							{#if savingCat === cat.value}
 								<div class="spinner-xs"></div>
 							{:else}
@@ -480,7 +482,7 @@
 						<!-- Remove -->
 						<button class="btn-row-icon btn-remove" onclick={() => removeCategory(cat.value)}
 							disabled={removingCat === cat.value || categories.length <= 1}
-							title={categories.length <= 1 ? 'Cannot remove last category' : 'Remove category'}>
+							title={categories.length <= 1 ? t("management.bulletins.cannotRemoveLast") : t("management.bulletins.removeCategory")}>
 							{#if removingCat === cat.value}
 								<div class="spinner-xs"></div>
 							{:else}

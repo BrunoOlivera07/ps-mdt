@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { MANAGEMENT_TABS } from "@/constants/management";
+	import { t } from "../../lib/i18n";
 
 	type View = "Activity" | "Bulletins" | "Permissions";
 
@@ -17,7 +18,7 @@
 			onclick={() => onViewChange(tab)}
 			class:selected={currentView === tab}
 		>
-			{tab}
+			{t(`management.tabs.${tab.toLowerCase()}`)}
 		</button>
 	{/each}
 </div>

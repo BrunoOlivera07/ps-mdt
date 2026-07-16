@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CollabEditor } from "../services/collabService.svelte";
+	import { t } from "../lib/i18n";
 
 	let {
 		reportId,
@@ -39,14 +40,14 @@
 
 <div class="editor-header">
 	<span class="report-title">
-		{reportId ? "Edit Report" : "Create New Report"}
+		{reportId ? t("reportEditor.editReport") : t("reportEditor.createReport")}
 	</span>
 
 	{#if collabActive}
 		<div class="collab-section">
 			<div class="collab-live-badge" class:has-others={collabEditors.length > 0}>
 				<span class="live-dot"></span>
-				<span class="live-text">{collabEditors.length > 0 ? 'Live Editing' : 'Connected'}</span>
+				<span class="live-text">{collabEditors.length > 0 ? t("reportEditor.liveEditing") : t("reportEditor.connected")}</span>
 			</div>
 			<div class="collab-avatars">
 				{#if myName && myColor}
@@ -56,7 +57,7 @@
 						onmouseenter={() => hoveredAvatar = '__me__'}
 						onmouseleave={() => hoveredAvatar = null}
 					>
-						You
+						{t("reportEditor.you")}
 						{#if hoveredAvatar === '__me__'}
 							<div class="avatar-tooltip">{myName}</div>
 						{/if}
@@ -83,20 +84,20 @@
 		{#if reportId && onDelete}
 			{#if showDeleteConfirm}
 				<span class="delete-confirm-group">
-					<span class="delete-confirm-text">Delete?</span>
+					<span class="delete-confirm-text">{t("reportEditor.deleteConfirmShort")}</span>
 					<button
 						class="action-btn delete-confirm-btn"
 						onclick={() => { showDeleteConfirm = false; onDelete(); }}
 						type="button"
 					>
-						Yes
+						{t("common.yes")}
 					</button>
 					<button
 						class="action-btn cancel-btn"
 						onclick={() => (showDeleteConfirm = false)}
 						type="button"
 					>
-						No
+						{t("common.no")}
 					</button>
 				</span>
 			{:else}
@@ -105,9 +106,9 @@
 					onclick={() => (showDeleteConfirm = true)}
 					disabled={isSaving || isLoading}
 					type="button"
-					aria-label="Delete report"
+					aria-label={t("reportEditor.deleteReport")}
 				>
-					Delete
+					{t("common.actions.delete")}
 				</button>
 			{/if}
 		{/if}
@@ -116,18 +117,18 @@
 			onclick={onClose}
 			disabled={isSaving}
 			type="button"
-			aria-label="Cancel report editing"
+			aria-label={t("reportEditor.cancelEditing")}
 		>
-			Cancel
+			{t("common.actions.cancel")}
 		</button>
 		<button
 			class="action-btn save-btn"
 			onclick={onSave}
 			disabled={isSaving || isLoading}
 			type="button"
-			aria-label={isSaving ? "Saving report" : "Save report"}
+			aria-label={isSaving ? t("reportEditor.saving") : t("reportEditor.saveReport")}
 		>
-			{isSaving ? "Saving..." : "Save Report"}
+			{isSaving ? t("reportEditor.saving") : t("reportEditor.saveReport")}
 		</button>
 	</div>
 </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TagInfo } from "../../services/tagService.svelte";
+	import { t } from "../../lib/i18n";
 
 	// Hover tooltip rendered into <body> so a scrolling/overflow parent (the
 	// dropdown) can never clip it; follows the cursor so it never covers a
@@ -80,17 +81,17 @@
 
 <div class="metadata-section">
 	<div class="section-title">
-		<span class="section-label">TAGS</span>
+		<span class="section-label">{t("tagManager.tags")}</span>
 		<div class="dropdown-container">
 			<button
 				class="add-btn"
 				onclick={openTagDropdown}
-				title="Add Tag"
-				aria-label="Add Tag"
-			>+ Add</button>
+				title={t("tagManager.add")}
+				aria-label={t("tagManager.add")}
+			>+ {t("common.actions.add")}</button>
 			{#if showTagDropdown}
 				<div class="dropdown">
-					<div class="dropdown-header">Available Tags</div>
+					<div class="dropdown-header">{t("reportEditor.tags.available")}</div>
 					{#each filteredTags as tag}
 						<button
 							class="dropdown-item"
@@ -102,7 +103,7 @@
 						</button>
 					{/each}
 					{#if filteredTags.length === 0}
-						<div class="dropdown-empty">No more tags available</div>
+						<div class="dropdown-empty">{t("reportEditor.tags.noneAvailable")}</div>
 					{/if}
 				</div>
 			{/if}
@@ -118,7 +119,7 @@
 				<button
 					class="remove-btn"
 					onclick={() => removeTag(index)}
-					aria-label="Remove tag"
+					aria-label={t("reportEditor.tags.remove")}
 				>
 					<svg
 						width="8"

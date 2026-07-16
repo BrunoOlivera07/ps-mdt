@@ -4,6 +4,7 @@
 	import { isEnvBrowser } from "../utils/misc";
 	import { NUI_EVENTS } from "../constants/nuiEvents";
 	import { globalNotifications } from "../services/notificationService.svelte";
+	import { t } from "../lib/i18n";
 
 	let bodycams = $state<Bodycam[]>([]);
 	let isLoading = $state(false);
@@ -52,7 +53,7 @@
 				(Array.isArray(response) ? response : []) ??
 				[];
 		} catch (error) {
-			globalNotifications.error("Failed to load bodycams");
+			globalNotifications.error(t("pages.bodycams.loadFailed"));
 			bodycams = [];
 		} finally {
 			isLoading = false;
@@ -66,7 +67,7 @@
 					id: "001",
 					officerName: "John Smith",
 					callsign: "401",
-					rank: "Chief",
+					rank: t("pages.bodycams.sampleRanks.chief"),
 					isOnline: true,
 					viewerCount: 5,
 				},
@@ -74,7 +75,7 @@
 					id: "002",
 					officerName: "Sarah Johnson",
 					callsign: "405",
-					rank: "Sergeant",
+					rank: t("pages.bodycams.sampleRanks.sergeant"),
 					isOnline: true,
 					viewerCount: 0,
 				},
@@ -82,7 +83,7 @@
 					id: "003",
 					officerName: "Michael Davis",
 					callsign: "455",
-					rank: "Deputy",
+					rank: t("pages.bodycams.sampleRanks.deputy"),
 					isOnline: false,
 					viewerCount: 0,
 				},
@@ -90,7 +91,7 @@
 					id: "004",
 					officerName: "Emily Brown",
 					callsign: "496",
-					rank: "Officer",
+					rank: t("pages.bodycams.sampleRanks.officer"),
 					isOnline: true,
 					viewerCount: 2,
 				},
@@ -98,7 +99,7 @@
 					id: "005",
 					officerName: "Robert Wilson",
 					callsign: "431",
-					rank: "Sergeant",
+					rank: t("pages.bodycams.sampleRanks.sergeant"),
 					isOnline: true,
 					viewerCount: 0,
 				},
@@ -106,7 +107,7 @@
 					id: "006",
 					officerName: "Lisa Garcia",
 					callsign: "402",
-					rank: "Assistant Chief",
+					rank: t("pages.bodycams.sampleRanks.assistantChief"),
 					isOnline: false,
 					viewerCount: 0,
 				},
@@ -125,29 +126,29 @@
 	<div class="topbar">
 		<input
 			type="text"
-			placeholder="Search by name, callsign or rank..."
+			placeholder={t("pages.bodycams.searchPlaceholder")}
 			bind:value={searchQuery}
 			class="search-input"
 		/>
 		<div class="topbar-right">
-			<span class="result-count">{filteredBodycams.length} officer{filteredBodycams.length !== 1 ? "s" : ""}</span>
+			<span class="result-count">{t(filteredBodycams.length === 1 ? "pages.bodycams.officerCountOne" : "pages.bodycams.officerCountMany", { count: filteredBodycams.length })}</span>
 			<button
 				class="btn-secondary"
 				onclick={loadBodycams}
 				disabled={isLoading}
 			>
-				{isLoading ? "Loading..." : "Refresh"}
+				{isLoading ? t("common.status.loading") : t("pages.bodycams.refresh")}
 			</button>
 		</div>
 	</div>
 
 	<div class="list-panel">
 		<div class="table-header">
-			<span class="col-callsign">Callsign</span>
-			<span class="col-name">Officer</span>
-			<span class="col-rank">Rank</span>
-			<span class="col-status">Status</span>
-			<span class="col-viewers">Viewers</span>
+			<span class="col-callsign">{t("pages.bodycams.callsign")}</span>
+			<span class="col-name">{t("pages.bodycams.officer")}</span>
+			<span class="col-rank">{t("pages.bodycams.rank")}</span>
+			<span class="col-status">{t("pages.bodycams.status")}</span>
+			<span class="col-viewers">{t("pages.bodycams.viewers")}</span>
 			<span class="col-action"></span>
 		</div>
 
@@ -155,15 +156,15 @@
 			{#if isLoading && bodycams.length === 0}
 				<div class="empty-state">
 					<div class="loading-spinner"></div>
-					<p>Loading bodycams...</p>
+					<p>{t("pages.bodycams.loading")}</p>
 				</div>
 			{:else if filteredBodycams.length === 0}
 				<div class="empty-state">
-					<p class="empty-title">No Bodycams Found</p>
+					<p class="empty-title">{t("pages.bodycams.noneFound")}</p>
 					<p class="empty-sub">
 						{searchQuery
-							? "No officers match your search criteria."
-							: "No officers with bodycams are currently on duty."}
+							? t("pages.bodycams.noSearchMatches")
+							: t("pages.bodycams.noneOnDuty")}
 					</p>
 				</div>
 			{:else}
@@ -176,9 +177,9 @@
 						<span class="col-rank">{bodycam.rank}</span>
 						<span class="col-status">
 							{#if bodycam.isOnline}
-								<span class="pill pill-green">Online</span>
+								<span class="pill pill-green">{t("pages.bodycams.online")}</span>
 							{:else}
-								<span class="pill pill-grey">Offline</span>
+								<span class="pill pill-grey">{t("pages.bodycams.offline")}</span>
 							{/if}
 						</span>
 						<span class="col-viewers">
@@ -192,7 +193,7 @@
 							{#if bodycam.isOnline}
 								<button class="view-btn" onclick={() => viewBodycam(bodycam)}>
 									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-									View
+									{t("common.actions.view")}
 								</button>
 							{/if}
 						</span>

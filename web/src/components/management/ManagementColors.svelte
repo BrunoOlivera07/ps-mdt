@@ -4,6 +4,7 @@
 	import { isEnvBrowser } from "@/utils/misc";
 	import { NUI_EVENTS } from "@/constants/nuiEvents";
 	import { settingsService } from "@/services/settingsService.svelte";
+	import { t } from "../../lib/i18n";
 
 	interface ColorConfig {
 		accent: string;
@@ -26,16 +27,16 @@
 	}
 
 	const THEMES: Theme[] = [
-		{ name: "Default Blue", config: { ...DEFAULT_LEO } },
-		{ name: "LSPD Classic", config: { accent: "59, 130, 246", accentText: "147, 197, 253", background: "18, 20, 28", cardBackground: "12, 14, 22", buttonPrimary: "59, 130, 246" } },
-		{ name: "BCSO Gold", config: { accent: "234, 179, 8", accentText: "253, 224, 71", background: "20, 18, 12", cardBackground: "14, 12, 8", buttonPrimary: "180, 140, 10" } },
-		{ name: "State Trooper", config: { accent: "16, 185, 129", accentText: "167, 243, 208", background: "14, 22, 18", cardBackground: "8, 16, 12", buttonPrimary: "16, 185, 129" } },
-		{ name: "FBI Dark", config: { accent: "100, 100, 120", accentText: "180, 180, 200", background: "12, 12, 14", cardBackground: "8, 8, 10", buttonPrimary: "80, 80, 100" } },
-		{ name: "EMS Red", config: { accent: "220, 50, 50", accentText: "252, 165, 165", background: "22, 16, 16", cardBackground: "16, 10, 10", buttonPrimary: "200, 60, 60" } },
-		{ name: "GTA V", config: { accent: "114, 204, 68", accentText: "180, 230, 150", background: "16, 20, 14", cardBackground: "10, 14, 8", buttonPrimary: "114, 204, 68" } },
-		{ name: "GTA VI", config: { accent: "255, 90, 150", accentText: "255, 170, 200", background: "22, 14, 24", cardBackground: "16, 8, 18", buttonPrimary: "220, 70, 130" } },
-		{ name: "Cyberpunk", config: { accent: "255, 205, 0", accentText: "255, 230, 100", background: "10, 10, 16", cardBackground: "6, 6, 12", buttonPrimary: "0, 200, 255" } },
-		{ name: "Purple Haze", config: { accent: "139, 92, 246", accentText: "196, 181, 253", background: "18, 14, 26", cardBackground: "12, 8, 20", buttonPrimary: "139, 92, 246" } },
+		{ name: t("management.colors.themesList.defaultBlue"), config: { ...DEFAULT_LEO } },
+		{ name: t("management.colors.themesList.lspdClassic"), config: { accent: "59, 130, 246", accentText: "147, 197, 253", background: "18, 20, 28", cardBackground: "12, 14, 22", buttonPrimary: "59, 130, 246" } },
+		{ name: t("management.colors.themesList.bcsoGold"), config: { accent: "234, 179, 8", accentText: "253, 224, 71", background: "20, 18, 12", cardBackground: "14, 12, 8", buttonPrimary: "180, 140, 10" } },
+		{ name: t("management.colors.themesList.stateTrooper"), config: { accent: "16, 185, 129", accentText: "167, 243, 208", background: "14, 22, 18", cardBackground: "8, 16, 12", buttonPrimary: "16, 185, 129" } },
+		{ name: t("management.colors.themesList.fbiDark"), config: { accent: "100, 100, 120", accentText: "180, 180, 200", background: "12, 12, 14", cardBackground: "8, 8, 10", buttonPrimary: "80, 80, 100" } },
+		{ name: t("management.colors.themesList.emsRed"), config: { accent: "220, 50, 50", accentText: "252, 165, 165", background: "22, 16, 16", cardBackground: "16, 10, 10", buttonPrimary: "200, 60, 60" } },
+		{ name: t("management.colors.themesList.gtaV"), config: { accent: "114, 204, 68", accentText: "180, 230, 150", background: "16, 20, 14", cardBackground: "10, 14, 8", buttonPrimary: "114, 204, 68" } },
+		{ name: t("management.colors.themesList.gtaVI"), config: { accent: "255, 90, 150", accentText: "255, 170, 200", background: "22, 14, 24", cardBackground: "16, 8, 18", buttonPrimary: "220, 70, 130" } },
+		{ name: t("management.colors.themesList.cyberpunk"), config: { accent: "255, 205, 0", accentText: "255, 230, 100", background: "10, 10, 16", cardBackground: "6, 6, 12", buttonPrimary: "0, 200, 255" } },
+		{ name: t("management.colors.themesList.purpleHaze"), config: { accent: "139, 92, 246", accentText: "196, 181, 253", background: "18, 14, 26", cardBackground: "12, 8, 20", buttonPrimary: "139, 92, 246" } },
 	];
 
 	interface ColorField {
@@ -45,11 +46,11 @@
 	}
 
 	const COLOR_FIELDS: ColorField[] = [
-		{ key: "accent", label: "Accent Color", description: "Main theme color used across navigation, badges, and highlights" },
-		{ key: "accentText", label: "Accent Text", description: "Lighter variant used for text over dark backgrounds" },
-		{ key: "background", label: "Background", description: "Primary MDT background color" },
-		{ key: "cardBackground", label: "Card Background", description: "Background for cards and panels" },
-		{ key: "buttonPrimary", label: "Primary Button", description: "Color for save, confirm, and primary action buttons" },
+		{ key: "accent", label: t("management.colors.fields.accent.label"), description: t("management.colors.fields.accent.description") },
+		{ key: "accentText", label: t("management.colors.fields.accentText.label"), description: t("management.colors.fields.accentText.description") },
+		{ key: "background", label: t("management.colors.fields.background.label"), description: t("management.colors.fields.background.description") },
+		{ key: "cardBackground", label: t("management.colors.fields.cardBackground.label"), description: t("management.colors.fields.cardBackground.description") },
+		{ key: "buttonPrimary", label: t("management.colors.fields.buttonPrimary.label"), description: t("management.colors.fields.buttonPrimary.description") },
 	];
 
 	let config: ColorConfig = $state({ ...DEFAULT_LEO });
@@ -146,7 +147,7 @@
 	async function saveConfig() {
 		if (isEnvBrowser()) {
 			savedConfig = { ...config };
-			showStatus("Colors saved");
+			showStatus(t("management.colors.saved"));
 			return;
 		}
 		try {
@@ -159,13 +160,13 @@
 			if (result?.success) {
 				savedConfig = { ...config };
 				settingsService.setColorConfig(config);
-				showStatus("Colors saved - applies to all officers on next MDT open");
+				showStatus(t("management.colors.savedDetailed"));
 			} else {
-				showStatus(result?.message || "Failed to save colors", "error");
+				showStatus(result?.message || t("management.colors.failedSave"), "error");
 			}
 		} catch (error) {
 			console.error("Failed to save color config:", error);
-			showStatus("Failed to save colors", "error");
+			showStatus(t("management.colors.failedSave"), "error");
 		} finally {
 			isSaving = false;
 		}
@@ -178,12 +179,12 @@
 
 <div class="colors-page">
 	{#if isLoading}
-		<div class="colors-loading">Loading...</div>
+		<div class="colors-loading">{t("management.colors.loading")}</div>
 	{:else}
 		<div class="colors-body">
 			<!-- Custom Colors - horizontal -->
 			<div class="section">
-				<span class="card-label">Custom Colors</span>
+				<span class="card-label">{t("management.colors.customColors")}</span>
 				<div class="colors-hz">
 					{#each COLOR_FIELDS as field}
 						<div class="color-tile">
@@ -201,7 +202,7 @@
 
 			<!-- Themes - horizontal scroll -->
 			<div class="section">
-				<span class="card-label">Themes</span>
+				<span class="card-label">{t("management.colors.themes")}</span>
 				<div class="themes-hz">
 					{#each THEMES as theme}
 						<button
@@ -238,28 +239,28 @@
 
 			<!-- Preview -->
 			<div class="section">
-				<span class="card-label">Preview</span>
+				<span class="card-label">{t("management.colors.preview")}</span>
 				<div class="preview-mockup" style="background: rgb({config.background})">
 					<div class="mock-sidebar" style="background: rgb({config.cardBackground})">
 						<div class="mock-nav-item active" style="background: rgba({config.accent}, 0.15); color: rgb({config.accentText})">
 							<span class="material-icons mock-icon">dashboard</span>
-							<span>Dashboard</span>
+							<span>{t("management.colors.labels.dashboard")}</span>
 						</div>
 						<div class="mock-nav-item">
 							<span class="material-icons mock-icon">people</span>
-							<span>Citizens</span>
+							<span>{t("management.colors.labels.citizens")}</span>
 						</div>
 						<div class="mock-nav-item">
 							<span class="material-icons mock-icon">description</span>
-							<span>Reports</span>
+							<span>{t("management.colors.labels.reports")}</span>
 						</div>
 						<div class="mock-nav-item">
 							<span class="material-icons mock-icon">folder</span>
-							<span>Cases</span>
+							<span>{t("management.colors.labels.cases")}</span>
 						</div>
 						<div class="mock-nav-item">
 							<span class="material-icons mock-icon">gavel</span>
-							<span>Warrants</span>
+							<span>{t("management.colors.labels.warrants")}</span>
 						</div>
 					</div>
 					<div class="mock-main">
@@ -275,14 +276,14 @@
 								<span class="material-icons mock-icon" style="color: rgba({config.accent}, 0.7)">description</span>
 								<div class="mock-stat-text">
 									<span class="mock-stat-value">12</span>
-									<span class="mock-stat-sub">REPORTS</span>
+									<span class="mock-stat-sub">{t("management.colors.labels.reportsShort")}</span>
 								</div>
 							</div>
 							<div class="mock-stat">
 								<span class="material-icons mock-icon" style="color: rgba({config.accent}, 0.7)">groups</span>
 								<div class="mock-stat-text">
 									<span class="mock-stat-value">8</span>
-									<span class="mock-stat-label" style="background: rgb({config.buttonPrimary}); color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 6px;">ON DUTY</span>
+									<span class="mock-stat-label" style="background: rgb({config.buttonPrimary}); color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 6px;">{t("management.colors.labels.onDuty")}</span>
 								</div>
 							</div>
 							<button class="mock-action-btn" style="background: rgba({config.accent}, 0.1); border: 1px solid rgba({config.accent}, 0.2)">
@@ -292,7 +293,7 @@
 						<div class="mock-columns">
 							<div class="mock-col">
 								<div class="mock-col-header">
-									<span>WARRANTS</span>
+									<span>{t("management.colors.labels.warrantsShort")}</span>
 									<span class="mock-count" style="color: rgb({config.accentText})">2</span>
 								</div>
 								<div class="mock-list-item" style="border-left: 2px solid rgba({config.accent}, 0.5)">
@@ -306,7 +307,7 @@
 							</div>
 							<div class="mock-col" style="border-left: 1px solid rgba(255,255,255,0.04); border-right: 1px solid rgba(255,255,255,0.04)">
 								<div class="mock-col-header">
-									<span>RECENT REPORTS</span>
+									<span>{t("management.colors.labels.recentReports")}</span>
 									<span class="mock-count" style="color: rgb({config.accentText})">3</span>
 								</div>
 								<div class="mock-list-item">
@@ -320,7 +321,7 @@
 							</div>
 							<div class="mock-col">
 								<div class="mock-col-header">
-									<span>DISPATCHES</span>
+									<span>{t("management.colors.labels.dispatches")}</span>
 									<span class="mock-count" style="color: rgb({config.accentText})">3</span>
 								</div>
 								<div class="mock-dispatch">
@@ -339,17 +340,17 @@
 						</div>
 						<div class="mock-bolos-section">
 							<div class="mock-col-header">
-								<span>BOLOS</span>
+								<span>{t("management.colors.labels.bolos")}</span>
 								<span class="mock-count" style="color: rgb({config.accentText})">2</span>
 							</div>
 							<div class="mock-bolo-row">
 								<div class="mock-list-item" style="flex: 1">
 									<span class="mock-item-name">Marcus Johnson</span>
-									<span class="mock-item-sub">#RPT-001 · <span style="background: rgba({config.accent}, 0.2); color: rgb({config.accentText}); padding: 0 3px; border-radius: 2px; font-size: 6px;">citizen</span></span>
+									<span class="mock-item-sub">#RPT-001 · <span style="background: rgba({config.accent}, 0.2); color: rgb({config.accentText}); padding: 0 3px; border-radius: 2px; font-size: 6px;">{t("management.colors.labels.citizen")}</span></span>
 								</div>
 								<div class="mock-list-item" style="flex: 1">
 									<span class="mock-item-name">Black Kuruma</span>
-									<span class="mock-item-sub">#RPT-003 · <span style="background: rgba({config.accent}, 0.2); color: rgb({config.accentText}); padding: 0 3px; border-radius: 2px; font-size: 6px;">vehicle</span></span>
+									<span class="mock-item-sub">#RPT-003 · <span style="background: rgba({config.accent}, 0.2); color: rgb({config.accentText}); padding: 0 3px; border-radius: 2px; font-size: 6px;">{t("management.colors.labels.vehicle")}</span></span>
 								</div>
 							</div>
 						</div>
@@ -363,16 +364,16 @@
 		{#if hasChanges}
 			<button class="btn-reset" onclick={resetToSaved}>
 				<span class="material-icons btn-icon">undo</span>
-				Reset
+				{t("management.colors.reset")}
 			</button>
 		{/if}
 		<button class="btn-save" onclick={saveConfig} disabled={isSaving || !hasChanges}>
 			<span class="material-icons btn-icon">save</span>
-			{isSaving ? "Saving..." : "Save Colors"}
+			{isSaving ? t("management.colors.saving") : t("management.colors.save")}
 		</button>
 		<button class="btn-default" onclick={revertToDefault} disabled={isSaving}>
 			<span class="material-icons btn-icon">restart_alt</span>
-			Revert to Default
+			{t("management.colors.revert")}
 		</button>
 		{#if statusMsg}
 			<span class="save-status" class:error={statusMsg.type === "error"}>{statusMsg.text}</span>

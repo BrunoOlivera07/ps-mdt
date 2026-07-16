@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ComponentId } from "../constants";
-	import { COMPONENT_DISPLAY_NAMES } from "../constants";
+	import { t } from "../lib/i18n";
 
 	interface Props {
 		componentId: ComponentId;
@@ -13,7 +13,7 @@
 	 * Gets the display name for the component.
 	 */
 	function getDisplayName(): string {
-		return COMPONENT_DISPLAY_NAMES[componentId] || componentId;
+		return t(`componentLabels.${componentId}`);
 	}
 </script>
 

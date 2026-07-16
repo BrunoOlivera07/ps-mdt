@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from "../../lib/i18n";
 	interface Props {
 		show: boolean;
 		uploading?: boolean;
@@ -43,23 +44,23 @@
 		onkeydown={handleKeydown}
 		role="button"
 		tabindex="0"
-		aria-label="Close upload dialog"
+		aria-label={t("reportEditor.upload.closeDialog")}
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="popup" role="dialog" aria-modal="true" tabindex="-1">
 			<div class="popup-header">
-				<span class="popup-title">Upload Evidence Image</span>
+				<span class="popup-title">{t("reportEditor.upload.title")}</span>
 				{#if !uploading}
-					<button class="popup-close" onclick={onClose}>x</button>
+					<button class="popup-close" onclick={onClose} aria-label={t("common.actions.close")}>x</button>
 				{/if}
 			</div>
 			<div class="popup-content">
 				{#if uploading}
 					<div class="uploading-state">
 						<div class="spinner"></div>
-						<span class="uploading-text">Uploading{selectedFileName ? ` ${selectedFileName}` : ""}...</span>
-						<span class="uploading-hint">Please wait, compressing and uploading image</span>
+						<span class="uploading-text">{t("reportEditor.upload.uploading", { file: selectedFileName ? ` ${selectedFileName}` : "" })}</span>
+						<span class="uploading-hint">{t("reportEditor.upload.wait")}</span>
 					</div>
 				{:else}
 					<div class="upload-area">
@@ -72,8 +73,8 @@
 						/>
 						<label for="image-upload" class="upload-label">
 							<span class="upload-icon">+</span>
-							<span class="upload-text">Click to select image</span>
-							<span class="upload-hint">Supports JPG, PNG, GIF (auto-compressed)</span>
+							<span class="upload-text">{t("reportEditor.upload.selectImage")}</span>
+							<span class="upload-hint">{t("reportEditor.upload.formats")}</span>
 						</label>
 					</div>
 				{/if}

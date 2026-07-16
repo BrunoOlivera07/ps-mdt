@@ -3,6 +3,7 @@
 	import { fetchNui } from "../../utils/fetchNui";
 	import { isEnvBrowser } from "../../utils/misc";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
+	import { t } from "../../lib/i18n";
 
 	interface TrackingConfig {
 		[key: string]: boolean;
@@ -58,7 +59,7 @@
 
 	async function saveTrackingConfig() {
 		if (isEnvBrowser()) {
-			showTrackingStatus("Settings saved");
+			showTrackingStatus(t("management.tracking.saved"));
 			return;
 		}
 		try {
@@ -69,13 +70,13 @@
 				{ success: false },
 			);
 			if (result?.success) {
-				showTrackingStatus("Activity tracking settings saved");
+				showTrackingStatus(t("management.tracking.savedDetailed"));
 			} else {
-				showTrackingStatus(result?.message || "Failed to save settings", "error");
+				showTrackingStatus(result?.message || t("management.tracking.failedSave"), "error");
 			}
 		} catch (error) {
 			console.error("Failed to save tracking config:", error);
-			showTrackingStatus("Failed to save settings", "error");
+			showTrackingStatus(t("management.tracking.failedSave"), "error");
 		} finally {
 			isSavingTracking = false;
 		}
@@ -115,18 +116,18 @@
 <div class="tracking-page">
 	<div class="tracking-card">
 		<div class="card-title-row">
-			<span class="card-label">Activity Tracking</span>
+			<span class="card-label">{t("management.tracking.title")}</span>
 			<div class="tracking-actions">
-				<button class="action-btn" onclick={enableAll}>Enable All</button>
-				<button class="action-btn" onclick={disableAll}>Disable All</button>
+				<button class="action-btn" onclick={enableAll}>{t("management.tracking.enableAll")}</button>
+				<button class="action-btn" onclick={disableAll}>{t("management.tracking.disableAll")}</button>
 			</div>
 		</div>
-		<p class="card-subtitle">Configure which actions are logged in the activity feed. Changes apply department-wide.</p>
+		<p class="card-subtitle">{t("management.tracking.subtitle")}</p>
 
 		{#if isLoadingTracking}
 			<div class="tracking-loading">
 				<div class="loading-spinner"></div>
-				<p>Loading tracking settings...</p>
+				<p>{t("management.tracking.loading")}</p>
 			</div>
 		{:else}
 			<div class="tracking-scroll">
@@ -156,7 +157,7 @@
 		<div class="save-bar">
 			<button class="btn-save" onclick={saveTrackingConfig} disabled={isSavingTracking}>
 				<span class="material-icons btn-save-icon">save</span>
-				{isSavingTracking ? "Saving..." : "Save Settings"}
+				{isSavingTracking ? t("common.status.saving") : t("management.tracking.save")}
 			</button>
 			{#if trackingStatus}
 				<span class="save-status {trackingStatus.type}">{trackingStatus.text}</span>

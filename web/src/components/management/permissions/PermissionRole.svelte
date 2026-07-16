@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { PermissionRole as Role } from "@/services/managementService.svelte";
+	import { PERMISSION_CATEGORIES } from "@/constants/management";
+	import { t, tf } from "../../../lib/i18n";
 
 	let {
 		role,
@@ -19,9 +21,12 @@
 	});
 
 	function formatPermissionName(permission: string): string {
-		return permission
+		const fallback = PERMISSION_CATEGORIES
+			.flatMap((category) => category.permissions)
+			.find((item) => item.key === permission)?.label ?? permission
 			.replace(/_/g, " ")
 			.replace(/\b\w/g, (c) => c.toUpperCase());
+		return tf(`management.permissions.catalog.items.${permission}.label`, fallback);
 	}
 
 	function togglePermission(permission: string) {
@@ -39,18 +44,19 @@
 	<div class="role-header">
 		<span class="role-name">{role.label}</span>
 		{#if isBoss}
-			<span class="boss-tag">All</span>
+			<span class="boss-tag">{t("management.permissions.all")}</span>
 		{/if}
 	</div>
 	<div class="permission-list">
 		{#if permissions.length === 0}
-			<div class="empty-perm">No permissions</div>
+			<div class="empty-perm">{t("management.permissions.noPermissions")}</div>
 		{/if}
 		{#each permissions as permission}
 			<label class="permission-row">
 				<span class="perm-label">{formatPermissionName(permission)}</span>
 				<input
 					type="checkbox"
+					aria-label={`${t("management.permissions.toggle")}: ${formatPermissionName(permission)}`}
 					checked={selected.has(permission) || isBoss}
 					disabled={isBoss}
 					onchange={() => togglePermission(permission)}

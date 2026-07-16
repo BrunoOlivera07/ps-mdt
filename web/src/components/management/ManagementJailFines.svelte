@@ -3,6 +3,7 @@
 	import { fetchNui } from "../../utils/fetchNui";
 	import { isEnvBrowser } from "../../utils/misc";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
+	import { t } from "../../lib/i18n";
 
 	interface JailFinesConfig {
 		reductionOffers: number[];
@@ -57,7 +58,7 @@
 	async function saveConfig() {
 		if (isEnvBrowser()) {
 			savedSnapshot = snapshot();
-			showStatus("Settings saved");
+			showStatus(t("management.jailFines.saved"));
 			return;
 		}
 		try {
@@ -69,13 +70,13 @@
 			);
 			if (result?.success) {
 				savedSnapshot = snapshot();
-				showStatus("Jail & Fines settings saved");
+				showStatus(t("management.jailFines.savedDetailed"));
 			} else {
-				showStatus(result?.message || "Failed to save settings", "error");
+				showStatus(result?.message || t("management.jailFines.failedSave"), "error");
 			}
 		} catch (error) {
 			console.error("Failed to save jail/fines config:", error);
-			showStatus("Failed to save settings", "error");
+			showStatus(t("management.jailFines.failedSave"), "error");
 		} finally {
 			isSaving = false;
 		}
@@ -84,11 +85,11 @@
 	function addOffer() {
 		const val = parseInt(newOfferValue, 10);
 		if (!val || val < 1 || val > 100) {
-			showStatus("Enter a value between 1 and 100", "error");
+			showStatus(t("management.jailFines.errors.range"), "error");
 			return;
 		}
 		if (config.reductionOffers.includes(val)) {
-			showStatus("That percentage already exists", "error");
+			showStatus(t("management.jailFines.errors.duplicate"), "error");
 			return;
 		}
 		config.reductionOffers = [...config.reductionOffers, val].sort((a, b) => a - b);
@@ -114,19 +115,19 @@
 <div class="jf-page">
 	<div class="jf-header">
 		<div class="jf-header-info">
-			<span class="card-label">Jail & Fines Configuration</span>
-			<span class="card-subtitle">Configure reduction offers and fine limits. Changes apply department-wide.</span>
+			<span class="card-label">{t("management.jailFines.title")}</span>
+			<span class="card-subtitle">{t("management.jailFines.subtitle")}</span>
 		</div>
 		{#if !isLoading}
 			<div class="jf-header-actions">
 				{#if statusMsg}
 					<span class="save-status {statusMsg.type}">{statusMsg.text}</span>
 				{:else if isDirty}
-					<span class="dirty-hint">Unsaved changes</span>
+					<span class="dirty-hint">{t("settings.unsaved")}</span>
 				{/if}
 				<button class="btn-save" class:dirty={isDirty} onclick={saveConfig} disabled={isSaving}>
 					<span class="material-icons btn-save-icon">save</span>
-					{isSaving ? "Saving..." : "Save Settings"}
+					{isSaving ? t("common.status.saving") : t("common.actions.save")}
 				</button>
 			</div>
 		{/if}
@@ -135,7 +136,7 @@
 		{#if isLoading}
 			<div class="jf-loading">
 				<div class="loading-spinner"></div>
-				<p>Loading settings...</p>
+				<p>{t("common.status.loading")}</p>
 			</div>
 		{:else}
 			<div class="jf-scroll">
@@ -145,8 +146,8 @@
 					<div class="setting-group-header">
 						<span class="material-icons group-icon">percent</span>
 						<div class="group-head-text">
-						<span class="group-label">Reduction Offers</span>
-						<span class="group-desc">Percentage options shown when offering a reduction on charges</span>
+						<span class="group-label">{t("management.jailFines.reductionOffers")}</span>
+						<span class="group-desc">{t("management.jailFines.reductionOffersDesc")}</span>
 						</div>
 					</div>
 
@@ -154,13 +155,13 @@
 						{#each config.reductionOffers as offer}
 							<div class="offer-chip">
 								<span class="offer-value">{offer}%</span>
-								<button class="offer-remove" onclick={() => removeOffer(offer)} aria-label="Remove {offer}%">
+								<button class="offer-remove" onclick={() => removeOffer(offer)} aria-label={t("management.jailFines.removeOffer", { offer })}>
 									<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
 								</button>
 							</div>
 						{/each}
 						{#if config.reductionOffers.length === 0}
-							<span class="no-offers">No reduction offers configured</span>
+							<span class="no-offers">{t("management.jailFines.noOffers")}</span>
 						{/if}
 					</div>
 
@@ -168,14 +169,14 @@
 						<input
 							type="number"
 							class="offer-input"
-							placeholder="e.g. 25"
+							placeholder={t("management.jailFines.offerPlaceholder")}
 							min="1"
 							max="100"
 							bind:value={newOfferValue}
 							onkeydown={handleOfferKeydown}
 						/>
 						<span class="offer-input-suffix">%</span>
-						<button class="add-offer-btn" onclick={addOffer}>Add</button>
+						<button class="add-offer-btn" onclick={addOffer}>{t("common.actions.add")}</button>
 					</div>
 				</div>
 
@@ -184,8 +185,8 @@
 					<div class="setting-group-header">
 						<span class="material-icons group-icon">payments</span>
 						<div class="group-head-text">
-						<span class="group-label">Maximum Fine Amount</span>
-						<span class="group-desc">The highest fine amount that can be processed through the MDT</span>
+						<span class="group-label">{t("management.jailFines.maxFine")}</span>
+						<span class="group-desc">{t("management.jailFines.maxFineDesc")}</span>
 						</div>
 					</div>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { VICTIM_TYPES, OFFICER_TYPES } from "../constants";
 	import type { Report } from "../interfaces/IReportEditor";
+	import { t } from "../lib/i18n";
 
 	export let report: Report;
 	export let onRemoveSuspect: (index: number) => void;
@@ -36,14 +37,14 @@
 	}
 </script>
 
-<section class="involved-persons" aria-label="Involved persons">
-	<h3 class="section-title">Involved Persons</h3>
+<section class="involved-persons" aria-label={t("reportEditor.involved.title")}>
+	<h3 class="section-title">{t("reportEditor.involved.title")}</h3>
 
 	<!-- Suspects Section -->
 	<div class="person-section">
 		<div class="person-header">
 			<h4 class="person-title">
-				Suspects ({report.involved.suspects.length})
+				{t("reportEditor.involved.suspects")} ({report.involved.suspects.length})
 			</h4>
 			<button
 				type="button"
@@ -52,7 +53,7 @@
 				aria-expanded={showSuspectSearch}
 				aria-controls="suspect-search"
 			>
-				{showSuspectSearch ? "Cancel" : "Add Suspect"}
+				{showSuspectSearch ? t("common.actions.cancel") : t("reportEditor.involved.addSuspect")}
 			</button>
 		</div>
 
@@ -61,36 +62,36 @@
 				id="suspect-search"
 				class="search-container"
 				role="region"
-				aria-label="Add suspect"
+				aria-label={t("reportEditor.involved.addSuspect")}
 			>
 				<!-- Search component would go here -->
-				<p class="search-placeholder">Suspect search interface</p>
+				<p class="search-placeholder">{t("reportEditor.involved.suspectSearch")}</p>
 			</div>
 		{/if}
 
 		{#if report.involved.suspects.length > 0}
-			<div class="persons-list" role="list" aria-label="Suspects">
+			<div class="persons-list" role="list" aria-label={t("reportEditor.involved.suspects")}>
 				{#each report.involved.suspects as suspect, index}
 					<div class="person-item" role="listitem">
 						<div class="person-info">
 							<div class="person-name">{suspect.fullName}</div>
 							<div class="person-details">
-								Notes: {suspect.notes}
+								{t("reportEditor.involved.notes")}: {suspect.notes}
 							</div>
 						</div>
 						<button
 							type="button"
 							on:click={() => onRemoveSuspect(index)}
 							class="remove-person-btn"
-							aria-label="Remove suspect {suspect.fullName}"
+							aria-label={t("reportEditor.involved.removeSuspect", { name: suspect.fullName })}
 						>
-							Remove
+							{t("reportEditor.involved.remove")}
 						</button>
 					</div>
 				{/each}
 			</div>
 		{:else}
-			<p class="no-persons">No suspects added</p>
+			<p class="no-persons">{t("reportEditor.involved.noSuspects")}</p>
 		{/if}
 	</div>
 
@@ -98,7 +99,7 @@
 	<div class="person-section">
 		<div class="person-header">
 			<h4 class="person-title">
-				Victims ({report.involved.victims.length})
+				{t("reportEditor.involved.victims")} ({report.involved.victims.length})
 			</h4>
 			<button
 				type="button"
@@ -107,7 +108,7 @@
 				aria-expanded={showVictimSearch}
 				aria-controls="victim-search"
 			>
-				{showVictimSearch ? "Cancel" : "Add Victim"}
+				{showVictimSearch ? t("common.actions.cancel") : t("reportEditor.involved.addVictim")}
 			</button>
 		</div>
 
@@ -116,36 +117,36 @@
 				id="victim-search"
 				class="search-container"
 				role="region"
-				aria-label="Add victim"
+				aria-label={t("reportEditor.involved.addVictim")}
 			>
 				<!-- Search component would go here -->
-				<p class="search-placeholder">Victim search interface</p>
+				<p class="search-placeholder">{t("reportEditor.involved.victimSearch")}</p>
 			</div>
 		{/if}
 
 		{#if report.involved.victims.length > 0}
-			<div class="persons-list" role="list" aria-label="Victims">
+			<div class="persons-list" role="list" aria-label={t("reportEditor.involved.victims")}>
 				{#each report.involved.victims as victim, index}
 					<div class="person-item" role="listitem">
 						<div class="person-info">
 							<div class="person-name">{victim.fullName}</div>
 							<div class="person-details">
-								Type: {victim.type}
+								{t("reportEditor.involved.type")}: {victim.type}
 							</div>
 						</div>
 						<button
 							type="button"
 							on:click={() => onRemoveVictim(index)}
 							class="remove-person-btn"
-							aria-label="Remove victim {victim.fullName}"
+							aria-label={t("reportEditor.involved.removeVictim", { name: victim.fullName })}
 						>
-							Remove
+							{t("reportEditor.involved.remove")}
 						</button>
 					</div>
 				{/each}
 			</div>
 		{:else}
-			<p class="no-persons">No victims added</p>
+			<p class="no-persons">{t("reportEditor.involved.noVictims")}</p>
 		{/if}
 	</div>
 
@@ -153,7 +154,7 @@
 	<div class="person-section">
 		<div class="person-header">
 			<h4 class="person-title">
-				Officers ({report.involved.officers.length})
+				{t("reportEditor.involved.officers")} ({report.involved.officers.length})
 			</h4>
 			<button
 				type="button"
@@ -162,7 +163,7 @@
 				aria-expanded={showOfficerSearch}
 				aria-controls="officer-search"
 			>
-				{showOfficerSearch ? "Cancel" : "Add Officer"}
+				{showOfficerSearch ? t("common.actions.cancel") : t("reportEditor.involved.addOfficer")}
 			</button>
 		</div>
 
@@ -171,36 +172,36 @@
 				id="officer-search"
 				class="search-container"
 				role="region"
-				aria-label="Add officer"
+				aria-label={t("reportEditor.involved.addOfficer")}
 			>
 				<!-- Search component would go here -->
-				<p class="search-placeholder">Officer search interface</p>
+				<p class="search-placeholder">{t("reportEditor.involved.officerSearch")}</p>
 			</div>
 		{/if}
 
 		{#if report.involved.officers.length > 0}
-			<div class="persons-list" role="list" aria-label="Officers">
+			<div class="persons-list" role="list" aria-label={t("reportEditor.involved.officers")}>
 				{#each report.involved.officers as officer, index}
 					<div class="person-item" role="listitem">
 						<div class="person-info">
 							<div class="person-name">{officer.fullName}</div>
 							<div class="person-details">
-								Type: {officer.type} | Badge: {officer.badgeId}
+								{t("reportEditor.involved.type")}: {officer.type} | {t("reportEditor.badge")}: {officer.badgeId}
 							</div>
 						</div>
 						<button
 							type="button"
 							on:click={() => onRemoveOfficer(index)}
 							class="remove-person-btn"
-							aria-label="Remove officer {officer.fullName}"
+							aria-label={t("reportEditor.involved.removeOfficer", { name: officer.fullName })}
 						>
-							Remove
+							{t("reportEditor.involved.remove")}
 						</button>
 					</div>
 				{/each}
 			</div>
 		{:else}
-			<p class="no-persons">No officers added</p>
+			<p class="no-persons">{t("reportEditor.involved.noOfficers")}</p>
 		{/if}
 	</div>
 </section>

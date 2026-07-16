@@ -9,6 +9,7 @@
 	import { fetchNui } from "../utils/fetchNui";
 	import { formatDateTime } from "../utils/datetime";
 	import { NUI_EVENTS } from "../constants/nuiEvents";
+	import { t } from "../lib/i18n";
 
 	let { citizenid }: { citizenid: string } = $props();
 
@@ -90,11 +91,11 @@
 </script>
 
 {#if loading && entries.length === 0}
-	<p class="act-hint">Loading...</p>
+	<p class="act-hint">{t("common.status.loading")}</p>
 {:else if entries.length === 0}
 	<div class="no-tags">
 		<span class="material-icons no-tags-icon">history</span>
-		<p>No recorded activity for this officer.</p>
+		<p>{t("activityTimeline.empty")}</p>
 	</div>
 {:else}
 	<div class="act-list">
@@ -104,7 +105,7 @@
 					<span class="act-action">{label(e)}</span>
 				</div>
 				<div class="act-meta">
-					<span>{e.actor_name ?? e.actor_citizenid ?? "System"}</span>
+					<span>{e.actor_name ?? e.actor_citizenid ?? t("activityTimeline.system")}</span>
 					<span class="act-date">{fmt(e.created_at)}</span>
 				</div>
 			</div>
@@ -112,7 +113,7 @@
 	</div>
 	{#if hasMore}
 		<button class="act-more" disabled={loading} onclick={() => load(page + 1, true)}>
-			{loading ? "Loading..." : "Load more"}
+			{loading ? t("common.status.loading") : t("activityTimeline.loadMore")}
 		</button>
 	{/if}
 {/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { CollabEditor } from "../../services/collabService.svelte";
+	import { t } from "../../lib/i18n";
 
 	interface Props {
 		editors: CollabEditor[];
@@ -21,17 +22,17 @@
 	<div class="collab-bar">
 		<div class="collab-indicator">
 			<div class="pulse-dot" style="background: {myColor};"></div>
-			<span class="collab-label">Live Editing</span>
+			<span class="collab-label">{t("reportEditor.liveEditing")}</span>
 		</div>
 		<div class="collab-editors">
 			{#each editors as editor}
-				<div class="editor-avatar" style="background: {editor.color}; border-color: {editor.color};" title="{editor.name} is editing">
+				<div class="editor-avatar" style="background: {editor.color}; border-color: {editor.color};" title={t("reportEditor.collaboration.isEditing", { name: editor.name })}>
 					<span class="editor-initials">{getInitials(editor.name)}</span>
 					<div class="editor-active-dot"></div>
 				</div>
 			{/each}
 		</div>
-		<span class="collab-count">{editors.length} other{editors.length !== 1 ? 's' : ''} editing</span>
+		<span class="collab-count">{t(editors.length === 1 ? "reportEditor.collaboration.oneOther" : "reportEditor.collaboration.manyOthers", { count: editors.length })}</span>
 	</div>
 {/if}
 

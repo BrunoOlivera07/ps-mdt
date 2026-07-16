@@ -4,6 +4,7 @@
 	import { TAB_VISIBILITY_KEYS } from "@/constants/management";
 	import { NAV_GROUPS, getTabsForJob, MDT_TABS } from "@/constants";
 	import type { JobType } from "@/interfaces/IUser";
+	import { t } from "../../lib/i18n";
 
 	let { jobType = 'leo' }: { jobType?: JobType } = $props();
 
@@ -32,8 +33,11 @@
 	}
 
 	function getTabLabel(tabName: string): string {
-		const entry = TAB_VISIBILITY_KEYS.find(t => t.tabName === tabName);
-		return entry?.label || tabName;
+		return t(`componentLabels.${tabName.toLowerCase().replaceAll(" ", "_")}`);
+	}
+
+	function getGroupLabel(groupId: string): string {
+		return t(`navigation.groups.${groupId}`);
 	}
 
 	function isTabVisible(tabName: string): boolean {
@@ -86,7 +90,7 @@
 	{/if}
 
 	<div class="visibility-header">
-		<span class="header-label">Tab Visibility</span>
+		<span class="header-label">{t("management.visibility.title")}</span>
 		{#if mgmt.jobLabel}
 			<span class="job-tag">{mgmt.jobLabel}</span>
 		{/if}
@@ -95,11 +99,11 @@
 	{#if mgmt.isLoading}
 		<div class="empty-state">
 			<div class="loading-spinner"></div>
-			<p>Loading roles...</p>
+			<p>{t("management.visibility.loading")}</p>
 		</div>
 	{:else if mgmt.roles.length === 0}
 		<div class="empty-state">
-			<p>No roles available</p>
+			<p>{t("management.visibility.noRoles")}</p>
 		</div>
 	{:else}
 		<div class="visibility-body">
@@ -112,7 +116,7 @@
 					>
 						<span class="role-name">{role.label}</span>
 						{#if role.isBoss}
-							<span class="boss-tag">All</span>
+							<span class="boss-tag">{t("management.visibility.all")}</span>
 						{/if}
 					</button>
 				{/each}
@@ -123,10 +127,10 @@
 					<div class="role-title-row">
 						<span class="role-title">{currentRole.label}</span>
 						{#if currentRole.isBoss}
-							<span class="boss-note">Boss roles always see all tabs</span>
+							<span class="boss-note">{t("management.visibility.bossNote")}</span>
 						{:else}
 							{#if mgmt.isDirty}
-								<span class="dirty-hint">Unsaved changes</span>
+								<span class="dirty-hint">{t("management.visibility.unsaved")}</span>
 							{/if}
 							<button
 								class="save-btn"
@@ -134,7 +138,7 @@
 								onclick={() => mgmt.saveAllRoles()}
 								disabled={mgmt.isSaving}
 							>
-								{mgmt.isSaving ? "Saving..." : "Save Visibility"}
+								{mgmt.isSaving ? t("management.visibility.saving") : t("management.visibility.save")}
 							</button>
 						{/if}
 					</div>
@@ -145,7 +149,7 @@
 								<div class="group-header">
 									<div class="group-label-row">
 										<span class="material-icons group-icon">{group.icon}</span>
-										<span class="group-label">{group.label}</span>
+										<span class="group-label">{getGroupLabel(group.id)}</span>
 									</div>
 									{#if !currentRole.isBoss}
 										<button
@@ -153,7 +157,7 @@
 											class:all-hidden={!groupAllVisible(group.id)}
 											onclick={() => toggleGroup(group.id)}
 										>
-											{groupAllVisible(group.id) ? "Hide All" : "Show All"}
+											{groupAllVisible(group.id) ? t("management.visibility.hideAll") : t("management.visibility.showAll")}
 										</button>
 									{/if}
 								</div>

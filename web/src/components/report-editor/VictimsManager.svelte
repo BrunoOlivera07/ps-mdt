@@ -3,6 +3,7 @@
 	import PersonnelSection from "./PersonnelSection.svelte";
 	import PersonnelCard from "./PersonnelCard.svelte";
 	import { VICTIM_TYPES } from "../../constants";
+	import { t } from "../../lib/i18n";
 
 	interface Props {
 		victims: Victim[];
@@ -12,7 +13,7 @@
 		title?: string;
 	}
 
-	let { victims, onAdd, onRemove, onUpdate, title = "Victims" }: Props = $props();
+	let { victims, onAdd, onRemove, onUpdate, title = t("reportEditor.involved.victims") }: Props = $props();
 
 	function updateVictim(id: string, field: string, value: any) {
 		const victim = victims.find((v) => v.id === id);
@@ -28,7 +29,7 @@
 		<PersonnelCard
 			id={victim.id}
 			fullName={victim.fullName}
-			secondaryInfo={`ID: ${victim.citizenid}`}
+			secondaryInfo={`${t("reportEditor.id")}: ${victim.citizenid}`}
 			type={victim.type}
 			typeOptions={VICTIM_TYPES}
 			notes={victim.notes}

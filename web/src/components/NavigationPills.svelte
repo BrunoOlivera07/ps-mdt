@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { MDT_TABS, NAV_GROUPS, DOJ_NAV_GROUPS, getTabsForJob, getTabLabel, type MDTTab, type ComponentId } from "../constants";
+	import { MDT_TABS, NAV_GROUPS, DOJ_NAV_GROUPS, getTabsForJob, type MDTTab, type ComponentId } from "../constants";
 	import type { createTabService } from "../services/tabService.svelte";
 	import type { JobType } from "../interfaces/IUser";
 	import type { AuthService } from "../services/authService.svelte";
+	import { t } from "../lib/i18n";
 
 	interface Props {
 		tabService: ReturnType<typeof createTabService>;
@@ -43,6 +44,10 @@
 
 	function getTabData(tabName: string) {
 		return MDT_TABS.find(t => t.name === tabName);
+	}
+
+	function tabLabel(tabName: string): string {
+		return t(`navigation.tabs.${tabName.toLowerCase().replace(/\s+/g, "_")}`);
 	}
 
 	// Compute visible groups: filter out groups with no visible tabs
@@ -87,7 +92,7 @@
 			<div class="nav-group">
 				<button class="nav-group-header" onclick={() => toggleGroup(group.id)}>
 					<span class="material-icons nav-group-icon">{group.icon}</span>
-					<span class="nav-group-label">{group.label}</span>
+					<span class="nav-group-label">{t(`navigation.groups.${group.id}`)}</span>
 					<span class="material-icons nav-group-chevron" class:rotated={!isGroupCollapsed(group.id)}>expand_more</span>
 				</button>
 				{#if !isGroupCollapsed(group.id)}
@@ -101,7 +106,7 @@
 									onclick={() => handleTabClick(tab)}
 								>
 									<span class="material-icons nav-icon">{tab.icon}</span>
-									<span>{getTabLabel(tab.name)}</span>
+									<span>{tabLabel(tab.name)}</span>
 								</button>
 							{/if}
 						{/each}
@@ -119,7 +124,7 @@
 						onclick={() => handleTabClick(tab)}
 					>
 						<span class="material-icons nav-icon">{tab.icon}</span>
-						<span class:hide={collapsed}>{getTabLabel(tab.name)}</span>
+						<span class:hide={collapsed}>{tabLabel(tab.name)}</span>
 					</button>
 				{/if}
 			{/each}
@@ -132,7 +137,7 @@
 				? "keyboard_double_arrow_right"
 				: "keyboard_double_arrow_left"}</span
 		>
-		{collapsed ? "" : "Collapse"}
+		{collapsed ? "" : t("navigation.collapse")}
 	</button>
 </div>
 

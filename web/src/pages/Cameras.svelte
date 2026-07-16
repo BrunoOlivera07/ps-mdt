@@ -4,6 +4,7 @@
 	import { isEnvBrowser } from "../utils/misc";
 	import { NUI_EVENTS } from "../constants/nuiEvents";
 	import { globalNotifications } from "../services/notificationService.svelte";
+	import { t } from "../lib/i18n";
 
 	let cameras = $state<Camera[]>([]);
 	let isLoading = $state(false);
@@ -84,7 +85,7 @@
 
 	function formatGroupLabel(type: string) {
 		const raw = String(type || "Unknown").trim();
-		if (!raw) return "Unknown Cameras";
+		if (!raw) return t("pages.cameras.unknownCameras");
 		const withSpaces = raw.replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 		const titleCased = withSpaces
 			.split(" ")
@@ -96,9 +97,7 @@
 			})
 			.join(" ");
 		const lower = titleCased.toLowerCase();
-		return /\bcameras?\b/.test(lower)
-			? titleCased
-			: `${titleCased} Cameras`;
+		return /\bcameras?\b/.test(lower) ? titleCased : t("pages.cameras.groupLabel", { type: titleCased });
 	}
 
 	async function loadCameras() {
@@ -119,7 +118,7 @@
 				[];
 			groupedCameras = groupCamerasByType(filteredCameras);
 		} catch (error) {
-			globalNotifications.error("Failed to load cameras");
+			globalNotifications.error(t("pages.cameras.loadFailed"));
 			cameras = [];
 			groupedCameras = {};
 		} finally {
@@ -132,58 +131,58 @@
 			cameras = [
 				{
 					id: "001",
-					label: "Police Station Camera",
+					label: t("pages.cameras.samples.station"),
 					image: "/images/camera-1.png",
 					isOnline: true,
-					type: "Government",
+					type: t("pages.cameras.sampleTypes.government"),
 					viewerCount: 2,
 				},
 				{
 					id: "002",
-					label: "Police Station Camera - Inside",
+					label: t("pages.cameras.samples.stationInside"),
 					image: "/images/camera-2.png",
 					isOnline: false,
-					type: "Government",
+					type: t("pages.cameras.sampleTypes.government"),
 					viewerCount: 0,
 				},
 				{
 					id: "003",
-					label: "Police Station Camera - Cells",
+					label: t("pages.cameras.samples.stationCells"),
 					image: "/images/camera-3.png",
 					isOnline: true,
-					type: "Government",
+					type: t("pages.cameras.sampleTypes.government"),
 					viewerCount: 1,
 				},
 				{
 					id: "004",
-					label: "Bank Security Camera",
+					label: t("pages.cameras.samples.bank"),
 					image: "/images/camera-1.png",
 					isOnline: false,
-					type: "Bank",
+					type: t("pages.cameras.sampleTypes.bank"),
 					viewerCount: 0,
 				},
 				{
 					id: "005",
-					label: "24/7 Store Camera",
+					label: t("pages.cameras.samples.store"),
 					image: "/images/camera-1.png",
 					isOnline: false,
-					type: "Store",
+					type: t("pages.cameras.sampleTypes.store"),
 					viewerCount: 0,
 				},
 				{
 					id: "006",
-					label: "Hospital Emergency Camera",
+					label: t("pages.cameras.samples.hospital"),
 					image: "/images/camera-1.png",
 					isOnline: true,
-					type: "Medical",
+					type: t("pages.cameras.sampleTypes.medical"),
 					viewerCount: 3,
 				},
 				{
 					id: "007",
-					label: "Custom Placed Camera",
+					label: t("pages.cameras.samples.custom"),
 					image: "...",
 					isOnline: false,
-					type: "Placed",
+					type: t("pages.cameras.sampleTypes.placed"),
 					viewerCount: 0,
 				},
 			];
@@ -208,10 +207,10 @@
 		try {
 			const res: any = await fetchNui(NUI_EVENTS.CAMERA.VIEW_CAMERA, camera.id);
 			if (res && res.success === false) {
-				globalNotifications.error(res.message || "Failed to view camera");
+				globalNotifications.error(res.message || t("pages.cameras.viewFailed"));
 			}
 		} catch (e) {
-			globalNotifications.error("Failed to view camera");
+			globalNotifications.error(t("pages.cameras.viewFailed"));
 		}
 	}
 </script>
@@ -220,18 +219,18 @@
 	<div class="topbar">
 		<input
 			type="text"
-			placeholder="Search cameras..."
+			placeholder={t("pages.cameras.searchPlaceholder")}
 			bind:value={searchQuery}
 			class="search-input"
 		/>
 		<div class="topbar-right">
-			<span class="result-count">{filteredCameras.length} camera{filteredCameras.length !== 1 ? "s" : ""}</span>
+			<span class="result-count">{t(filteredCameras.length === 1 ? "pages.cameras.countOne" : "pages.cameras.countMany", { count: filteredCameras.length })}</span>
 			<button
 				class="btn-secondary"
 				onclick={loadCameras}
 				disabled={isLoading}
 			>
-				{isLoading ? "Loading..." : "Refresh"}
+				{isLoading ? t("common.status.loading") : t("pages.bodycams.refresh")}
 			</button>
 		</div>
 	</div>
@@ -240,15 +239,15 @@
 		{#if isLoading && cameras.length === 0}
 			<div class="empty-state">
 				<div class="loading-spinner"></div>
-				<p>Loading cameras...</p>
+				<p>{t("pages.cameras.loading")}</p>
 			</div>
 		{:else if filteredCameras.length === 0}
 			<div class="empty-state">
-				<p class="empty-title">No Cameras Found</p>
+				<p class="empty-title">{t("pages.cameras.noneFound")}</p>
 				<p class="empty-sub">
 					{searchQuery
-						? "No cameras match your search criteria."
-						: "No cameras have been loaded yet."}
+						? t("pages.cameras.noSearchMatches")
+						: t("pages.cameras.noneLoaded")}
 				</p>
 			</div>
 		{:else}
@@ -268,9 +267,9 @@
 					{#if !collapsedSections[type]}
 						<div class="table-header">
 							<span class="col-id">ID</span>
-							<span class="col-label">Camera</span>
-							<span class="col-status">Status</span>
-							<span class="col-viewers">Viewers</span>
+							<span class="col-label">{t("pages.cameras.camera")}</span>
+							<span class="col-status">{t("pages.bodycams.status")}</span>
+							<span class="col-viewers">{t("pages.bodycams.viewers")}</span>
 							<span class="col-action"></span>
 						</div>
 						{#each typeCameras as camera (camera.id)}
@@ -281,9 +280,9 @@
 								<span class="col-label">{camera.label}</span>
 								<span class="col-status">
 									{#if camera.isOnline}
-										<span class="pill pill-green">Online</span>
+										<span class="pill pill-green">{t("pages.bodycams.online")}</span>
 									{:else}
-										<span class="pill pill-grey">Offline</span>
+										<span class="pill pill-grey">{t("pages.bodycams.offline")}</span>
 									{/if}
 								</span>
 								<span class="col-viewers">
@@ -297,7 +296,7 @@
 									{#if camera.isOnline}
 										<button class="view-btn" onclick={() => viewCamera(camera)}>
 											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-											View
+											{t("common.actions.view")}
 										</button>
 									{/if}
 								</span>

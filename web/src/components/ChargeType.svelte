@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Charge } from "./../interfaces/ICharges";
+	import { t } from "../lib/i18n";
 
 	interface Props {
 		type: Charge["type"];
@@ -71,7 +72,7 @@
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div class="section-header" onclick={onToggle}>
 		<span class="section-title">
-			<span class="pill {getTypePillClass()}">{type.charAt(0).toUpperCase() + type.slice(1)}s</span>
+			<span class="pill {getTypePillClass()}">{t(`chargeType.types.${type}`)}</span>
 			<span class="charge-count">{Object.values(groupedCharges).reduce((a, b) => a + b.length, 0)}</span>
 		</span>
 		<svg class="chevron" class:collapsed width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -82,11 +83,11 @@
 			<div class="category-group">
 				<div class="category-label">{category}</div>
 				<div class="table-header">
-					<span class="col-code">Code</span>
-					<span class="col-label">Charge</span>
-					<span class="col-desc">Description</span>
-					<span class="col-fine">Fine</span>
-					<span class="col-time">Time</span>
+					<span class="col-code">{t("chargeType.code")}</span>
+					<span class="col-label">{t("chargeType.charge")}</span>
+					<span class="col-desc">{t("chargeType.description")}</span>
+					<span class="col-fine">{t("chargeType.fine")}</span>
+					<span class="col-time">{t("chargeType.time")}</span>
 					{#if canManage}
 						<span class="col-actions"></span>
 					{/if}
@@ -97,7 +98,7 @@
 					<div
 						class="charge-row"
 						class:clickable={canManage}
-						title={canManage ? "Click to edit this charge" : ""}
+						title={canManage ? t("chargeType.editHint") : ""}
 						onclick={() => canManage && onManage?.(charge)}
 					>
 						<span class="col-code">

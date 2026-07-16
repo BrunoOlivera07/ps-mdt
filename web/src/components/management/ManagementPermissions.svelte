@@ -3,6 +3,7 @@
 	import { createManagementService } from "@/services/managementService.svelte";
 	import { PERMISSION_CATEGORIES } from "@/constants/management";
 	import type { JobType } from "@/interfaces/IUser";
+	import { t, tf } from "../../lib/i18n";
 
 	let { jobType = 'leo' }: { jobType?: JobType } = $props();
 
@@ -74,6 +75,18 @@
 		}
 	}
 
+	function categoryLabel(key: string, fallback: string): string {
+		return tf(`management.permissions.catalog.categories.${key}`, fallback);
+	}
+
+	function permissionLabel(key: string, fallback: string): string {
+		return tf(`management.permissions.catalog.items.${key}.label`, fallback);
+	}
+
+	function permissionDescription(key: string, fallback: string): string {
+		return tf(`management.permissions.catalog.items.${key}.description`, fallback);
+	}
+
 	onMount(async () => {
 		await mgmt.loadRoles();
 		if (mgmt.roles.length > 0 && !selectedRole) {
@@ -90,7 +103,7 @@
 	{/if}
 
 	<div class="permissions-header">
-		<span class="header-label">Permissions</span>
+		<span class="header-label">{t("management.permissions.title")}</span>
 		{#if mgmt.jobLabel}
 			<span class="job-tag">{mgmt.jobLabel}</span>
 		{/if}
@@ -99,11 +112,11 @@
 	{#if mgmt.isLoading}
 		<div class="empty-state">
 			<div class="loading-spinner"></div>
-			<p>Loading permissions...</p>
+			<p>{t("management.permissions.loading")}</p>
 		</div>
 	{:else if mgmt.roles.length === 0}
 		<div class="empty-state">
-			<p>No roles available</p>
+			<p>{t("management.permissions.noRoles")}</p>
 		</div>
 	{:else}
 		<div class="permissions-body">
@@ -116,7 +129,7 @@
 					>
 						<span class="role-name">{role.label}</span>
 						{#if role.isBoss}
-							<span class="boss-tag">All</span>
+							<span class="boss-tag">{t("management.permissions.all")}</span>
 						{/if}
 					</button>
 				{/each}
@@ -127,10 +140,10 @@
 					<div class="role-title-row">
 						<span class="role-title">{currentRole.label}</span>
 						{#if currentRole.isBoss}
-							<span class="boss-note">Boss roles have all permissions enabled</span>
+							<span class="boss-note">{t("management.permissions.bossNote")}</span>
 						{:else}
 							{#if mgmt.isDirty}
-								<span class="dirty-hint">Unsaved changes</span>
+								<span class="dirty-hint">{t("management.permissions.unsaved")}</span>
 							{/if}
 							<button
 								class="save-btn"
@@ -138,7 +151,7 @@
 								onclick={() => mgmt.saveAllRoles()}
 								disabled={mgmt.isSaving}
 							>
-								{mgmt.isSaving ? "Saving..." : "Save Permissions"}
+								{mgmt.isSaving ? t("management.permissions.saving") : t("management.permissions.save")}
 							</button>
 						{/if}
 					</div>
@@ -149,7 +162,7 @@
 								<div class="category-header">
 									<div class="category-label-row">
 										<span class="material-icons category-icon">{category.icon}</span>
-										<span class="category-label">{category.label}</span>
+										<span class="category-label">{categoryLabel(category.key, category.label)}</span>
 									</div>
 									{#if !currentRole.isBoss}
 										<div class="category-actions">
@@ -158,7 +171,7 @@
 												class:all-on={categoryAllEnabled(category.key)}
 												onclick={() => toggleCategory(category.key)}
 											>
-												{categoryAllEnabled(category.key) ? "Disable All" : "Enable All"}
+												{categoryAllEnabled(category.key) ? t("management.permissions.disableAll") : t("management.permissions.enableAll")}
 											</button>
 										</div>
 									{/if}
@@ -167,8 +180,8 @@
 									{#each category.permissions as perm}
 										<div class="permission-row">
 											<div class="permission-info">
-												<span class="permission-label">{perm.label}</span>
-												<span class="permission-desc">{perm.description}</span>
+												<span class="permission-label">{permissionLabel(perm.key, perm.label)}</span>
+												<span class="permission-desc">{permissionDescription(perm.key, perm.description)}</span>
 											</div>
 											<label class="toggle">
 												<input

@@ -7,6 +7,7 @@
 	 * apart.
 	 */
 	import type { ImpoundReason, ImpoundLot, ImpoundDuration } from "../../interfaces/IImpound";
+	import { t } from "../../lib/i18n";
 
 	let {
 		reasons = [],
@@ -66,10 +67,10 @@
 		const d = selectedDuration;
 		if (!d) return "";
 		if (d.days === undefined || d.days === null) {
-			return "Held until an officer authorises release. Overriding this is logged.";
+			return t("impoundComponents.heldUntilRelease");
 		}
-		if (d.days <= 0) return "Can be released as soon as the fee is settled.";
-		return `Cannot be released for ${d.days} day${d.days === 1 ? "" : "s"}, even if the fee is paid.`;
+		if (d.days <= 0) return t("impoundComponents.releaseAfterFee");
+		return t(d.days === 1 ? "impoundComponents.holdDaysOne" : "impoundComponents.holdDaysMany", { days: d.days });
 	});
 
 	let recommendedHold = $derived.by(() => {
@@ -101,17 +102,17 @@
 </script>
 
 <div class="form-group">
-	<span class="field-label">Reason</span>
+	<span class="field-label">{t("impoundComponents.reason")}</span>
 	<select class="form-input form-select" value={reason}
 		onchange={(e) => onReasonChange((e.target as HTMLSelectElement).value)}>
 		{#each reasons as r}
-			<option value={r.label}>{r.label} — {r.fee === 0 ? "no fee" : money(r.fee)}</option>
+			<option value={r.label}>{r.label} - {r.fee === 0 ? t("impoundComponents.noFee") : money(r.fee)}</option>
 		{/each}
 	</select>
 </div>
 
 <div class="form-group">
-	<span class="field-label">Holding Lot</span>
+	<span class="field-label">{t("impoundComponents.holdingLot")}</span>
 	<select class="form-input form-select" bind:value={lot}>
 		{#each lots as l}
 			<option value={l.id}>{l.label}</option>
@@ -122,10 +123,10 @@
 {#if durations.length > 0}
 	<div class="form-group form-full">
 		<span class="field-label">
-			Hold Period
+			{t("impoundComponents.holdPeriod")}
 			{#if holdIsCustom}
 				<button class="hold-reset" type="button" onclick={() => (duration = recommendedHold)}>
-					reset to {recommendedHoldLabel.toLowerCase()}
+					{t("impoundComponents.resetTo", { value: recommendedHoldLabel.toLowerCase() })}
 				</button>
 			{/if}
 		</span>
@@ -137,7 +138,7 @@
 					class:recommended={d.id === recommendedHold && duration !== d.id}
 					class:indefinite={d.days === undefined || d.days === null}
 					type="button"
-					title={d.id === recommendedHold ? "Recommended for this reason" : ""}
+					title={d.id === recommendedHold ? t("impoundComponents.recommended") : ""}
 					onclick={() => (duration = d.id)}
 				>
 					{d.label}
@@ -153,17 +154,17 @@
 
 <div class="form-group form-full">
 	<span class="field-label">
-		Release Fee
+		{t("impoundComponents.releaseFee")}
 		{#if feeIsCustom}
 			<button class="fee-reset" type="button" onclick={() => (fee = reasonDefaultFee)}>
-				reset to {reasonDefaultFee === 0 ? "no fee" : money(reasonDefaultFee)}
+				{t("impoundComponents.resetTo", { value: reasonDefaultFee === 0 ? t("impoundComponents.noFee") : money(reasonDefaultFee) })}
 			</button>
 		{/if}
 	</span>
 
 	<div class="fee-editor">
 		<div class="fee-stepper">
-			<button class="fee-step" type="button" aria-label="Lower the fee"
+			<button class="fee-step" type="button" aria-label={t("impoundComponents.lowerFee")}
 				disabled={fee <= 0} onclick={() => adjustFee(-FEE_STEP)}>
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
 			</button>
@@ -172,14 +173,14 @@
 				<span class="fee-currency">$</span>{fee.toLocaleString()}
 			</div>
 
-			<button class="fee-step" type="button" aria-label="Raise the fee"
+			<button class="fee-step" type="button" aria-label={t("impoundComponents.raiseFee")}
 				disabled={fee >= maxFee} onclick={() => adjustFee(FEE_STEP)}>
 				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
 			</button>
 		</div>
 
 		<div class="fee-quick">
-			<button class="fee-chip" type="button" class:on={fee === 0} onclick={() => (fee = 0)}>Waive</button>
+			<button class="fee-chip" type="button" class:on={fee === 0} onclick={() => (fee = 0)}>{t("impoundComponents.waive")}</button>
 			{#each FEE_PRESETS as amt}
 				<button class="fee-chip" type="button" onclick={() => adjustFee(amt)}>+{money(amt)}</button>
 			{/each}
@@ -191,15 +192,15 @@
 	{#if maxStorage > 0}
 		<div class="cost-breakdown">
 			<div class="cost-row">
-				<span>Release fee</span>
-				<span class="cost-val">{fee === 0 ? "waived" : money(fee)}</span>
+				<span>{t("impoundComponents.releaseFee")}</span>
+				<span class="cost-val">{fee === 0 ? t("impoundComponents.waived") : money(fee)}</span>
 			</div>
 			<div class="cost-row">
-				<span>Storage · {money(storage.perDay)}/day, capped after {storage.maxDays} day{storage.maxDays === 1 ? "" : "s"}</span>
-				<span class="cost-val">up to {money(maxStorage)}</span>
+				<span>{t("impoundComponents.storageCost", { cost: money(storage.perDay), days: storage.maxDays })}</span>
+				<span class="cost-val">{t("impoundComponents.upTo", { amount: money(maxStorage) })}</span>
 			</div>
 			<div class="cost-row cost-total">
-				<span>Owner pays at most</span>
+				<span>{t("impoundComponents.ownerPaysAtMost")}</span>
 				<span class="cost-val">{money(worstCase)}</span>
 			</div>
 		</div>
@@ -207,18 +208,18 @@
 </div>
 
 <div class="form-group form-full">
-	<span class="field-label">Photo <span class="optional">(optional link)</span></span>
-	<input class="form-input" bind:value={photo} placeholder="https://…  paste a Fivemanage link" />
+	<span class="field-label">{t("impoundComponents.photo")} <span class="optional">({t("impoundComponents.optionalLink")})</span></span>
+	<input class="form-input" bind:value={photo} placeholder={t("impoundComponents.photoPlaceholder")} />
 
 	{#if photo.trim() && !photoBroken}
-		<button class="photo-thumb" type="button" onclick={() => (lightboxOpen = true)} title="Click to enlarge">
-			<img src={photo} alt="Vehicle condition" onerror={() => (photoBroken = true)} />
+		<button class="photo-thumb" type="button" onclick={() => (lightboxOpen = true)} title={t("impoundComponents.enlarge")}>
+			<img src={photo} alt={t("impoundComponents.vehicleCondition")} onerror={() => (photoBroken = true)} />
 			<span class="photo-zoom">
 				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
 			</span>
 		</button>
 	{:else if photo.trim() && photoBroken}
-		<span class="photo-error">That link could not be loaded</span>
+		<span class="photo-error">{t("impoundComponents.linkLoadFailed")}</span>
 	{/if}
 </div>
 
@@ -227,18 +228,18 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="lightbox-overlay" onclick={() => (lightboxOpen = false)}>
 		<div class="lightbox-card" onclick={(e) => e.stopPropagation()}>
-			<button class="lightbox-close" aria-label="Close" onclick={() => (lightboxOpen = false)}>
+			<button class="lightbox-close" aria-label={t("common.actions.close")} onclick={() => (lightboxOpen = false)}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 			</button>
-			<img class="lightbox-img" src={photo} alt="Vehicle condition" />
+			<img class="lightbox-img" src={photo} alt={t("impoundComponents.vehicleCondition")} />
 		</div>
 	</div>
 {/if}
 
 <div class="form-group form-full">
-	<span class="field-label">Notes</span>
+	<span class="field-label">{t("impoundComponents.notes")}</span>
 	<textarea class="form-input" rows="3" maxlength="500" bind:value={notes}
-		placeholder="Condition, contents, anything the next officer should know…"></textarea>
+		placeholder={t("impoundComponents.notesPlaceholder")}></textarea>
 </div>
 
 <style>

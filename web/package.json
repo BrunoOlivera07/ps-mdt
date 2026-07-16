@@ -9,6 +9,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json",
+		"check:locales": "node ./scripts/check-locales.mjs",
 		"format": "prettier --write ."
 	},
 	"devDependencies": {

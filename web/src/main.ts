@@ -4,6 +4,10 @@ import "@/styles/tailwind.css";
 import "./styles/variables.css";
 import "./styles/globals.css";
 import App from "./App.svelte";
+import { setLocale } from "./lib/i18n";
+
+const savedLocale = localStorage.getItem("ps-mdt-locale") || "pt-BR";
+setLocale(savedLocale);
 
 const app = mount(App, {
 	target: document.getElementById("app")!,

@@ -2,6 +2,7 @@
 	import type { ComponentId, MDTTab } from "../constants";
 	import { MDT_TABS, getTabLabel } from "../constants";
 	import type { TabInstance } from "../services/tabService.svelte.ts";
+	import { t } from "../lib/i18n";
 
 	interface Props {
 		instance: TabInstance;
@@ -42,7 +43,7 @@
 		class="instance-tab"
 		class:active={instance.isActive}
 		onclick={handleInstanceClick}
-		aria-label="Switch to {getTabLabel(instance.currentTab)}"
+		aria-label={t("tabs.switchTo", { tab: getTabLabel(instance.currentTab) })}
 	>
 		<span class="tab-icon material-icons">{tabIcon}</span>
 		<span class="tab-name">{getTabLabel(instance.currentTab)}</span>
@@ -51,7 +52,7 @@
 				class="close-btn"
 				onclick={handleCloseClick}
 				onkeydown={handleCloseKeydown}
-				aria-label="Close {getTabLabel(instance.currentTab)}"
+				aria-label={t("tabs.close", { tab: getTabLabel(instance.currentTab) })}
 				role="button"
 				tabindex="0"
 			>

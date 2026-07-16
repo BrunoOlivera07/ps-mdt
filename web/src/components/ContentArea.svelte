@@ -37,6 +37,7 @@
 	import type { createInstanceStateService } from "../services/instanceStateService.svelte";
 	import type { createTabService } from "../services/tabService.svelte";
 	import BulletInBoard from "@/pages/BulletInBoard.svelte";
+	import { t } from "../lib/i18n";
 
 	interface Props {
 		authService: AuthService;
@@ -137,26 +138,7 @@
 	}
 
 	function getPageLabel(pageId: string): string {
-		const labels: Record<string, string> = {
-			citizens: "Citizens",
-			bolos: "BOLOs",
-			vehicles: "Vehicles",
-			weapons: "Weapons",
-			cases: "Cases",
-			evidence: "Evidence",
-			reports: "Reports",
-			warrants: "Warrants",
-			charges: "Charges",
-			awards: "Awards",
-			cameras: "Cameras",
-			calendar: "Calendar",
-			bodycams: "Bodycams",
-			management: "Settings",
-			sop: "SOP",
-			bulletin_board: "Bulletin Board",
-			settings: "Preferences",
-		};
-		return labels[pageId] || pageId;
+		return t(`componentLabels.${pageId}`);
 	}
 </script>
 
@@ -178,14 +160,13 @@
 			<div class="denied-overlay">
 				<div class="denied-card">
 					<span class="material-icons denied-icon">lock</span>
-					<span class="denied-title">Permission Denied</span>
+					<span class="denied-title">{t("contentArea.permissionDenied")}</span>
 					<span class="denied-desc">
-						You do not have permission to access <strong>{getPageLabel(activeComponent)}</strong>.
-						Contact a supervisor to request access.
+						{t("contentArea.noPermission", { page: getPageLabel(activeComponent) })}
 					</span>
 					<button class="denied-btn" onclick={() => tabService.setActiveTab("Dashboard")}>
 						<span class="material-icons denied-btn-icon">arrow_back</span>
-						Back to Dashboard
+						{t("contentArea.backToDashboard")}
 					</button>
 				</div>
 			</div>

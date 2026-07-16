@@ -3,6 +3,7 @@
 	import { fetchNui } from "../../utils/fetchNui";
 	import { isEnvBrowser } from "../../utils/misc";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
+	import { t } from "../../lib/i18n";
 
 	interface AwardConfig {
 		id: number;
@@ -15,15 +16,15 @@
 	}
 
 	const GOAL_TYPES = [
-		{ value: "reports", label: "Reports Filed" },
-		{ value: "arrests", label: "Arrest Reports" },
-		{ value: "cases", label: "Cases Worked" },
-		{ value: "evidence", label: "Evidence Logged" },
-		{ value: "bolos", label: "BOLOs Issued" },
-		{ value: "warrants", label: "Warrants Issued" },
-		{ value: "totalFined", label: "Total Fined ($)" },
-		{ value: "totalMonths", label: "Months Sentenced" },
-		{ value: "citations", label: "Citations Issued" },
+		{ value: "reports", label: () => t("management.awards.goalTypes.reports") },
+		{ value: "arrests", label: () => t("management.awards.goalTypes.arrests") },
+		{ value: "cases", label: () => t("management.awards.goalTypes.cases") },
+		{ value: "evidence", label: () => t("management.awards.goalTypes.evidence") },
+		{ value: "bolos", label: () => t("management.awards.goalTypes.bolos") },
+		{ value: "warrants", label: () => t("management.awards.goalTypes.warrants") },
+		{ value: "totalFined", label: () => t("management.awards.goalTypes.totalFined") },
+		{ value: "totalMonths", label: () => t("management.awards.goalTypes.totalMonths") },
+		{ value: "citations", label: () => t("management.awards.goalTypes.citations") },
 	];
 
 	const ICONS = [
@@ -76,7 +77,7 @@
 		const desc = formDesc.trim();
 		const category = formCategory.trim();
 		if (!name || !desc || !category || formGoalAmount < 1) {
-			showStatus("Fill in all fields", "error");
+			showStatus(t("management.awards.fillAllFields"), "error");
 			return;
 		}
 
@@ -102,14 +103,14 @@
 				NUI_EVENTS.AWARDS.SAVE_AWARD, payload, { success: false }
 			);
 			if (result?.success) {
-				showStatus(editingId ? "Award updated" : "Award created");
+				showStatus(editingId ? t("management.awards.updated") : t("management.awards.created"));
 				resetForm();
 				await loadAwards();
 			} else {
-				showStatus(result?.message || "Failed to save", "error");
+				showStatus(result?.message || t("management.awards.failedSave"), "error");
 			}
 		} catch {
-			showStatus("Failed to save award", "error");
+			showStatus(t("management.awards.failedSave"), "error");
 		} finally {
 			isSubmitting = false;
 		}
@@ -127,14 +128,14 @@
 				NUI_EVENTS.AWARDS.DELETE_AWARD, { id: award.id }, { success: false }
 			);
 			if (result?.success) {
-				showStatus("Award deleted");
+				showStatus(t("management.awards.deleted"));
 				if (editingId === award.id) resetForm();
 				await loadAwards();
 			} else {
-				showStatus("Failed to delete", "error");
+				showStatus(t("management.awards.failedDelete"), "error");
 			}
 		} catch {
-			showStatus("Failed to delete award", "error");
+			showStatus(t("management.awards.failedDelete"), "error");
 		}
 	}
 
@@ -152,20 +153,20 @@
 	}
 
 	function getGoalTypeLabel(type: string): string {
-		return GOAL_TYPES.find(t => t.value === type)?.label || type;
+		return GOAL_TYPES.find((item) => item.value === type)?.label() || type;
 	}
 
 	onMount(() => {
 		if (isEnvBrowser()) {
 			awards = [
-				{ id: 1, name: "First Report", description: "File your first incident report", icon: "description", category: "Reports", goalType: "reports", goalAmount: 1 },
-				{ id: 2, name: "50 Reports Filed", description: "File 50 incident reports", icon: "description", category: "Reports", goalType: "reports", goalAmount: 50 },
-				{ id: 3, name: "100 Reports Filed", description: "File 100 incident reports", icon: "description", category: "Reports", goalType: "reports", goalAmount: 100 },
-				{ id: 4, name: "First Arrest", description: "File your first arrest report", icon: "local_police", category: "Arrests", goalType: "arrests", goalAmount: 1 },
-				{ id: 5, name: "50 Arrests", description: "File 50 arrest reports", icon: "local_police", category: "Arrests", goalType: "arrests", goalAmount: 50 },
-				{ id: 6, name: "Case Worker", description: "Work on 25 cases", icon: "folder", category: "Cases", goalType: "cases", goalAmount: 25 },
-				{ id: 7, name: "$100K Fined", description: "Fine citizens a total of $100,000", icon: "payments", category: "Fines", goalType: "totalFined", goalAmount: 100000 },
-				{ id: 8, name: "10 Warrants Issued", description: "Issue 10 warrants", icon: "gavel", category: "Warrants", goalType: "warrants", goalAmount: 10 },
+				{ id: 1, name: t("management.awards.samples.firstReport"), description: t("management.awards.samples.firstReportDesc"), icon: "description", category: t("management.awards.goalTypes.reports"), goalType: "reports", goalAmount: 1 },
+				{ id: 2, name: t("management.awards.samples.fiftyReports"), description: t("management.awards.samples.fiftyReportsDesc"), icon: "description", category: t("management.awards.goalTypes.reports"), goalType: "reports", goalAmount: 50 },
+				{ id: 3, name: t("management.awards.samples.oneHundredReports"), description: t("management.awards.samples.oneHundredReportsDesc"), icon: "description", category: t("management.awards.goalTypes.reports"), goalType: "reports", goalAmount: 100 },
+				{ id: 4, name: t("management.awards.samples.firstArrest"), description: t("management.awards.samples.firstArrestDesc"), icon: "local_police", category: t("management.awards.goalTypes.arrests"), goalType: "arrests", goalAmount: 1 },
+				{ id: 5, name: t("management.awards.samples.fiftyArrests"), description: t("management.awards.samples.fiftyArrestsDesc"), icon: "local_police", category: t("management.awards.goalTypes.arrests"), goalType: "arrests", goalAmount: 50 },
+				{ id: 6, name: t("management.awards.samples.caseWorker"), description: t("management.awards.samples.caseWorkerDesc"), icon: "folder", category: t("management.awards.goalTypes.cases"), goalType: "cases", goalAmount: 25 },
+				{ id: 7, name: t("management.awards.samples.hundredK"), description: t("management.awards.samples.hundredKDesc"), icon: "payments", category: t("management.awards.goalTypes.totalFined"), goalType: "totalFined", goalAmount: 100000 },
+				{ id: 8, name: t("management.awards.samples.tenWarrants"), description: t("management.awards.samples.tenWarrantsDesc"), icon: "gavel", category: t("management.awards.goalTypes.warrants"), goalType: "warrants", goalAmount: 10 },
 			];
 			return;
 		}
@@ -180,17 +181,17 @@
 
 	<div class="form-section">
 		<div class="form-row">
-			<input class="form-input name-input" type="text" placeholder="Award name..." bind:value={formName} maxlength="50" />
-			<input class="form-input" type="text" placeholder="Category..." bind:value={formCategory} maxlength="25" />
+			<input class="form-input name-input" type="text" placeholder={t("management.awards.placeholders.name")} bind:value={formName} maxlength="50" />
+			<input class="form-input" type="text" placeholder={t("management.awards.placeholders.category")} bind:value={formCategory} maxlength="25" />
 			<select class="form-select" bind:value={formGoalType}>
 				{#each GOAL_TYPES as gt}
 					<option value={gt.value}>{gt.label}</option>
 				{/each}
 			</select>
-			<input class="form-input goal-input" type="number" min="1" bind:value={formGoalAmount} placeholder="Goal" />
+			<input class="form-input goal-input" type="number" min="1" bind:value={formGoalAmount} placeholder={t("management.awards.placeholders.goal")} />
 		</div>
 		<div class="form-row">
-			<input class="form-input desc-input" type="text" placeholder="Description..." bind:value={formDesc} maxlength="100" />
+			<input class="form-input desc-input" type="text" placeholder={t("management.awards.placeholders.description")} bind:value={formDesc} maxlength="100" />
 			<div class="icon-picker">
 				{#each ICONS as icon}
 					<button
@@ -205,11 +206,11 @@
 			</div>
 			<div class="form-actions">
 				{#if editingId}
-					<button class="btn-save" onclick={handleSave} disabled={isSubmitting}>Update</button>
-					<button class="btn-cancel" onclick={resetForm}>Cancel</button>
+					<button class="btn-save" onclick={handleSave} disabled={isSubmitting}>{t("management.awards.labels.update")}</button>
+					<button class="btn-cancel" onclick={resetForm}>{t("management.awards.labels.cancel")}</button>
 				{:else}
 					<button class="btn-create" onclick={handleSave} disabled={!formName.trim() || !formDesc.trim() || !formCategory.trim() || isSubmitting}>
-						{isSubmitting ? "..." : "+ Add"}
+						{isSubmitting ? t("common.status.saving") : t("management.awards.labels.add")}
 					</button>
 				{/if}
 			</div>
@@ -219,7 +220,7 @@
 	{#if isLoading}
 		<div class="empty-state">
 			<div class="loading-spinner"></div>
-			<p>Loading awards...</p>
+			<p>{t("management.awards.loading")}</p>
 		</div>
 	{:else}
 		<div class="awards-list">
@@ -233,16 +234,16 @@
 					<span class="row-category">{award.category}</span>
 					<span class="row-goal">{getGoalTypeLabel(award.goalType)}: {award.goalAmount.toLocaleString()}</span>
 					<div class="row-actions">
-						<button class="action-btn edit-btn" onclick={() => startEdit(award)} title="Edit">
+						<button class="action-btn edit-btn" onclick={() => startEdit(award)} title={t("common.actions.edit")}>
 							<span class="material-icons">edit</span>
 						</button>
-						<button class="action-btn delete-btn" onclick={() => handleDelete(award)} title="Delete">
+						<button class="action-btn delete-btn" onclick={() => handleDelete(award)} title={t("common.actions.delete")}>
 							<span class="material-icons">delete</span>
 						</button>
 					</div>
 				</div>
 			{:else}
-				<div class="empty-state">No awards configured. Add one above.</div>
+				<div class="empty-state">{t("management.awards.empty")}</div>
 			{/each}
 		</div>
 	{/if}

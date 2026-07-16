@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SearchResult } from "../../interfaces/IReportEditor";
+	import { t } from "../../lib/i18n";
 
 	interface Props {
 		show: boolean;
@@ -70,13 +71,13 @@
 		<div class="popup" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
 			<div class="popup-header">
 				<span class="popup-title">{title}</span>
-				<button class="popup-close" onclick={onClose}>x</button>
+				<button class="popup-close" onclick={onClose} aria-label={t("common.actions.close")}>x</button>
 			</div>
 			<div class="popup-content">
 				<input
 					bind:this={inputRef}
 					type="text"
-					placeholder="Search by name or ID..."
+					placeholder={t("reportEditor.searchPerson")}
 					bind:value={localQuery}
 					oninput={handleInput}
 					class="search-input"
@@ -93,9 +94,9 @@
 								>
 								<span class="result-details">
 									{#if person.badgeId}
-										Badge: {person.badgeId} | {person.rank}
+										{t("reportEditor.badge")}: {person.badgeId} | {person.rank}
 									{:else if person.citizenid}
-										ID: {person.citizenid}
+										{t("reportEditor.id")}: {person.citizenid}
 									{/if}
 								</span>
 							</div>

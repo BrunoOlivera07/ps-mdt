@@ -6,6 +6,7 @@
 		createTabService,
 	} from "../services/tabService.svelte.ts";
 	import { globalNotifications } from "../services/notificationService.svelte";
+	import { t } from "../lib/i18n";
 
 	const MAX_TABS = 10;
 
@@ -28,11 +29,11 @@
 
 	function handleAddNewInstance(): void {
 		if (!canAddTab) {
-			globalNotifications.error(`Maximum ${MAX_TABS} tabs allowed`);
+			globalNotifications.error(t("instanceTabs.maximum", { count: MAX_TABS }));
 			return;
 		}
 		const instanceNumber = tabService.instances.length + 1;
-		const instanceName = `Instance ${instanceNumber}`;
+		const instanceName = t("instanceTabs.instanceName", { number: instanceNumber });
 		const instanceId = `instance-${Date.now()}` as ComponentId;
 		tabService.addInstance(instanceId, instanceName);
 	}
@@ -53,7 +54,7 @@
 			<button
 				class="add-instance-btn"
 				onclick={handleAddNewInstance}
-				aria-label="Add new instance"
+				aria-label={t("instanceTabs.addNew")}
 			>
 				<span class="material-icons">add</span>
 			</button>
