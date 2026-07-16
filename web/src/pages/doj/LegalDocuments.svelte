@@ -7,6 +7,7 @@
 	import { globalNotifications } from "../../services/notificationService.svelte";
 	import type { createTabService } from "../../services/tabService.svelte";
 	import type { AuthService } from "../../services/authService.svelte";
+	import { t, tf } from "../../lib/i18n";
 
 	interface Props {
 		tabService: ReturnType<typeof createTabService>;
@@ -49,14 +50,8 @@
 	});
 
 	const typeOptions: { value: string; label: string }[] = [
-		{ value: "all", label: "All Types" },
-		{ value: "brief", label: "Brief" },
-		{ value: "motion", label: "Motion" },
-		{ value: "ruling", label: "Ruling" },
-		{ value: "opinion", label: "Opinion" },
-		{ value: "plea_deal", label: "Plea Deal" },
-		{ value: "sentencing", label: "Sentencing" },
-		{ value: "other", label: "Other" },
+		{ value: "all", label: t("pages.doj.legalDocuments.allTypes") },
+		...(["brief", "motion", "ruling", "opinion", "plea_deal", "sentencing", "other"].map((value) => ({ value, label: formatLabel(value) }))),
 	];
 
 	const statusOptions = ["all", "draft", "filed", "approved", "rejected"];
@@ -84,7 +79,8 @@
 	}
 
 	function formatLabel(value: string): string {
-		return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		const fallback = value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		return tf(`pages.doj.legalDocuments.labels.${value}`, fallback);
 	}
 
 	function formatDateValue(value: string | undefined): string {
@@ -146,7 +142,7 @@
 			);
 			documents = data.documents || [];
 		} catch {
-			globalNotifications.error("Failed to load legal documents");
+			globalNotifications.error(t("pages.doj.legalDocuments.messages.loadFailed"));
 		}
 		isLoading = false;
 	}
@@ -162,7 +158,7 @@
 			selectedDocument = response?.data || documents.find((d) => d.id === id) || null;
 			editContent = selectedDocument?.content || "";
 		} catch {
-			globalNotifications.error("Failed to load document");
+			globalNotifications.error(t("pages.doj.legalDocuments.messages.detailLoadFailed"));
 		}
 		isLoading = false;
 	}
@@ -190,13 +186,13 @@
 			if (result.success) {
 				showCreateModal = false;
 				newDoc = { type: "brief", title: "", linked_court_case_id: "", content: "" };
-				globalNotifications.success("Legal document created");
+				globalNotifications.success(t("pages.doj.legalDocuments.messages.created"));
 				await loadDocuments();
 			} else {
-				globalNotifications.error(result.error || "Failed to create document");
+				globalNotifications.error(result.error || t("pages.doj.legalDocuments.messages.createFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to create document");
+			globalNotifications.error(t("pages.doj.legalDocuments.messages.createFailed"));
 		}
 		isLoading = false;
 	}
@@ -210,9 +206,9 @@
 				{ success: true },
 			);
 			selectedDocument.content = editContent;
-			globalNotifications.success("Document saved");
+			globalNotifications.success(t("pages.doj.legalDocuments.messages.saved"));
 		} catch {
-			globalNotifications.error("Failed to save document");
+			globalNotifications.error(t("pages.doj.legalDocuments.messages.saveFailed"));
 		}
 	}
 
@@ -225,9 +221,9 @@
 				{ success: true },
 			);
 			selectedDocument.status = newStatus;
-			globalNotifications.success("Status updated");
+			globalNotifications.success(t("pages.doj.legalDocuments.messages.statusUpdated"));
 		} catch {
-			globalNotifications.error("Failed to update status");
+			globalNotifications.error(t("pages.doj.legalDocuments.messages.statusFailed"));
 		}
 	}
 
@@ -240,14 +236,14 @@
 				{ success: true },
 			);
 			if (result.success) {
-				globalNotifications.success("Document deleted");
+				globalNotifications.success(t("pages.doj.legalDocuments.messages.deleted"));
 				goBack();
 				await loadDocuments();
 			} else {
-				globalNotifications.error(result.error || "Failed to delete document");
+				globalNotifications.error(result.error || t("pages.doj.legalDocuments.messages.deleteFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to delete document");
+			globalNotifications.error(t("pages.doj.legalDocuments.messages.deleteFailed"));
 		}
 	}
 </script>
@@ -263,7 +259,7 @@
 			<span class="pill {getTypePillClass(selectedDocument.type)}">{formatLabel(selectedDocument.type)}</span>
 			<span class="pill {getStatusPillClass(selectedDocument.status)}">{formatLabel(selectedDocument.status)}</span>
 			<div class="topbar-actions">
-				<button class="action-btn" onclick={handleSaveContent} disabled={isLoading}>Save</button>
+				<button class="action-btn" onclick={handleSaveContent} disabled={isLoading}>{t("common.actions.save")}</button>
 			</div>
 		</div>
 
@@ -271,20 +267,20 @@
 			<div class="detail-layout">
 				<div class="detail-main">
 					<div class="section">
-						<div class="section-title">Document Information</div>
+					<div class="section-title">{t("pages.doj.legalDocuments.documentInformation")}</div>
 						<h3 class="doc-title">{selectedDocument.title}</h3>
 						<div class="field-row">
 							<div class="field-group">
-								<span class="field-label">Author</span>
+							<span class="field-label">{t("pages.doj.legalDocuments.author")}</span>
 								<span class="field-value">{selectedDocument.author_name}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Created</span>
+							<span class="field-label">{t("pages.doj.legalDocuments.created")}</span>
 								<span class="field-value">{formatDateValue(selectedDocument.created_at)}</span>
 							</div>
 							{#if selectedDocument.linked_court_case_number}
 								<div class="field-group">
-									<span class="field-label">Court Case</span>
+								<span class="field-label">{t("pages.doj.legalDocuments.courtCase")}</span>
 									<span class="field-value link">{selectedDocument.linked_court_case_number}</span>
 								</div>
 							{/if}
@@ -292,26 +288,26 @@
 					</div>
 
 					<div class="section editor-section">
-						<div class="section-title">Content</div>
-						<textarea class="editor-textarea" bind:value={editContent} placeholder="Document content..."></textarea>
+					<div class="section-title">{t("pages.doj.legalDocuments.content")}</div>
+					<textarea class="editor-textarea" bind:value={editContent} placeholder={t("pages.doj.legalDocuments.contentPlaceholder")}></textarea>
 					</div>
 				</div>
 
 				<div class="detail-side">
 					<div class="section">
-						<div class="section-title">Status</div>
+						<div class="section-title">{t("pages.doj.legalDocuments.status")}</div>
 						<select class="form-select" value={selectedDocument.status} onchange={(e) => handleUpdateStatus((e.target as HTMLSelectElement).value as DocStatus)}>
-							<option value="draft">Draft</option>
-							<option value="filed">Filed</option>
-							<option value="approved">Approved</option>
-							<option value="rejected">Rejected</option>
+							<option value="draft">{formatLabel("draft")}</option>
+							<option value="filed">{formatLabel("filed")}</option>
+							<option value="approved">{formatLabel("approved")}</option>
+							<option value="rejected">{formatLabel("rejected")}</option>
 						</select>
 					</div>
 
 					<div class="section">
-						<div class="section-title">Actions</div>
+						<div class="section-title">{t("pages.doj.legalDocuments.actions")}</div>
 						<button class="danger-btn" onclick={handleDeleteDocument} disabled={isLoading}>
-							Delete Document
+							{t("pages.doj.legalDocuments.deleteDocument")}
 						</button>
 					</div>
 				</div>
@@ -321,7 +317,7 @@
 		<!-- LIST VIEW -->
 		<div class="topbar">
 			<div class="search-box">
-				<input type="text" placeholder="Search documents..." bind:value={searchQuery} />
+				<input type="text" placeholder={t("pages.doj.legalDocuments.searchPlaceholder")} bind:value={searchQuery} />
 			</div>
 			<div class="filter-pills">
 				{#each statusOptions as opt}
@@ -336,9 +332,9 @@
 				{/each}
 			</select>
 			<div class="topbar-actions">
-				<span class="result-count">{allFilteredDocs.length} document{allFilteredDocs.length !== 1 ? "s" : ""}</span>
-				<button class="action-btn" onclick={loadDocuments} disabled={isLoading}>{isLoading ? "Loading..." : "Refresh"}</button>
-				<button class="primary-btn" onclick={() => (showCreateModal = true)}>New Document</button>
+				<span class="result-count">{t(allFilteredDocs.length === 1 ? "pages.doj.legalDocuments.countOne" : "pages.doj.legalDocuments.countMany", { count: allFilteredDocs.length })}</span>
+				<button class="action-btn" onclick={loadDocuments} disabled={isLoading}>{isLoading ? t("common.status.loading") : t("pages.doj.legalDocuments.refresh")}</button>
+				<button class="primary-btn" onclick={() => (showCreateModal = true)}>{t("pages.doj.legalDocuments.newDocument")}</button>
 			</div>
 		</div>
 
@@ -346,21 +342,21 @@
 			{#if isLoading && documents.length === 0}
 				<div class="center-state">
 					<div class="loading-spinner"></div>
-					<p>Loading legal documents...</p>
+					<p>{t("pages.doj.legalDocuments.loading")}</p>
 				</div>
 			{:else if allFilteredDocs.length === 0}
 				<div class="center-state">
-					<h3>No Legal Documents Found</h3>
-					<p>{searchQuery ? "No documents match your search criteria." : "No legal documents available."}</p>
+					<h3>{t("pages.doj.legalDocuments.noneFound")}</h3>
+					<p>{searchQuery ? t("pages.doj.legalDocuments.noMatches") : t("pages.doj.legalDocuments.noneAvailable")}</p>
 				</div>
 			{:else}
 				<div class="table-header">
-					<span>Title</span>
-					<span>Type</span>
-					<span>Status</span>
-					<span>Author</span>
-					<span>Court Case</span>
-					<span>Date</span>
+					<span>{t("pages.doj.legalDocuments.title")}</span>
+					<span>{t("pages.doj.legalDocuments.type")}</span>
+					<span>{t("pages.doj.legalDocuments.status")}</span>
+					<span>{t("pages.doj.legalDocuments.author")}</span>
+					<span>{t("pages.doj.legalDocuments.courtCase")}</span>
+					<span>{t("pages.doj.legalDocuments.date")}</span>
 				</div>
 				<div class="table-body">
 					{#each allFilteredDocs as item}
@@ -384,40 +380,40 @@
 	<div class="modal-backdrop" onclick={() => (showCreateModal = false)} role="presentation">
 		<div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
 			<div class="modal-header">
-				<span class="modal-title">New Legal Document</span>
+				<span class="modal-title">{t("pages.doj.legalDocuments.newDocument")}</span>
 				<button class="modal-close" onclick={() => (showCreateModal = false)}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
 			</div>
 			<div class="modal-body">
 				<div class="form-group">
-					<label class="form-label">Type</label>
+					<label class="form-label">{t("pages.doj.legalDocuments.type")}</label>
 					<select class="form-select" bind:value={newDoc.type}>
-						<option value="brief">Brief</option>
-						<option value="motion">Motion</option>
-						<option value="ruling">Ruling</option>
-						<option value="opinion">Opinion</option>
-						<option value="plea_deal">Plea Deal</option>
-						<option value="sentencing">Sentencing</option>
-						<option value="other">Other</option>
+						<option value="brief">{formatLabel("brief")}</option>
+						<option value="motion">{formatLabel("motion")}</option>
+						<option value="ruling">{formatLabel("ruling")}</option>
+						<option value="opinion">{formatLabel("opinion")}</option>
+						<option value="plea_deal">{formatLabel("plea_deal")}</option>
+						<option value="sentencing">{formatLabel("sentencing")}</option>
+						<option value="other">{formatLabel("other")}</option>
 					</select>
 				</div>
 				<div class="form-group">
-					<label class="form-label">Title</label>
-					<input type="text" class="form-input" placeholder="Document title..." bind:value={newDoc.title} />
+					<label class="form-label">{t("pages.doj.legalDocuments.title")}</label>
+					<input type="text" class="form-input" placeholder={t("pages.doj.legalDocuments.titlePlaceholder")} bind:value={newDoc.title} />
 				</div>
 				<div class="form-group">
-					<label class="form-label">Link to Court Case (optional, ID)</label>
-					<input type="text" class="form-input" placeholder="Court case ID" bind:value={newDoc.linked_court_case_id} />
+					<label class="form-label">{t("pages.doj.legalDocuments.linkCaseOptional")}</label>
+					<input type="text" class="form-input" placeholder={t("pages.doj.legalDocuments.caseIdPlaceholder")} bind:value={newDoc.linked_court_case_id} />
 				</div>
 				<div class="form-group">
-					<label class="form-label">Content</label>
-					<textarea class="form-textarea" style="min-height: 120px;" placeholder="Document content..." bind:value={newDoc.content}></textarea>
+					<label class="form-label">{t("pages.doj.legalDocuments.content")}</label>
+					<textarea class="form-textarea" style="min-height: 120px;" placeholder={t("pages.doj.legalDocuments.contentPlaceholder")} bind:value={newDoc.content}></textarea>
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button class="back-btn" onclick={() => (showCreateModal = false)}>Cancel</button>
-				<button class="primary-btn" disabled={!newDoc.title.trim()} onclick={handleCreateDocument}>Create Document</button>
+				<button class="back-btn" onclick={() => (showCreateModal = false)}>{t("common.actions.cancel")}</button>
+				<button class="primary-btn" disabled={!newDoc.title.trim()} onclick={handleCreateDocument}>{t("pages.doj.legalDocuments.createDocument")}</button>
 			</div>
 		</div>
 	</div>

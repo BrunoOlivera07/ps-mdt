@@ -44,6 +44,7 @@
 	import { globalNotifications } from "../services/notificationService.svelte";
 	import type { AuthService } from "../services/authService.svelte";
 	import ActivityTimeline from "../components/ActivityTimeline.svelte";
+	import { t } from "../lib/i18n";
 
 	let { authService, tabService }: { authService?: AuthService; tabService?: any } = $props();
 
@@ -120,15 +121,15 @@
 	// should match the caller's domain (police "Officer" vs EMS "Personnel").
 	let isEmsDomain = $derived((authService?.jobType ?? "leo") === "ems");
 	let term = $derived({
-		member: isEmsDomain ? "Personnel" : "Officer",
-		members: isEmsDomain ? "Personnel" : "Officers",
-		memberLower: isEmsDomain ? "member" : "officer",
-		membersLower: isEmsDomain ? "members" : "officers",
-		management: isEmsDomain ? "Personnel Management" : "Officer Management",
-		terminate: isEmsDomain ? "Terminate Member" : "Terminate Officer",
+		member: isEmsDomain ? t("pages.roster.personnel") : t("pages.roster.officer"),
+		members: isEmsDomain ? t("pages.roster.personnel") : t("pages.roster.officers"),
+		memberLower: isEmsDomain ? t("pages.roster.memberLower") : t("pages.roster.officerLower"),
+		membersLower: isEmsDomain ? t("pages.roster.membersLower") : t("pages.roster.officersLower"),
+		management: isEmsDomain ? t("pages.roster.personnelManagement") : t("pages.roster.officerManagement"),
+		terminate: isEmsDomain ? t("pages.roster.terminateMember") : t("pages.roster.terminateOfficer"),
 		removeHint: isEmsDomain
-			? "Remove this person from the department. This sets their job to unemployed."
-			: "Remove this officer from the department. This sets their job to unemployed.",
+			? t("pages.roster.removeMemberHint")
+			: t("pages.roster.removeOfficerHint"),
 	});
 
 	let filteredOfficers = $derived.by(() => {
@@ -286,7 +287,7 @@
 				? response.activeUnits
 				: [];
 		} catch (error) {
-			globalNotifications.error("Failed to load roster");
+			globalNotifications.error(t("pages.roster.messages.loadFailed"));
 			officers = [];
 		} finally {
 			isLoading = false;
@@ -406,17 +407,17 @@
 				if (idx !== -1) {
 					officers[idx].certifications = [...selectedCerts];
 				}
-				globalNotifications.success(`Updated certifications for ${selectedOfficer.firstName} ${selectedOfficer.lastName}`);
+		globalNotifications.success(t("pages.roster.messages.certificationsUpdated", { name: `${selectedOfficer.firstName} ${selectedOfficer.lastName}` }));
 				if (showBossPanel) {
 					// Stay on boss panel, just show success
 				} else {
 					closeCertModal();
 				}
 			} else {
-				globalNotifications.error(response?.message || "Failed to update certifications");
+			globalNotifications.error(response?.message || t("pages.roster.messages.certificationsFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to update certifications");
+		globalNotifications.error(t("pages.roster.messages.certificationsFailed"));
 		} finally {
 			isSavingCerts = false;
 		}
@@ -440,12 +441,12 @@
 				if (idx !== -1) {
 					officers[idx].rank = gradeName;
 				}
-				globalNotifications.success(response.message || `Rank updated to ${gradeName}`);
+			globalNotifications.success(response.message || t("pages.roster.messages.rankUpdated", { rank: gradeName }));
 			} else {
-				globalNotifications.error(response?.message || "Failed to update rank");
+			globalNotifications.error(response?.message || t("pages.roster.messages.rankFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to update rank");
+		globalNotifications.error(t("pages.roster.messages.rankFailed"));
 		} finally {
 			isSavingBoss = false;
 		}
@@ -463,13 +464,13 @@
 			);
 			if (response?.success) {
 				officers = officers.filter((o) => o.citizenid !== selectedOfficer!.citizenid);
-				globalNotifications.success(response.message || `${term.member} has been terminated`);
+			globalNotifications.success(response.message || t("pages.roster.messages.terminated", { member: term.member }));
 				closeBossPanel();
 			} else {
-				globalNotifications.error(response?.message || `Failed to terminate ${term.memberLower}`);
+			globalNotifications.error(response?.message || t("pages.roster.messages.terminateFailed", { member: term.memberLower }));
 			}
 		} catch {
-			globalNotifications.error(`Failed to terminate ${term.memberLower}`);
+		globalNotifications.error(t("pages.roster.messages.terminateFailed", { member: term.memberLower }));
 		} finally {
 			isSavingBoss = false;
 			showFireConfirm = false;
@@ -495,7 +496,18 @@
 	}
 
 	function formatIAStatus(status: string): string {
-		return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+		const labels: Record<string, string> = {
+			open: t("pages.roster.statuses.open"),
+			under_review: t("pages.roster.statuses.underReview"),
+			investigated: t("pages.roster.statuses.investigated"),
+			sustained: t("pages.roster.statuses.sustained"),
+			exonerated: t("pages.roster.statuses.exonerated"),
+			active: t("pages.roster.statuses.active"),
+			completed: t("pages.roster.statuses.completed"),
+			failed: t("pages.roster.statuses.failed"),
+			suspended: t("pages.roster.statuses.suspended"),
+		};
+		return labels[status] || status.replace(/_/g, " ");
 	}
 
 	function getIAStatusClass(status: string): string {
@@ -561,7 +573,12 @@
 	}
 
 	function formatPPRCategory(category: string): string {
-		return category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+		const labels: Record<string, string> = {
+			positive: t("pages.roster.categories.positive"),
+			coaching: t("pages.roster.categories.coaching"),
+			disciplinary: t("pages.roster.categories.disciplinary"),
+		};
+		return labels[category] || category.replace(/_/g, " ");
 	}
 
 	function formatDateShort(dateStr: string): string {
@@ -585,12 +602,12 @@
 					officers[idx].callsign = editCallsign.trim();
 					officers[idx].badgeNumber = editCallsign.trim();
 				}
-				globalNotifications.success(response.message || `Callsign updated to ${editCallsign.trim()}`);
+			globalNotifications.success(response.message || t("pages.roster.messages.callsignUpdated", { callsign: editCallsign.trim() }));
 			} else {
-				globalNotifications.error(response?.message || "Failed to update callsign");
+			globalNotifications.error(response?.message || t("pages.roster.messages.callsignFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to update callsign");
+		globalNotifications.error(t("pages.roster.messages.callsignFailed"));
 		} finally {
 			isSavingBoss = false;
 		}
@@ -609,14 +626,14 @@
 	<div class="topbar">
 		<input
 			type="text"
-			placeholder="Search by callsign, name or rank..."
+			placeholder={t("pages.roster.searchPlaceholder")}
 			bind:value={searchQuery}
 			class="search-input"
 		/>
 		<div class="topbar-right">
-			<span class="result-count">{filteredOfficers.length} {term.memberLower}{filteredOfficers.length !== 1 ? "s" : ""}</span>
+			<span class="result-count">{t("pages.roster.resultCount", { count: filteredOfficers.length, members: filteredOfficers.length === 1 ? term.memberLower : term.membersLower })}</span>
 			<button class="btn-secondary" onclick={refreshData} disabled={isLoading}>
-				{isLoading ? "Loading..." : "Refresh"}
+				{isLoading ? t("common.status.loading") : t("pages.roster.refresh")}
 			</button>
 		</div>
 	</div>
@@ -624,28 +641,28 @@
 	<div class="content-area">
 		<div class="list-panel">
 			<div class="table-header">
-				<button class="col-header sortable" onclick={() => handleSort("status")}>Status{getSortIndicator("status")}</button>
-				<button class="col-header sortable" onclick={() => handleSort("callsign")}>Call Sign{getSortIndicator("callsign")}</button>
-				<button class="col-header sortable" onclick={() => handleSort("name")}>Name{getSortIndicator("name")}</button>
-				<span class="col-header">Radio Ch.</span>
-				<button class="col-header sortable" onclick={() => handleSort("rank")}>Rank{getSortIndicator("rank")}</button>
-				<span class="col-header">Dept</span>
-				<span class="col-header">Certifications</span>
+				<button class="col-header sortable" onclick={() => handleSort("status")}>{t("pages.roster.status")}{getSortIndicator("status")}</button>
+				<button class="col-header sortable" onclick={() => handleSort("callsign")}>{t("pages.roster.callsign")}{getSortIndicator("callsign")}</button>
+				<button class="col-header sortable" onclick={() => handleSort("name")}>{t("pages.roster.name")}{getSortIndicator("name")}</button>
+				<span class="col-header">{t("pages.roster.radioChannel")}</span>
+				<button class="col-header sortable" onclick={() => handleSort("rank")}>{t("pages.roster.rank")}{getSortIndicator("rank")}</button>
+				<span class="col-header">{t("pages.roster.department")}</span>
+				<span class="col-header">{t("pages.roster.certifications")}</span>
 			</div>
 
 			<div class="table-body">
 				{#if isLoading}
 					<div class="empty-state">
 						<div class="loading-spinner"></div>
-						<p>Loading roster...</p>
+						<p>{t("pages.roster.loading")}</p>
 					</div>
 				{:else if filteredOfficers.length === 0}
 					<div class="empty-state">
-						<p class="empty-title">No {term.members} Found</p>
+						<p class="empty-title">{t("pages.roster.noneFound", { members: term.members })}</p>
 						<p class="empty-sub">
 							{searchQuery
-								? `No ${term.membersLower} match your search criteria.`
-								: `No ${term.membersLower} are currently in the roster.`}
+								? t("pages.roster.noMatches", { members: term.membersLower })
+								: t("pages.roster.noneInRoster", { members: term.membersLower })}
 						</p>
 					</div>
 				{:else}
@@ -657,7 +674,7 @@
 						>
 							<span class="cell-status">
 								<span class="status-pill" class:on-duty={officer.status === "On Duty"} class:off-duty={officer.status === "Off Duty"}>
-									{officer.status}
+									{officer.status === "On Duty" ? t("pages.roster.onDuty") : t("pages.roster.offDuty")}
 								</span>
 							</span>
 							<span class="cell-callsign">{officer.callsign}</span>
@@ -688,12 +705,12 @@
 
 		<div class="units-panel">
 			<div class="units-header">
-				<span class="units-label">Active Units</span>
+				<span class="units-label">{t("pages.roster.activeUnits")}</span>
 				<span class="units-count">{activeUnits.length}</span>
 			</div>
 
 			{#if activeUnits.length === 0}
-				<div class="units-empty">No units active</div>
+				<div class="units-empty">{t("pages.roster.noActiveUnits")}</div>
 			{:else}
 				<div class="units-list">
 					{#each activeUnits as unit (unit.id)}
@@ -716,7 +733,7 @@
 		<div class="modal-container" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-header">
 				<div class="modal-title-area">
-					<span class="modal-title">Manage Certifications</span>
+				<span class="modal-title">{t("pages.roster.manageCertifications")}</span>
 					<span class="modal-subtitle">{selectedOfficer.firstName} {selectedOfficer.lastName} - {selectedOfficer.callsign}</span>
 				</div>
 				<button class="modal-close" onclick={closeCertModal}>
@@ -728,8 +745,8 @@
 				{#if availableTags.length === 0}
 					<div class="no-tags">
 						<span class="material-icons no-tags-icon">label_off</span>
-						<p>No certifications available.</p>
-						<p class="no-tags-hint">Create {term.memberLower} tags in Management &gt; Tags</p>
+						<p>{t("pages.roster.noCertifications")}</p>
+					<p class="no-tags-hint">{t("pages.roster.createTagsHint", { member: term.memberLower })}</p>
 					</div>
 				{:else}
 					<div class="cert-grid">
@@ -757,13 +774,13 @@
 			</div>
 
 			<div class="modal-footer">
-				<button class="btn-cancel" onclick={closeCertModal}>Cancel</button>
+				<button class="btn-cancel" onclick={closeCertModal}>{t("common.actions.cancel")}</button>
 				<button
 					class="btn-save"
 					onclick={saveCertifications}
 					disabled={isSavingCerts || availableTags.length === 0}
 				>
-					{isSavingCerts ? "Saving..." : "Save"}
+					{isSavingCerts ? t("common.status.saving") : t("common.actions.save")}
 				</button>
 			</div>
 		</div>
@@ -789,16 +806,16 @@
 			<div class="boss-tabs">
 				<button class="boss-tab" class:active={bossPanelTab === "rank"} onclick={() => { bossPanelTab = "rank"; showFireConfirm = false; }}>
 					<span class="material-icons boss-tab-icon">military_tech</span>
-					Rank
+					{t("pages.roster.rank")}
 				</button>
 				<button class="boss-tab" class:active={bossPanelTab === "callsign"} onclick={() => { bossPanelTab = "callsign"; showFireConfirm = false; }}>
 					<span class="material-icons boss-tab-icon">badge</span>
-					Callsign
+					{t("pages.roster.callsign")}
 				</button>
 				{#if canManageCerts}
 					<button class="boss-tab" class:active={bossPanelTab === "certs"} onclick={() => { bossPanelTab = "certs"; showFireConfirm = false; }}>
 						<span class="material-icons boss-tab-icon">verified</span>
-						Certifications
+						{t("pages.roster.certifications")}
 					</button>
 				{/if}
 				<button class="boss-tab" class:active={bossPanelTab === "ppr"} onclick={() => { bossPanelTab = "ppr"; showFireConfirm = false; loadOfficerPPR(); }}>
@@ -811,23 +828,23 @@
 				</button>
 				<button class="boss-tab" class:active={bossPanelTab === "ia_history"} onclick={() => { bossPanelTab = "ia_history"; showFireConfirm = false; loadIAHistory(); }}>
 					<span class="material-icons boss-tab-icon">shield</span>
-					IA History
+					{t("pages.roster.iaHistory")}
 				</button>
 				<button class="boss-tab" class:active={bossPanelTab === "activity"} onclick={() => { bossPanelTab = "activity"; showFireConfirm = false; }}>
 					<span class="material-icons boss-tab-icon">history</span>
-					Activity
+					{t("pages.roster.activity")}
 				</button>
 			</div>
 
 			<div class="boss-body">
 				{#if bossPanelTab === "rank"}
 					<div class="boss-section">
-						<label class="boss-label">Change Rank</label>
-						<p class="boss-hint">Select a new rank for this {term.memberLower}. {term.member} must be online.</p>
+					<label class="boss-label">{t("pages.roster.changeRank")}</label>
+						<p class="boss-hint">{t("pages.roster.rankHint", { member: term.memberLower, memberLabel: term.member })}</p>
 						<div class="grade-grid">
 							{#if jobGrades.length === 0}
 								<div class="no-tags">
-									<p>No grades available for this department.</p>
+						<p>{t("pages.roster.noGrades")}</p>
 								</div>
 							{:else}
 								{#each jobGrades as grade (grade.grade)}
@@ -841,10 +858,10 @@
 										<span class="grade-number">{grade.grade}</span>
 										<span class="grade-name">{grade.name}</span>
 										{#if grade.name === selectedOfficer.rank}
-											<span class="grade-current">Current</span>
+								<span class="grade-current">{t("pages.roster.current")}</span>
 										{/if}
 										{#if grade.isBoss}
-											<span class="grade-boss-badge">Boss</span>
+								<span class="grade-boss-badge">{t("pages.roster.boss")}</span>
 										{/if}
 									</button>
 								{/each}
@@ -864,18 +881,18 @@
 							</button>
 						{:else}
 							<div class="fire-confirm">
-								<p class="fire-warning">Are you sure you want to terminate <strong>{selectedOfficer.firstName} {selectedOfficer.lastName}</strong>?</p>
+						<p class="fire-warning">{t("pages.roster.terminateConfirm", { name: `${selectedOfficer.firstName} ${selectedOfficer.lastName}` })}</p>
 								<label class="fire-delete-toggle">
 									<input type="checkbox" bind:checked={deleteUserData} />
-									<span>Delete all user data from MDT</span>
+							<span>{t("pages.roster.deleteAllData")}</span>
 								</label>
 								{#if deleteUserData}
-									<p class="fire-delete-hint">Removes this person's logs, tags, status, FTO/PPR file, clock records and patrol membership. Reports, evidence, cases, warrants and arrests are kept.</p>
+						<p class="fire-delete-hint">{t("pages.roster.deleteDataHint")}</p>
 								{/if}
 								<div class="fire-actions">
-									<button class="btn-cancel" onclick={() => showFireConfirm = false}>Cancel</button>
+							<button class="btn-cancel" onclick={() => showFireConfirm = false}>{t("common.actions.cancel")}</button>
 									<button class="btn-fire-confirm" onclick={fireOfficer} disabled={isSavingBoss}>
-										{isSavingBoss ? "Processing..." : "Confirm Termination"}
+										{isSavingBoss ? t("sopAgreement.processing") : t("pages.roster.confirmTermination")}
 									</button>
 								</div>
 							</div>
@@ -884,14 +901,14 @@
 
 				{:else if bossPanelTab === "callsign"}
 					<div class="boss-section">
-						<label class="boss-label">Edit Callsign</label>
-						<p class="boss-hint">Update this {term.memberLower}'s callsign/badge number. {term.member} must be online.</p>
+					<label class="boss-label">{t("pages.roster.editCallsign")}</label>
+					<p class="boss-hint">{t("pages.roster.callsignHint", { member: term.memberLower, memberLabel: term.member })}</p>
 						<div class="callsign-input-row">
 							<input
 								type="text"
 								class="callsign-input"
 								bind:value={editCallsign}
-								placeholder="Enter callsign..."
+						placeholder={t("pages.roster.callsignPlaceholder")}
 								maxlength="10"
 							/>
 						</div>
@@ -899,12 +916,12 @@
 
 				{:else if bossPanelTab === "certs"}
 					<div class="boss-section">
-						<label class="boss-label">Manage Certifications</label>
+					<label class="boss-label">{t("pages.roster.manageCertifications")}</label>
 						{#if availableTags.length === 0}
 							<div class="no-tags">
 								<span class="material-icons no-tags-icon">label_off</span>
-								<p>No certifications available.</p>
-								<p class="no-tags-hint">Create {term.memberLower} tags in Management &gt; Tags</p>
+						<p>{t("pages.roster.noCertifications")}</p>
+					<p class="no-tags-hint">{t("pages.roster.createTagsHint", { member: term.memberLower })}</p>
 							</div>
 						{:else}
 							<div class="cert-grid">
@@ -933,14 +950,14 @@
 
 				{:else if bossPanelTab === "ppr"}
 					<div class="boss-section">
-						<label class="boss-label">Performance Reviews</label>
-						<p class="boss-hint">Performance planning and review entries for this {term.memberLower}.</p>
+					<label class="boss-label">{t("pages.roster.performanceReviews")}</label>
+						<p class="boss-hint">{t("pages.roster.pprHint", { member: term.memberLower })}</p>
 						{#if pprHistoryLoading}
-							<p class="boss-hint">Loading...</p>
+						<p class="boss-hint">{t("common.status.loading")}</p>
 						{:else if pprHistory.length === 0}
 							<div class="no-tags">
 								<span class="material-icons no-tags-icon">rate_review</span>
-								<p>No PPR entries found for this {term.memberLower}.</p>
+								<p>{t("pages.roster.noPprEntries", { member: term.memberLower })}</p>
 							</div>
 						{:else}
 							<div class="ia-history-list">
@@ -955,7 +972,7 @@
 											<span class="ia-history-date">{formatDateShort(ppr.created_at)}</span>
 										</div>
 										<div class="ia-history-meta">
-											<span style="color: rgba(255,255,255,0.35); font-size: 9px;">By {ppr.author_name}</span>
+											<span style="color: rgba(255,255,255,0.35); font-size: 9px;">{t("pages.roster.byAuthor", { author: ppr.author_name })}</span>
 										</div>
 									</div>
 								{/each}
@@ -965,14 +982,14 @@
 
 				{:else if bossPanelTab === "fto"}
 					<div class="boss-section">
-						<label class="boss-label">Field Training History</label>
-						<p class="boss-hint">FTO training assignments for this {term.memberLower}.</p>
+					<label class="boss-label">{t("pages.roster.ftoHistory")}</label>
+						<p class="boss-hint">{t("pages.roster.ftoHint", { member: term.memberLower })}</p>
 						{#if ftoHistoryLoading}
-							<p class="boss-hint">Loading...</p>
+						<p class="boss-hint">{t("common.status.loading")}</p>
 						{:else if ftoHistory.length === 0}
 							<div class="no-tags">
 								<span class="material-icons no-tags-icon">school</span>
-								<p>No FTO records found for this {term.memberLower}.</p>
+								<p>{t("pages.roster.noFtoRecords", { member: term.memberLower })}</p>
 							</div>
 						{:else}
 							<div class="ia-history-list">
@@ -980,11 +997,11 @@
 									<div class="ia-history-item">
 										<div class="ia-history-info">
 											<span class="ia-history-number">{record.fto_number}</span>
-											<span class="ia-pill {getFTOStatusClass(record.status)}">{record.status.toUpperCase()}</span>
+											<span class="ia-pill {getFTOStatusClass(record.status)}">{formatIAStatus(record.status)}</span>
 										</div>
 										<div class="ia-history-meta">
 											<span style="flex:1;">
-												{record.trainee_name === selectedOfficer?.name ? 'Trainer' : 'Trainee'}:
+												{record.trainee_name === selectedOfficer?.name ? t("pages.roster.trainer") : t("pages.roster.trainee")}:
 												{record.trainee_name === selectedOfficer?.name ? record.trainer_name : record.trainee_name}
 											</span>
 											{#if record.phase_name}
@@ -996,7 +1013,7 @@
 												<span style="color: rgba(255,255,255,0.35); font-size: 9px;">{record.dor_count} DOR{record.dor_count !== 1 ? 's' : ''}</span>
 											{/if}
 											{#if record.latest_rating}
-												<span style="color: rgba(255,255,255,0.5); font-size: 9px;">Rating: {record.latest_rating}/5</span>
+												<span style="color: rgba(255,255,255,0.5); font-size: 9px;">{t("pages.roster.rating", { rating: record.latest_rating })}</span>
 											{/if}
 											<span class="ia-history-date">{formatDateShort(record.start_date || record.created_at)}</span>
 										</div>
@@ -1008,14 +1025,14 @@
 
 				{:else if bossPanelTab === "ia_history"}
 					<div class="boss-section">
-						<label class="boss-label">IA Complaint History</label>
-						<p class="boss-hint">Internal affairs complaints involving this {term.memberLower}.</p>
+					<label class="boss-label">{t("pages.roster.iaHistory")}</label>
+						<p class="boss-hint">{t("pages.roster.iaHint", { member: term.memberLower })}</p>
 						{#if iaHistoryLoading}
-							<p class="boss-hint">Loading...</p>
+						<p class="boss-hint">{t("common.status.loading")}</p>
 						{:else if iaHistory.length === 0}
 							<div class="no-tags">
 								<span class="material-icons no-tags-icon">verified_user</span>
-								<p>No IA complaints found for this {term.memberLower}.</p>
+								<p>{t("pages.roster.noIaComplaints", { member: term.memberLower })}</p>
 							</div>
 						{:else}
 							<div class="ia-history-list">
@@ -1037,8 +1054,8 @@
 
 				{:else if bossPanelTab === "activity"}
 					<div class="boss-section">
-						<label class="boss-label">Activity Timeline</label>
-						<p class="boss-hint">Recorded changes involving this {term.memberLower} — rank, callsign, status and more.</p>
+					<label class="boss-label">{t("pages.roster.activityTimeline")}</label>
+						<p class="boss-hint">{t("pages.roster.activityHint", { member: term.memberLower })}</p>
 						{#if selectedOfficer?.citizenid}
 							<ActivityTimeline citizenid={selectedOfficer.citizenid} />
 						{/if}
@@ -1047,14 +1064,14 @@
 			</div>
 
 			<div class="modal-footer">
-				<button class="btn-cancel" onclick={closeBossPanel}>Close</button>
+				<button class="btn-cancel" onclick={closeBossPanel}>{t("common.actions.close")}</button>
 				{#if bossPanelTab === "rank" && selectedGrade !== null}
 					<button
 						class="btn-save"
 						onclick={promoteOfficer}
 						disabled={isSavingBoss}
 					>
-						{isSavingBoss ? "Saving..." : "Update Rank"}
+					{isSavingBoss ? t("common.status.saving") : t("pages.roster.updateRank")}
 					</button>
 				{:else if bossPanelTab === "callsign"}
 					<button
@@ -1062,7 +1079,7 @@
 						onclick={saveCallsign}
 						disabled={isSavingBoss || editCallsign.length === 0}
 					>
-						{isSavingBoss ? "Saving..." : "Save Callsign"}
+					{isSavingBoss ? t("common.status.saving") : t("pages.roster.saveCallsign")}
 					</button>
 				{:else if bossPanelTab === "certs"}
 					<button
@@ -1070,7 +1087,7 @@
 						onclick={saveCertifications}
 						disabled={isSavingCerts || availableTags.length === 0}
 					>
-						{isSavingCerts ? "Saving..." : "Save Certifications"}
+					{isSavingCerts ? t("common.status.saving") : t("pages.roster.saveCertifications")}
 					</button>
 				{/if}
 			</div>

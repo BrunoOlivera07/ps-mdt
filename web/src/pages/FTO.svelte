@@ -10,6 +10,7 @@
 	import PersonSearchModal from "../components/report-editor/PersonSearchModal.svelte";
 	import type { createTabService } from "../services/tabService.svelte";
 	import type { AuthService } from "../services/authService.svelte";
+	import { t } from "../lib/i18n";
 
 	let { tabService, authService }: { tabService?: ReturnType<typeof createTabService>; authService?: AuthService } = $props();
 
@@ -146,7 +147,7 @@
 			assignments = data.entries || [];
 		} catch (e) {
 			console.error('[FTO] loadAssignments error:', e);
-			globalNotifications.error("Failed to load FTO assignments");
+			globalNotifications.error(t("pages.fto.messages.loadFailed"));
 		}
 		loading = false;
 	}
@@ -166,7 +167,7 @@
 				dors: raw?.dors || [],
 			};
 		} catch {
-			globalNotifications.error("Failed to load FTO assignment details");
+			globalNotifications.error(t("pages.fto.messages.detailLoadFailed"));
 		}
 		loading = false;
 	}
@@ -208,16 +209,16 @@
 				{ success: true }
 			);
 			if (!result || result.success === false) {
-				globalNotifications.error(result?.error || "Failed to create FTO assignment");
+				globalNotifications.error(result?.error || t("pages.fto.messages.createFailed"));
 				isSubmitting = false;
 				return;
 			}
-			globalNotifications.success("FTO assignment created");
+			globalNotifications.success(t("pages.fto.messages.created"));
 			resetCreateForm();
 			showCreateForm = false;
 			if (!isEnvBrowser()) loadAssignments();
 		} catch {
-			globalNotifications.error("Failed to create FTO assignment");
+			globalNotifications.error(t("pages.fto.messages.createFailed"));
 		}
 		isSubmitting = false;
 	}
@@ -226,10 +227,10 @@
 		if (!selectedDetail || !canManage) return;
 		try {
 			await fetchNui(NUI_EVENTS.FTO.DELETE_FTO_ASSIGNMENT, { id: selectedDetail.assignment.id }, { success: true });
-			globalNotifications.success("FTO assignment deleted");
+			globalNotifications.success(t("pages.fto.messages.deleted"));
 			goBack();
 		} catch {
-			globalNotifications.error("Failed to delete FTO assignment");
+			globalNotifications.error(t("pages.fto.messages.deleteFailed"));
 		}
 	}
 
@@ -263,18 +264,18 @@
 				{ success: true }
 			);
 			if (!result || result.success === false) {
-				globalNotifications.error(result?.error || "Failed to create DOR");
+				globalNotifications.error(result?.error || t("pages.fto.messages.dorCreateFailed"));
 				dorSubmitting = false;
 				return;
 			}
-			globalNotifications.success("Daily Observation Report created");
+			globalNotifications.success(t("pages.fto.messages.dorCreated"));
 			showDorForm = false;
 			dorRatings = [];
 			dorNotes = "";
 			dorShiftDate = "";
 			await selectAssignment(selectedDetail.assignment.id);
 		} catch {
-			globalNotifications.error("Failed to create DOR");
+			globalNotifications.error(t("pages.fto.messages.dorCreateFailed"));
 		}
 		dorSubmitting = false;
 	}
@@ -288,14 +289,14 @@
 				assignment_id: selectedDetail.assignment.id,
 			}, { success: true });
 			if (res?.success) {
-				globalNotifications.success("DOR deleted");
+			globalNotifications.success(t("pages.fto.messages.dorDeleted"));
 				await selectAssignment(selectedDetail.assignment.id);
 				await loadAssignments();
 			} else {
-				globalNotifications.error(res?.error || "Failed to delete DOR");
+			globalNotifications.error(res?.error || t("pages.fto.messages.dorDeleteFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to delete DOR");
+			globalNotifications.error(t("pages.fto.messages.dorDeleteFailed"));
 		}
 	}
 
@@ -346,7 +347,9 @@
 	}
 
 	function formatLabel(value: string): string {
-		return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		const key = `pages.fto.statuses.${value}`;
+		const translated = t(key);
+		return translated === key ? value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : translated;
 	}
 
 	// Phase progress
@@ -491,16 +494,16 @@
 				res = await fetchNui(NUI_EVENTS.FTO.SET_FTO_STATUS, { assignment_id: id, status: kind === "fail" ? "failed" : "suspended" }, { success: true });
 			}
 			if (res?.success) {
-				const labels: Record<string, string> = { advance: "Advanced to next phase", complete: "Training completed", back: "Moved back a phase", fail: "Marked as failed", suspend: "Training suspended" };
-				globalNotifications.success(labels[kind] || "Updated");
+			const labels: Record<string, string> = { advance: t("pages.fto.messages.advanced"), complete: t("pages.fto.messages.completed"), back: t("pages.fto.messages.movedBack"), fail: t("pages.fto.messages.markedFailed"), suspend: t("pages.fto.messages.suspended") };
+			globalNotifications.success(labels[kind] || t("pages.fto.messages.updated"));
 				phaseAction = null;
 				await selectAssignment(id);
 				await loadAssignments();
 			} else {
-				globalNotifications.error(res?.error || "Action failed");
+			globalNotifications.error(res?.error || t("pages.fto.messages.actionFailed"));
 			}
 		} catch {
-			globalNotifications.error("Action failed");
+		globalNotifications.error(t("pages.fto.messages.actionFailed"));
 		} finally {
 			phaseActionBusy = false;
 		}
@@ -512,14 +515,14 @@
 		try {
 			const res = await fetchNui<{ success: boolean; error?: string }>(NUI_EVENTS.FTO.SET_FTO_STATUS, { assignment_id: id, status: "active" }, { success: true });
 			if (res?.success) {
-				globalNotifications.success("Training reactivated");
+			globalNotifications.success(t("pages.fto.messages.reactivated"));
 				await selectAssignment(id);
 				await loadAssignments();
 			} else {
-				globalNotifications.error(res?.error || "Action failed");
+			globalNotifications.error(res?.error || t("pages.fto.messages.actionFailed"));
 			}
 		} catch {
-			globalNotifications.error("Action failed");
+		globalNotifications.error(t("pages.fto.messages.actionFailed"));
 		}
 	}
 
@@ -534,11 +537,11 @@
 	// ── 1–5 point rating scale (single source of truth, explained everywhere) ──
 	// 1 = worst, 5 = best. Descriptions keep trainers consistent and honest.
 	const RATING_SCALE = [
-		{ value: 1, label: "Poor", desc: "Unsatisfactory — could not perform, needed to be taken over" },
-		{ value: 2, label: "Needs Work", desc: "Below standard — frequent correction/prompting required" },
-		{ value: 3, label: "Competent", desc: "Meets standard — performs the task with minimal guidance" },
-		{ value: 4, label: "Proficient", desc: "Above standard — consistent, reliable, little to no help" },
-		{ value: 5, label: "Excellent", desc: "Exceptional — independent and exceeds expectations" },
+		{ value: 1, label: t("pages.fto.ratings.poor"), desc: t("pages.fto.ratings.poorDesc") },
+		{ value: 2, label: t("pages.fto.ratings.needsWork"), desc: t("pages.fto.ratings.needsWorkDesc") },
+		{ value: 3, label: t("pages.fto.ratings.competent"), desc: t("pages.fto.ratings.competentDesc") },
+		{ value: 4, label: t("pages.fto.ratings.proficient"), desc: t("pages.fto.ratings.proficientDesc") },
+		{ value: 5, label: t("pages.fto.ratings.excellent"), desc: t("pages.fto.ratings.excellentDesc") },
 	] as const;
 
 	function ratingLabel(v: number): string {
@@ -589,49 +592,49 @@
 
 		<div class="detail-scroll">
 			{#if isCompleted}
-				<div class="status-watermark wm-complete">COMPLETE</div>
+			<div class="status-watermark wm-complete">{t("pages.fto.complete")}</div>
 			{:else if isFailed}
-				<div class="status-watermark wm-failed">FAILED</div>
+			<div class="status-watermark wm-failed">{t("pages.fto.failed")}</div>
 			{/if}
 			<div class="detail-layout">
 				<!-- Left Column: Main Content -->
 				<div class="detail-main">
 					<div class="section">
 						<div class="section-header">
-							<div class="section-title" style="margin-bottom:0;">Assignment Details</div>
+				<div class="section-title" style="margin-bottom:0;">{t("pages.fto.assignmentDetails")}</div>
 							{#if canManage}
 								<div class="inline-controls">
-									<button class="action-btn danger" onclick={handleDelete}>Delete</button>
+					<button class="action-btn danger" onclick={handleDelete}>{t("common.actions.delete")}</button>
 								</div>
 							{/if}
 						</div>
 						<div class="field-row">
 							<div class="field-group">
-								<span class="field-label">Trainee</span>
+					<span class="field-label">{t("pages.fto.trainee")}</span>
 								<span class="field-value">{selectedDetail.assignment.trainee_name || '-'}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Trainer (FTO)</span>
+					<span class="field-label">{t("pages.fto.trainerFto")}</span>
 								<span class="field-value">{selectedDetail.assignment.trainer_name || '-'}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Status</span>
+					<span class="field-label">{t("pages.fto.status")}</span>
 								<span class="pill {getStatusPillClass(selectedDetail.assignment.status)}">{formatLabel(selectedDetail.assignment.status)}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Start Date</span>
+					<span class="field-label">{t("pages.fto.startDate")}</span>
 								<span class="field-value">{formatDateValue(selectedDetail.assignment.start_date)}</span>
 							</div>
 							{#if selectedDetail.assignment.end_date}
 								<div class="field-group">
-									<span class="field-label">End Date</span>
+						<span class="field-label">{t("pages.fto.endDate")}</span>
 									<span class="field-value">{formatDateValue(selectedDetail.assignment.end_date)}</span>
 								</div>
 							{/if}
 						</div>
 						{#if selectedDetail.assignment.notes}
 							<div class="field-group" style="margin-top:6px;">
-								<span class="field-label">Notes</span>
+					<span class="field-label">{t("pages.fto.notes")}</span>
 								<p class="summary-text">{selectedDetail.assignment.notes}</p>
 							</div>
 						{/if}
@@ -639,7 +642,7 @@
 
 					<!-- Training Progress (trainer tool) -->
 					<div class="section">
-						<div class="section-title">Training Progress</div>
+			<div class="section-title">{t("pages.fto.trainingProgress")}</div>
 
 						<!-- Overall program progress -->
 						<div class="overall-progress">
@@ -677,7 +680,7 @@
 						<div class="phase-stats">
 							<div class="phase-stat">
 								<span class="phase-stat-value">{phaseProgress.current}/{phaseProgress.total}</span>
-								<span class="phase-stat-label">Phase</span>
+						<span class="phase-stat-label">{t("pages.fto.phase")}</span>
 							</div>
 							<div class="phase-stat">
 								<span class="phase-stat-value" style="color:{ratingColor(isCompleted ? overallAvgAll : avgOverall)}">{(isCompleted ? overallAvgAll : avgOverall) ? (isCompleted ? overallAvgAll : avgOverall).toFixed(1) : "—"}</span>
@@ -689,7 +692,7 @@
 							</div>
 							<div class="phase-stat">
 								<span class="phase-stat-value">{daysInProgram ?? "—"}</span>
-								<span class="phase-stat-label">Days in program</span>
+						<span class="phase-stat-label">{t("pages.fto.daysInProgram")}</span>
 							</div>
 						</div>
 
@@ -716,18 +719,18 @@
 										</button>
 									{/if}
 									{#if prevPhase}
-										<button class="phase-btn phase-btn-ghost" onclick={() => askPhaseAction("back")} title="Move back one phase">
+					<button class="phase-btn phase-btn-ghost" onclick={() => askPhaseAction("back")} title={t("pages.fto.moveBackPhase")}>
 											<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
 											Back
 										</button>
 									{/if}
 									<span class="phase-actions-spacer"></span>
-									<button class="phase-btn phase-btn-warn" onclick={() => askPhaseAction("suspend")}>Suspend</button>
-									<button class="phase-btn phase-btn-danger" onclick={() => askPhaseAction("fail")}>Fail</button>
+					<button class="phase-btn phase-btn-warn" onclick={() => askPhaseAction("suspend")}>{t("pages.fto.suspend")}</button>
+					<button class="phase-btn phase-btn-danger" onclick={() => askPhaseAction("fail")}>{t("pages.fto.fail")}</button>
 								</div>
 							{:else if selectedDetail.assignment.status === "suspended"}
 								<div class="phase-actions">
-									<button class="phase-btn phase-btn-advance" onclick={reactivateAssignment}>Reactivate training</button>
+					<button class="phase-btn phase-btn-advance" onclick={reactivateAssignment}>{t("pages.fto.reactivateTraining")}</button>
 								</div>
 							{/if}
 						{/if}
@@ -736,7 +739,7 @@
 					<!-- Competency proficiency -->
 					{#if competencyAverages.length > 0}
 						<div class="section">
-							<div class="section-title">Competency Proficiency</div>
+			<div class="section-title">{t("pages.fto.competencyProficiency")}</div>
 							<div class="comp-averages">
 								{#each competencyAverages as c}
 									<div class="comp-avg-row">
@@ -766,12 +769,12 @@
 						{#if showDorForm}
 							<div class="dor-form">
 								<div class="form-group">
-									<span class="form-label">Shift Date</span>
+						<span class="form-label">{t("pages.fto.shiftDate")}</span>
 									<input type="date" class="form-input" bind:value={dorShiftDate} />
 								</div>
 
 								<div class="rating-legend">
-									<span class="rating-legend-title">Score each competency from 1 to 5 — 1 = worst, 5 = best</span>
+						<span class="rating-legend-title">{t("pages.fto.ratingLegend")}</span>
 									<div class="rating-legend-scale">
 										{#each RATING_SCALE as s}
 											<span class="rating-legend-item" title={s.desc}>
@@ -780,7 +783,7 @@
 											</span>
 										{/each}
 									</div>
-									<span class="rating-legend-hint">Hover a level for its meaning. Be honest — these scores drive phase advancement.</span>
+						<span class="rating-legend-hint">{t("pages.fto.ratingHint")}</span>
 								</div>
 
 								<div class="dor-ratings-grid">
@@ -805,19 +808,19 @@
 								</div>
 
 								<div class="dor-overall">
-									<span class="field-label">Overall score (average)</span>
+						<span class="field-label">{t("pages.fto.overallScore")}</span>
 									<span class="dor-overall-value" style="color:{ratingColor(dorOverallRating)}">{dorOverallRating || "—"} / 5 · {ratingLabel(dorOverallRating)}</span>
 								</div>
 
 								<div class="form-group">
-									<span class="form-label">Notes</span>
-									<textarea class="form-textarea" rows="3" bind:value={dorNotes} placeholder="Observation notes..."></textarea>
+						<span class="form-label">{t("pages.fto.notes")}</span>
+						<textarea class="form-textarea" rows="3" bind:value={dorNotes} placeholder={t("pages.fto.observationNotes")}></textarea>
 								</div>
 
 								<div class="form-actions">
-									<button class="action-btn" onclick={() => { showDorForm = false; }}>Cancel</button>
+						<button class="action-btn" onclick={() => { showDorForm = false; }}>{t("common.actions.cancel")}</button>
 									<button class="primary-btn" onclick={handleCreateDor} disabled={dorSubmitting || !dorShiftDate}>
-										{dorSubmitting ? 'Submitting...' : 'Submit DOR'}
+										{dorSubmitting ? t("pages.fto.submitting") : t("pages.fto.submitDor")}
 									</button>
 								</div>
 							</div>
@@ -854,7 +857,7 @@
 								{/each}
 							</div>
 						{:else}
-							<p class="muted-text">No DORs recorded yet.</p>
+					<p class="muted-text">{t("pages.fto.noDors")}</p>
 						{/if}
 					</div>
 				</div>
@@ -879,57 +882,57 @@
 					{/if}
 
 					<div class="section">
-						<div class="section-title">Summary</div>
+				<div class="section-title">{t("pages.fto.summary")}</div>
 						<div class="field-group">
-							<span class="field-label">FTO Number</span>
+					<span class="field-label">{t("pages.fto.ftoNumber")}</span>
 							<span class="field-value">{selectedDetail.assignment.fto_number || "—"}</span>
 						</div>
 						<div class="field-group">
-							<span class="field-label">Trainer</span>
+					<span class="field-label">{t("pages.fto.trainer")}</span>
 							<span class="field-value">{selectedDetail.assignment.trainer_name}</span>
 						</div>
 						<div class="field-group">
-							<span class="field-label">Current Phase</span>
+					<span class="field-label">{t("pages.fto.currentPhase")}</span>
 							<span class="field-value">{selectedDetail.assignment.current_phase || "—"}</span>
 						</div>
 						<div class="field-group">
-							<span class="field-label">Start Date</span>
+					<span class="field-label">{t("pages.fto.startDate")}</span>
 							<span class="field-value">{formatDateValue(selectedDetail.assignment.start_date)}</span>
 						</div>
 						<div class="field-group">
-							<span class="field-label">Days in Program</span>
+					<span class="field-label">{t("pages.fto.daysInProgram")}</span>
 							<span class="field-value">{daysInProgram ?? "—"}</span>
 						</div>
 					</div>
 
 					<div class="section">
-						<div class="section-title">Performance</div>
+				<div class="section-title">{t("pages.fto.performance")}</div>
 						<div class="perf-grid">
 							<div class="perf-cell">
 								<span class="perf-value" style="color:{ratingColor(overallAvgAll)}">{overallAvgAll ? overallAvgAll.toFixed(1) : "—"}</span>
-								<span class="perf-label">Overall avg</span>
+						<span class="perf-label">{t("pages.fto.overallAverage")}</span>
 							</div>
 							{#if isCompleted}
 								<div class="perf-cell">
 									<span class="perf-value" style="color:rgba(74,222,128,0.95)">{phaseProgress.total}/{phaseProgress.total}</span>
-									<span class="perf-label">Phases done</span>
+						<span class="perf-label">{t("pages.fto.phasesDone")}</span>
 								</div>
 							{:else}
 								<div class="perf-cell">
 									<span class="perf-value" style="color:{ratingColor(avgOverall)}">{avgOverall ? avgOverall.toFixed(1) : "—"}</span>
-									<span class="perf-label">This phase</span>
+						<span class="perf-label">{t("pages.fto.thisPhase")}</span>
 								</div>
 							{/if}
 							<div class="perf-cell">
 								<span class="perf-value">{selectedDetail.dors.length}</span>
-								<span class="perf-label">Total DORs</span>
+						<span class="perf-label">{t("pages.fto.totalDors")}</span>
 							</div>
 						</div>
 					</div>
 
 					{#if phaseBreakdown.some(p => p.count > 0)}
 						<div class="section">
-							<div class="section-title">By Phase</div>
+				<div class="section-title">{t("pages.fto.byPhase")}</div>
 							<div class="pb-list">
 								{#each phaseBreakdown as pb}
 									<div class="pb-row">
@@ -944,17 +947,17 @@
 
 					{#if bestCompetency || weakestCompetency}
 						<div class="section">
-							<div class="section-title">Highlights</div>
+				<div class="section-title">{t("pages.fto.highlights")}</div>
 							{#if bestCompetency}
 								<div class="hl-row">
-									<span class="hl-tag hl-good">Strongest</span>
+						<span class="hl-tag hl-good">{t("pages.fto.strongest")}</span>
 									<span class="hl-name">{bestCompetency.name}</span>
 									<span class="hl-val" style="color:{ratingColor(bestCompetency.avg)}">{bestCompetency.avg.toFixed(1)}</span>
 								</div>
 							{/if}
 							{#if weakestCompetency && weakestCompetency.id !== bestCompetency?.id}
 								<div class="hl-row">
-									<span class="hl-tag hl-bad">Needs work</span>
+						<span class="hl-tag hl-bad">{t("pages.fto.needsWork")}</span>
 									<span class="hl-name">{weakestCompetency.name}</span>
 									<span class="hl-val" style="color:{ratingColor(weakestCompetency.avg)}">{weakestCompetency.avg.toFixed(1)}</span>
 								</div>
@@ -972,33 +975,33 @@
 				<div class="confirm-modal" role="dialog" aria-modal="true">
 					<div class="confirm-header">
 						<span class="confirm-title">
-							{#if phaseAction.kind === "advance"}Advance to {nextPhase?.name}?
-							{:else if phaseAction.kind === "complete"}Complete training?
-							{:else if phaseAction.kind === "back"}Move back to {prevPhase?.name}?
-							{:else if phaseAction.kind === "fail"}Mark training as failed?
-							{:else}Suspend training?{/if}
+							{#if phaseAction.kind === "advance"}{t("pages.fto.confirmAdvance", { phase: nextPhase?.name || "" })}
+							{:else if phaseAction.kind === "complete"}{t("pages.fto.confirmComplete")}
+							{:else if phaseAction.kind === "back"}{t("pages.fto.confirmMoveBack", { phase: prevPhase?.name || "" })}
+							{:else if phaseAction.kind === "fail"}{t("pages.fto.confirmFail")}
+							{:else}{t("pages.fto.confirmSuspend")}{/if}
 						</span>
-						<button class="confirm-close" aria-label="Cancel" onclick={() => (phaseAction = null)}>
+				<button class="confirm-close" aria-label={t("common.actions.cancel")} onclick={() => (phaseAction = null)}>
 							<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 						</button>
 					</div>
 					<div class="confirm-body">
 						<p class="confirm-text">
-							{#if phaseAction.kind === "advance"}This moves {selectedDetail.assignment.trainee_name} from {selectedDetail.assignment.current_phase} to {nextPhase?.name}. DORs for the new phase start fresh.
-							{:else if phaseAction.kind === "complete"}This graduates {selectedDetail.assignment.trainee_name} and marks the assignment as completed.
-							{:else if phaseAction.kind === "back"}This steps {selectedDetail.assignment.trainee_name} back one phase.
-							{:else if phaseAction.kind === "fail"}This closes the assignment as failed. You can reactivate it later if needed.
-							{:else}This pauses the assignment. You can reactivate it later.{/if}
+							{#if phaseAction.kind === "advance"}{t("pages.fto.advanceDescription", { trainee: selectedDetail.assignment.trainee_name, current: selectedDetail.assignment.current_phase, next: nextPhase?.name || "" })}
+							{:else if phaseAction.kind === "complete"}{t("pages.fto.completeDescription", { trainee: selectedDetail.assignment.trainee_name })}
+							{:else if phaseAction.kind === "back"}{t("pages.fto.backDescription", { trainee: selectedDetail.assignment.trainee_name })}
+							{:else if phaseAction.kind === "fail"}{t("pages.fto.failDescription")}
+							{:else}{t("pages.fto.suspendDescription")}{/if}
 						</p>
 						{#if (phaseAction.kind === "advance" || phaseAction.kind === "complete") && !phaseReady}
 							<p class="confirm-warn">⚠ {selectedDetail.assignment.trainee_name} hasn't met the recommended criteria yet (avg ≥ {ADVANCE_MIN_AVG.toFixed(1)}/5 over ≥ {ADVANCE_MIN_DORS} DORs this phase). Proceed only if you have grounds to.</p>
 						{/if}
 						{#if phaseAction.kind === "advance" || phaseAction.kind === "complete"}
-							<textarea class="confirm-note" rows="2" placeholder="Optional note for the record…" bind:value={phaseAction.note}></textarea>
+				<textarea class="confirm-note" rows="2" placeholder={t("pages.fto.optionalRecordNote")} bind:value={phaseAction.note}></textarea>
 						{/if}
 					</div>
 					<div class="confirm-footer">
-						<button class="phase-btn phase-btn-ghost" disabled={phaseActionBusy} onclick={() => (phaseAction = null)}>Cancel</button>
+					<button class="phase-btn phase-btn-ghost" disabled={phaseActionBusy} onclick={() => (phaseAction = null)}>{t("common.actions.cancel")}</button>
 						<button
 							class="phase-btn {phaseAction.kind === 'fail' ? 'phase-btn-danger' : phaseAction.kind === 'suspend' ? 'phase-btn-warn' : 'phase-btn-advance'}"
 							disabled={phaseActionBusy}
@@ -1015,60 +1018,60 @@
 		<div class="topbar">
 			<button class="back-btn" onclick={() => { showCreateForm = false; resetCreateForm(); }}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-				Back to FTO List
+				{t("pages.fto.backToList")}
 			</button>
 		</div>
 
 		<div class="create-form">
-			<h3>New FTO Assignment</h3>
+			<h3>{t("pages.fto.newAssignment")}</h3>
 
 			<div class="form-group">
-				<span class="form-label">Trainee</span>
+					<span class="form-label">{t("pages.fto.trainee")}</span>
 				<button
 					class="officer-search-trigger"
 					class:placeholder={!newTraineeName}
 					onclick={() => (showTraineeSearch = true)}
 				>
-					{newTraineeName || 'Click to search for a trainee...'}
+					{newTraineeName || t("pages.fto.selectTrainee")}
 				</button>
 			</div>
 
 			<div class="form-group">
-				<span class="form-label">Trainer (FTO)</span>
+					<span class="form-label">{t("pages.fto.trainerFto")}</span>
 				<button
 					class="officer-search-trigger"
 					class:placeholder={!newTrainerName}
 					onclick={() => (showTrainerSearch = true)}
 				>
-					{newTrainerName || 'Click to search for a trainer...'}
+					{newTrainerName || t("pages.fto.selectTrainer")}
 				</button>
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<span class="form-label">Starting Phase</span>
+					<span class="form-label">{t("pages.fto.startingPhase")}</span>
 					<select class="form-select" bind:value={newPhaseId}>
-						<option value={undefined}>-- Select Phase --</option>
+						<option value={undefined}>{t("pages.fto.selectPhase")}</option>
 						{#each phases as phase}
 							<option value={phase.id}>{phase.name}</option>
 						{/each}
 					</select>
 				</div>
 				<div class="form-group">
-					<span class="form-label">Start Date</span>
+					<span class="form-label">{t("pages.fto.startDate")}</span>
 					<input type="date" class="form-input" bind:value={newStartDate} />
 				</div>
 			</div>
 
 			<div class="form-group">
-				<span class="form-label">Notes</span>
-				<textarea class="form-textarea" rows="3" bind:value={newNotes} placeholder="Additional notes..."></textarea>
+					<span class="form-label">{t("pages.fto.notes")}</span>
+					<textarea class="form-textarea" rows="3" bind:value={newNotes} placeholder={t("pages.fto.additionalNotes")}></textarea>
 			</div>
 
 			<div class="form-actions">
-				<button class="action-btn" onclick={() => { showCreateForm = false; resetCreateForm(); }}>Cancel</button>
+				<button class="action-btn" onclick={() => { showCreateForm = false; resetCreateForm(); }}>{t("common.actions.cancel")}</button>
 				<button class="primary-btn" onclick={handleCreate} disabled={isSubmitting || !newTraineeCitizenId || !newTrainerCitizenId}>
-					{isSubmitting ? 'Submitting...' : 'Create Assignment'}
+					{isSubmitting ? t("pages.fto.submitting") : t("pages.fto.createAssignment")}
 				</button>
 			</div>
 		</div>
@@ -1091,7 +1094,7 @@
 		<div class="topbar">
 			<div class="search-box">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-				<input type="text" placeholder="Search by trainee or trainer name..." bind:value={searchQuery} />
+			<input type="text" placeholder={t("pages.fto.searchPlaceholder")} bind:value={searchQuery} />
 			</div>
 			<div style="flex:1;"></div>
 			{#if canManage}
@@ -1110,24 +1113,24 @@
 			{#if loading && assignments.length === 0}
 				<div class="center-state">
 					<div class="loading-spinner"></div>
-					<p>Loading FTO assignments...</p>
+				<p>{t("pages.fto.loadingAssignments")}</p>
 				</div>
 			{:else if paginatedAssignments.length === 0}
 				<div class="center-state">
 					<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-					<h3>No FTO Assignments Found</h3>
-					<p>{searchQuery ? "No assignments match your search criteria." : "No FTO assignments have been created yet."}</p>
+				<h3>{t("pages.fto.noneFound")}</h3>
+					<p>{searchQuery ? t("pages.fto.noMatches") : t("pages.fto.noneCreated")}</p>
 				</div>
 			{:else}
 				<div class="table-header">
 					<span>#</span>
-					<span>Trainee</span>
-					<span>Trainer</span>
-					<span>Phase</span>
-					<span>Status</span>
-					<span>Start Date</span>
-					<span>DORs</span>
-					<span>Rating</span>
+					<span>{t("pages.fto.trainee")}</span>
+					<span>{t("pages.fto.trainer")}</span>
+					<span>{t("pages.fto.phase")}</span>
+					<span>{t("pages.fto.status")}</span>
+					<span>{t("pages.fto.startDate")}</span>
+					<span>{t("pages.fto.dors")}</span>
+					<span>{t("pages.fto.rating")}</span>
 				</div>
 				<div class="table-body">
 					{#each paginatedAssignments as item}
@@ -1165,7 +1168,7 @@
 
 <PersonSearchModal
 	show={showTraineeSearch}
-	title="Search Trainee"
+		title={t("pages.fto.searchTrainee")}
 	searchQuery={personSearchQuery}
 	searchResults={searchService.state.results}
 	onClose={() => {
@@ -1178,7 +1181,7 @@
 
 <PersonSearchModal
 	show={showTrainerSearch}
-	title="Search Trainer (FTO)"
+		title={t("pages.fto.searchTrainer")}
 	searchQuery={personSearchQuery}
 	searchResults={searchService.state.results}
 	onClose={() => {

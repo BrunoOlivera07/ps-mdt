@@ -3,6 +3,7 @@
 	import { fetchNui } from "../utils/fetchNui";
 	import { NUI_EVENTS } from "../constants/nuiEvents";
 	import type { AuthService } from "../services/authService.svelte";
+	import { t } from "../lib/i18n";
 
 	interface SOPSection {
 		id: number;
@@ -194,14 +195,14 @@
 		<div class="sidebar-header">
 			<span class="material-icons header-icon">menu_book</span>
 			<div class="header-text">
-				<h2>Standard Operating Procedures</h2>
+				<h2>{t("pages.sop.title")}</h2>
 				{#if sopSettings.version}
 					<span class="version-line">
-						Version {sopSettings.version}
+						{t("pages.sop.version", { version: sopSettings.version })}
 						{#if agreement.agreed}
-							<span class="ack-pill ack-ok" title="You have acknowledged this version">Acknowledged</span>
+							<span class="ack-pill ack-ok" title={t("pages.sop.acknowledgedHint")}>{t("pages.sop.acknowledged")}</span>
 						{:else}
-							<span class="ack-pill ack-pending" title="You have not acknowledged this version">Not acknowledged</span>
+							<span class="ack-pill ack-pending" title={t("pages.sop.notAcknowledgedHint")}>{t("pages.sop.notAcknowledged")}</span>
 						{/if}
 					</span>
 				{/if}
@@ -212,12 +213,12 @@
 			<span class="material-icons search-icon">search</span>
 			<input
 				type="text"
-				placeholder="Search procedures…"
+				placeholder={t("pages.sop.searchPlaceholder")}
 				bind:value={searchQuery}
 				onkeydown={(e) => { if (e.key === "Escape") searchQuery = ""; }}
 			/>
 			{#if searchQuery}
-				<button class="search-clear" aria-label="Clear search" onclick={() => (searchQuery = "")}>
+				<button class="search-clear" aria-label={t("pages.sop.clearSearch")} onclick={() => (searchQuery = "")}>
 					<span class="material-icons">close</span>
 				</button>
 			{/if}
@@ -225,7 +226,7 @@
 
 		{#if query}
 			<div class="search-summary">
-				{matchCount} section{matchCount === 1 ? "" : "s"} matched
+				{t("pages.sop.matchedSections", { count: matchCount })}
 			</div>
 		{/if}
 
@@ -233,7 +234,7 @@
 			{#if loading}
 				<div class="loading-state">
 					<div class="spinner"></div>
-					<span>Loading…</span>
+					<span>{t("common.status.loading")}</span>
 				</div>
 			{:else}
 				{#if hasOverview && !query}
@@ -244,8 +245,8 @@
 					>
 						<span class="material-icons cat-icon">flag</span>
 						<div class="cat-info">
-							<span class="cat-title">Overview</span>
-							<span class="cat-count">Mission &amp; introduction</span>
+							<span class="cat-title">{t("pages.sop.overview")}</span>
+							<span class="cat-count">{t("pages.sop.missionAndIntroduction")}</span>
 						</div>
 					</button>
 				{/if}
@@ -253,7 +254,7 @@
 				{#if filteredCategories.length === 0}
 					<div class="empty-state">
 						<span class="material-icons">search_off</span>
-						<span>{query ? "Nothing matched that search" : "No SOPs published yet"}</span>
+						<span>{query ? t("pages.sop.noSearchMatches") : t("pages.sop.nonePublished")}</span>
 					</div>
 				{:else}
 					{#each filteredCategories as category (category.id)}
@@ -266,8 +267,7 @@
 							<div class="cat-info">
 								<span class="cat-title">{category.title}</span>
 								<span class="cat-count">
-									{category.sections.length} section{category.sections.length === 1 ? "" : "s"}
-									{#if query}matching{/if}
+									{t(query ? "pages.sop.sectionCountMatching" : "pages.sop.sectionCount", { count: category.sections.length })}
 								</span>
 							</div>
 						</button>
@@ -294,21 +294,21 @@
 		{#if loading}
 			<div class="content-empty">
 				<div class="spinner"></div>
-				<span>Loading SOPs…</span>
+				<span>{t("pages.sop.loading")}</span>
 			</div>
 		{:else if selectedCategoryId === null && hasOverview}
 			<!-- Overview: the mission statement and introduction used to be a banner
 			     stapled on top of every category. They're their own page now. -->
 			<div class="content-header">
 				<span class="material-icons">flag</span>
-				<h2>Overview</h2>
+				<h2>{t("pages.sop.overview")}</h2>
 			</div>
 
 			{#if sopSettings.mission_statement?.trim()}
 				<div class="doc-card">
 					<div class="doc-header">
 						<span class="material-icons doc-icon">flag</span>
-						<h3>Mission Statement</h3>
+						<h3>{t("pages.sop.missionStatement")}</h3>
 					</div>
 					<div class="doc-body prose">{@html sopSettings.mission_statement}</div>
 				</div>
@@ -318,7 +318,7 @@
 				<div class="doc-card">
 					<div class="doc-header">
 						<span class="material-icons doc-icon">info</span>
-						<h3>Introduction</h3>
+						<h3>{t("pages.sop.introduction")}</h3>
 					</div>
 					<div class="doc-body prose">{@html sopSettings.introduction}</div>
 				</div>
@@ -326,20 +326,20 @@
 		{:else if !selectedCategory}
 			<div class="content-empty">
 				<span class="material-icons empty-icon">menu_book</span>
-				<h3>Select a category</h3>
-				<p>Choose an SOP category from the sidebar to read it.</p>
+				<h3>{t("pages.sop.selectCategory")}</h3>
+				<p>{t("pages.sop.selectCategoryHint")}</p>
 			</div>
 		{:else if visibleSections.length === 0}
 			<div class="content-empty">
 				<span class="material-icons empty-icon">article</span>
 				<h3>{selectedCategory.title}</h3>
-				<p>{query ? "No sections in this category match your search." : "No sections have been added to this category yet."}</p>
+				<p>{query ? t("pages.sop.noSectionsMatch") : t("pages.sop.noSections")}</p>
 			</div>
 		{:else}
 			<div class="content-header">
 				<span class="material-icons">{selectedCategory.icon || "description"}</span>
 				<h2>{selectedCategory.title}</h2>
-				<span class="header-count">{visibleSections.length} section{visibleSections.length === 1 ? "" : "s"}</span>
+				<span class="header-count">{t("pages.sop.sectionCount", { count: visibleSections.length })}</span>
 			</div>
 
 			<!-- Jump list. An SOP category can run long; scrolling blind through it to
@@ -373,7 +373,7 @@
 
 			<button class="back-to-top" onclick={backToTop}>
 				<span class="material-icons">arrow_upward</span>
-				Back to top
+				{t("pages.sop.backToTop")}
 			</button>
 		{/if}
 	</div>

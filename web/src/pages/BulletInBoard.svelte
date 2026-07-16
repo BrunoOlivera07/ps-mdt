@@ -4,6 +4,7 @@
     import { fetchNui } from "../utils/fetchNui";
     import { NUI_EVENTS } from "../constants/nuiEvents";
     import type { AuthService } from "../services/authService.svelte";
+    import { t, tf } from "../lib/i18n";
 
     // ── Types ──────────────────────────────────────────────────
 
@@ -45,14 +46,14 @@
     // ── Constants ──────────────────────────────────────────────
 
     const STATIC_ALL_CATEGORY: SidebarCategory = {
-        label: 'All Posts', icon: 'dashboard', value: 'all', color: '#6B7280'
+        label: t("pages.bulletinBoard.allPosts"), icon: 'dashboard', value: 'all', color: '#6B7280'
     };
 
     const PRIORITY_META: Record<BulletinPriority, { label: string; icon: string; color: string }> = {
-        low:    { label: 'Low',    icon: 'arrow_downward', color: 'rgba(100,200,100,0.80)' },
-        normal: { label: 'Normal', icon: 'remove',         color: 'rgba(160,160,210,0.80)' },
-        high:   { label: 'High',   icon: 'arrow_upward',   color: 'rgba(240,180,40,0.90)'  },
-        urgent: { label: 'Urgent', icon: 'priority_high',  color: 'rgba(220,70,60,0.95)'   },
+        low:    { label: t("pages.bulletinBoard.priorities.low"),    icon: 'arrow_downward', color: 'rgba(100,200,100,0.80)' },
+        normal: { label: t("pages.bulletinBoard.priorities.normal"), icon: 'remove',         color: 'rgba(160,160,210,0.80)' },
+        high:   { label: t("pages.bulletinBoard.priorities.high"),   icon: 'arrow_upward',   color: 'rgba(240,180,40,0.90)'  },
+        urgent: { label: t("pages.bulletinBoard.priorities.urgent"), icon: 'priority_high',  color: 'rgba(220,70,60,0.95)'   },
     };
 
     // ── State ──────────────────────────────────────────────────
@@ -139,6 +140,10 @@
             icon: 'label',
             color: '#6B7280',
         };
+    }
+
+    function getCategoryLabel(category: SidebarCategory): string {
+        return tf(`pages.bulletinBoard.categories.${category.value}`, category.label);
     }
 
     function canEdit(_post: BulletinPost): boolean {
@@ -248,12 +253,12 @@
     <div class="bulletin-sidebar">
         <div class="sidebar-header">
             <span class="material-icons header-icon">campaign</span>
-            <h2>Bulletin Board</h2>
+			<h2>{t("pages.bulletinBoard.title")}</h2>
         </div>
 
         <div class="search-box">
             <span class="material-icons search-icon">search</span>
-            <input type="text" placeholder="Search posts..." bind:value={searchQuery} />
+			<input type="text" placeholder={t("pages.bulletinBoard.searchPlaceholder")} bind:value={searchQuery} />
         </div>
 
         <div class="category-list">
@@ -279,8 +284,8 @@
                         style={activeCategory === cat.value && cat.value !== 'all' ? `color:${cat.color};` : ''}
                     >{cat.icon}</span>
                     <div class="cat-info">
-                        <span class="cat-title">{cat.label}</span>
-                        <span class="cat-count">{count} post{count !== 1 ? 's' : ''}</span>
+						<span class="cat-title">{getCategoryLabel(cat)}</span>
+						<span class="cat-count">{t(count === 1 ? "pages.bulletinBoard.postCountOne" : "pages.bulletinBoard.postCountMany", { count })}</span>
                     </div>
                     {#if activeCategory === cat.value && cat.value !== 'all'}
                         <span
@@ -296,7 +301,7 @@
             {#if canPost()}
                 <button class="create-btn" onclick={openCreate}>
                     <span class="material-icons">add</span>
-                    New Post
+				{t("pages.bulletinBoard.newPost")}
                 </button>
             {/if}
         </div>
@@ -312,23 +317,23 @@
                 style="border-left-color:{activeCatMeta.color}; background:linear-gradient(90deg, {activeCatMeta.color}12, transparent);"
             >
                 <span class="material-icons" style="color:{activeCatMeta.color}; font-size:16px;">{activeCatMeta.icon}</span>
-                <span class="content-cat-title" style="color:{activeCatMeta.color};">{activeCatMeta.label}</span>
+			<span class="content-cat-title" style="color:{activeCatMeta.color};">{getCategoryLabel(activeCatMeta)}</span>
                 <span class="content-cat-sep">·</span>
-                <span class="content-cat-count">{postCountFor(activeCategory)} post{postCountFor(activeCategory) !== 1 ? 's' : ''}</span>
+			<span class="content-cat-count">{t(postCountFor(activeCategory) === 1 ? "pages.bulletinBoard.postCountOne" : "pages.bulletinBoard.postCountMany", { count: postCountFor(activeCategory) })}</span>
             </div>
         {/if}
 
         {#if loading}
             <div class="content-empty">
                 <div class="spinner"></div>
-                <span>Loading bulletin board...</span>
+			<span>{t("pages.bulletinBoard.loading")}</span>
             </div>
 
         {:else if posts.length === 0}
             <div class="content-empty">
                 <span class="material-icons empty-icon">campaign</span>
-                <h3>No Posts Yet</h3>
-                <p>Be the first to post on the bulletin board.</p>
+			<h3>{t("pages.bulletinBoard.noPostsYet")}</h3>
+			<p>{t("pages.bulletinBoard.firstPost")}</p>
             </div>
 
         {:else}
@@ -337,7 +342,7 @@
             {#if pinnedPosts.length > 0}
                 <div class="section-label">
                     <span class="material-icons label-icon">push_pin</span>
-                    <span>Pinned</span>
+					<span>{t("pages.bulletinBoard.pinned")}</span>
                 </div>
                 <div class="posts-list">
                     {#each pinnedPosts as post (post.id)}
@@ -374,7 +379,7 @@
                                     style="color:{catMeta.color};background:{catMeta.color}12;border-color:{catMeta.color}25;"
                                 >
                                     <span class="material-icons" style="font-size:10px;">{catMeta.icon}</span>
-                                    {post.category_label ?? catMeta.label}
+									{getCategoryLabel({ ...catMeta, label: post.category_label ?? catMeta.label })}
                                 </span>
                                 <span class="meta-sep">·</span>
                                 <span class="material-icons meta-icon">schedule</span>
@@ -389,18 +394,18 @@
                                     {#if canPin()}
                                         <button class="action-btn pin" onclick={() => togglePin(post)}>
                                             <span class="material-icons">push_pin</span>
-                                            Unpin
+										{t("pages.bulletinBoard.unpin")}
                                         </button>
                                     {/if}
                                     {#if canEdit(post)}
                                         <button class="action-btn edit" onclick={() => openEdit(post)}>
                                             <span class="material-icons">edit</span>
-                                            Edit
+										{t("common.actions.edit")}
                                         </button>
                                     {/if}
                                     <button class="action-btn delete" onclick={() => askDelete(post.id)}>
                                         <span class="material-icons">delete</span>
-                                        Delete
+									{t("common.actions.delete")}
                                     </button>
                                 </div>
                             {/if}
@@ -413,7 +418,7 @@
             {#if regularPosts().length > 0}
                 <div class="section-label" style="margin-top: {pinnedPosts.length > 0 ? '16px' : '0'};">
                     <span class="material-icons label-icon">article</span>
-                    <span>Posts</span>
+					<span>{t("pages.bulletinBoard.posts")}</span>
                 </div>
                 <div class="posts-list">
                     {#each regularPosts() as post (post.id)}
@@ -450,7 +455,7 @@
                                     style="color:{catMeta.color};background:{catMeta.color}12;border-color:{catMeta.color}25;"
                                 >
                                     <span class="material-icons" style="font-size:10px;">{catMeta.icon}</span>
-                                    {post.category_label ?? catMeta.label}
+									{getCategoryLabel({ ...catMeta, label: post.category_label ?? catMeta.label })}
                                 </span>
                                 <span class="meta-sep">·</span>
                                 <span class="material-icons meta-icon">schedule</span>
@@ -465,18 +470,18 @@
                                     {#if canPin()}
                                         <button class="action-btn pin" onclick={() => togglePin(post)}>
                                             <span class="material-icons">push_pin</span>
-                                            Pin
+										{t("pages.bulletinBoard.pin")}
                                         </button>
                                     {/if}
                                     {#if canEdit(post)}
                                         <button class="action-btn edit" onclick={() => openEdit(post)}>
                                             <span class="material-icons">edit</span>
-                                            Edit
+										{t("common.actions.edit")}
                                         </button>
                                     {/if}
                                     <button class="action-btn delete" onclick={() => askDelete(post.id)}>
                                         <span class="material-icons">delete</span>
-                                        Delete
+									{t("common.actions.delete")}
                                     </button>
                                 </div>
                             {/if}
@@ -486,8 +491,8 @@
             {:else if pinnedPosts.length === 0}
                 <div class="content-empty">
                     <span class="material-icons empty-icon">search_off</span>
-                    <h3>No posts found</h3>
-                    <p>Try adjusting your search or category filter.</p>
+				<h3>{t("pages.bulletinBoard.noneFound")}</h3>
+				<p>{t("pages.bulletinBoard.adjustFilters")}</p>
                 </div>
             {/if}
         {/if}
@@ -504,8 +509,8 @@
                 <span class="material-icons modal-header-icon">
                     {modal.mode === 'create' ? 'add_circle' : 'edit'}
                 </span>
-                <h3>{modal.mode === 'create' ? 'New Bulletin Post' : 'Edit Post'}</h3>
-                <button class="close-btn" onclick={closeModal} aria-label="Close">
+				<h3>{modal.mode === 'create' ? t("pages.bulletinBoard.newBulletinPost") : t("pages.bulletinBoard.editPost")}</h3>
+				<button class="close-btn" onclick={closeModal} aria-label={t("common.actions.close")}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                     </svg>
@@ -514,21 +519,21 @@
 
             <div class="modal-body">
                 <div class="form-group form-full">
-                    <span class="field-label">Title <span class="required">*</span></span>
+					<span class="field-label">{t("pages.bulletinBoard.fields.title")} <span class="required">*</span></span>
                     <input
                         class="form-input"
                         type="text"
-                        placeholder="Post title..."
+						placeholder={t("pages.bulletinBoard.placeholders.title")}
                         bind:value={modal.post.title}
                         maxlength="255"
                     />
                 </div>
 
                 <div class="form-group">
-                    <span class="field-label">Category</span>
+					<span class="field-label">{t("pages.bulletinBoard.fields.category")}</span>
                     <select class="form-input form-select" bind:value={modal.post.category}>
                         {#each categories as cat}
-                            <option value={cat.value}>{cat.label}</option>
+							<option value={cat.value}>{getCategoryLabel(cat)}</option>
                         {/each}
                     </select>
                     <!-- Color preview for selected category -->
@@ -537,30 +542,30 @@
                         <div class="cat-select-preview">
                             <span class="dot" style="background:{selCat.color};"></span>
                             <span class="material-icons" style="font-size:12px;color:{selCat.color};">{selCat.icon}</span>
-                            <span style="color:{selCat.color}; font-size:10px;">{selCat.label}</span>
+							<span style="color:{selCat.color}; font-size:10px;">{getCategoryLabel(selCat)}</span>
                         </div>
                     {/if}
                 </div>
 
                 <div class="form-group">
-                    <span class="field-label">Priority</span>
+					<span class="field-label">{t("pages.bulletinBoard.fields.priority")}</span>
                     <select class="form-input form-select" bind:value={modal.post.priority}>
-                        <option value="low">Low</option>
-                        <option value="normal">Normal</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
+						<option value="low">{PRIORITY_META.low.label}</option>
+						<option value="normal">{PRIORITY_META.normal.label}</option>
+						<option value="high">{PRIORITY_META.high.label}</option>
+						<option value="urgent">{PRIORITY_META.urgent.label}</option>
                     </select>
                 </div>
 
                 <div class="form-group form-full">
-                    <span class="field-label">Content <span class="required">*</span></span>
+					<span class="field-label">{t("pages.bulletinBoard.fields.content")} <span class="required">*</span></span>
                     <textarea
                         class="form-input"
-                        placeholder="Write your post content here... (HTML supported)"
+						placeholder={t("pages.bulletinBoard.placeholders.content")}
                         bind:value={modal.post.content}
                         rows="8"
                     ></textarea>
-                    <span class="field-hint">Basic HTML tags are supported: &lt;b&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;p&gt;, etc.</span>
+					<span class="field-hint">{t("pages.bulletinBoard.htmlHint")}</span>
                 </div>
 
                 {#if canPin()}
@@ -568,14 +573,14 @@
                         <input type="checkbox" id="chk-pinned" bind:checked={modal.post.pinned} />
                         <label for="chk-pinned">
                             <span class="material-icons">push_pin</span>
-                            Pin this post to the top
+							{t("pages.bulletinBoard.pinToTop")}
                         </label>
                     </div>
                 {/if}
             </div>
 
             <div class="modal-footer">
-                <button class="cancel-btn" onclick={closeModal} disabled={saving}>Cancel</button>
+				<button class="cancel-btn" onclick={closeModal} disabled={saving}>{t("common.actions.cancel")}</button>
                 <button
                     class="primary-btn"
                     onclick={savePost}
@@ -586,7 +591,7 @@
                     {:else}
                         <span class="material-icons" style="font-size: 13px;">save</span>
                     {/if}
-                    {modal.mode === 'create' ? 'Post' : 'Save Changes'}
+					{modal.mode === 'create' ? t("pages.bulletinBoard.post") : t("pages.bulletinBoard.saveChanges")}
                 </button>
             </div>
         </div>
@@ -601,21 +606,21 @@
         <div class="modal modal-sm" onclick={(e) => e.stopPropagation()}>
             <div class="modal-header">
                 <span class="material-icons modal-header-icon" style="color: rgba(220,70,60,0.85);">warning</span>
-                <h3>Delete Post</h3>
-                <button class="close-btn" onclick={() => deleteConfirm = { open: false, postId: null }} aria-label="Close">
+				<h3>{t("pages.bulletinBoard.deletePost")}</h3>
+				<button class="close-btn" onclick={() => deleteConfirm = { open: false, postId: null }} aria-label={t("common.actions.close")}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                     </svg>
                 </button>
             </div>
             <div class="modal-body">
-                <p class="confirm-text">Are you sure you want to delete this post? This action cannot be undone.</p>
+				<p class="confirm-text">{t("pages.bulletinBoard.confirmDelete")}</p>
             </div>
             <div class="modal-footer">
-                <button class="cancel-btn" onclick={() => deleteConfirm = { open: false, postId: null }} disabled={saving}>Cancel</button>
+				<button class="cancel-btn" onclick={() => deleteConfirm = { open: false, postId: null }} disabled={saving}>{t("common.actions.cancel")}</button>
                 <button class="delete-btn" onclick={confirmDelete} disabled={saving}>
                     {#if saving}<div class="spinner-sm"></div>{:else}<span class="material-icons" style="font-size: 13px;">delete</span>{/if}
-                    Delete
+					{t("common.actions.delete")}
                 </button>
             </div>
         </div>

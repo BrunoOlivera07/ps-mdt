@@ -6,6 +6,7 @@
 	import type { createTabService } from "../services/tabService.svelte";
 	import type { MDTTab } from "../constants";
 	import Pagination from "../components/Pagination.svelte";
+	import { t } from "../lib/i18n";
 
 	let { tabService }: { tabService?: ReturnType<typeof createTabService> } = $props();
 
@@ -65,13 +66,13 @@
 		stash?: boolean; stored?: boolean;
 		plate?: boolean; quantity?: boolean;
 	}> = {
-		Physical:  { serial: true, description: true, descriptionPlaceholder: "What is it? (e.g. Knife, Clothing, Bag)", stash: true, stored: true },
-		Digital:   { description: true, descriptionPlaceholder: "Type of digital evidence (e.g. Phone records, CCTV footage)" },
-		Document:  { serial: true, serialLabel: "Document #", serialPlaceholder: "Document reference number", description: true, descriptionPlaceholder: "Document type (e.g. Bank statement, ID card)" },
-		Weapon:    { serial: true, serialLabel: "Serial Number", serialPlaceholder: "Weapon serial number", stash: true, stored: true },
-		Drug:      { description: true, descriptionPlaceholder: "Substance type (e.g. Cocaine, Marijuana)", quantity: true, stash: true, stored: true },
-		Vehicle:   { plate: true, description: true, descriptionPlaceholder: "Vehicle description (e.g. Red Sultan RS)" },
-		Other:     { serial: true, description: true, descriptionPlaceholder: "Describe the evidence", stash: true, stored: true },
+		Physical:  { serial: true, description: true, descriptionPlaceholder: t("pages.evidence.placeholders.physicalDescription"), stash: true, stored: true },
+		Digital:   { description: true, descriptionPlaceholder: t("pages.evidence.placeholders.digitalDescription") },
+		Document:  { serial: true, serialLabel: t("pages.evidence.documentNumber"), serialPlaceholder: t("pages.evidence.placeholders.documentReference"), description: true, descriptionPlaceholder: t("pages.evidence.placeholders.documentDescription") },
+		Weapon:    { serial: true, serialLabel: t("pages.evidence.serialNumber"), serialPlaceholder: t("pages.evidence.placeholders.weaponSerial"), stash: true, stored: true },
+		Drug:      { description: true, descriptionPlaceholder: t("pages.evidence.placeholders.drugDescription"), quantity: true, stash: true, stored: true },
+		Vehicle:   { plate: true, description: true, descriptionPlaceholder: t("pages.evidence.placeholders.vehicleDescription") },
+		Other:     { serial: true, description: true, descriptionPlaceholder: t("pages.evidence.placeholders.otherDescription"), stash: true, stored: true },
 	};
 
 	let typeConfig = $derived(TYPE_FIELDS[createForm.type] || TYPE_FIELDS.Other);
@@ -163,7 +164,7 @@
 	async function handleCreateEvidence() {
 		evidenceError = "";
 		if (!createForm.title.trim()) {
-			evidenceError = "Title is required.";
+			evidenceError = t("pages.evidence.messages.titleRequired");
 			return;
 		}
 
@@ -186,7 +187,7 @@
 			total = items.length;
 			showCreate = false;
 			resetCreateForm();
-			showStatus("Evidence created successfully");
+			showStatus(t("pages.evidence.messages.created"));
 			return;
 		}
 
@@ -224,15 +225,15 @@
 				showCreate = false;
 				resetCreateForm();
 				await loadEvidence(1);
-				showStatus("Evidence created successfully");
+				showStatus(t("pages.evidence.messages.created"));
 				if (stashToOpen) {
 					await openStash(stashToOpen);
 				}
 			} else {
-				evidenceError = (response as any)?.error || "Failed to create evidence. Please try again.";
+				evidenceError = (response as any)?.error || t("pages.evidence.messages.createFailed");
 			}
 		} catch (err) {
-			evidenceError = "An error occurred while creating evidence.";
+			evidenceError = t("pages.evidence.messages.createError");
 		}
 	}
 
@@ -247,7 +248,7 @@
 
 	async function handleLinkEvidenceCase() {
 		if (!selectedEvidenceId || !linkCaseId.trim()) {
-			if (!linkCaseId.trim()) showStatus("Enter a Case ID or Case Number", "error");
+			if (!linkCaseId.trim()) showStatus(t("pages.evidence.messages.enterCaseId"), "error");
 			return;
 		}
 		try {
@@ -258,36 +259,36 @@
 				selectedEvidence?.report_id ? Number(selectedEvidence.report_id) : undefined,
 			);
 			if (result?.success) {
-				showStatus("Evidence linked to Case #" + linkCaseId.trim());
+				showStatus(t("pages.evidence.messages.linkedCase", { id: linkCaseId.trim() }));
 				await loadEvidence(page);
 			} else {
-				showStatus((result as any)?.error || "Failed to link evidence", "error");
+				showStatus((result as any)?.error || t("pages.evidence.messages.linkCaseFailed"), "error");
 			}
 		} catch {
-			showStatus("Failed to link evidence", "error");
+			showStatus(t("pages.evidence.messages.linkCaseFailed"), "error");
 		}
 	}
 
 	async function handleLinkEvidenceReport() {
 		if (!selectedEvidenceId || !linkReportId.trim()) {
-			if (!linkReportId.trim()) showStatus("Enter a Report ID", "error");
+			if (!linkReportId.trim()) showStatus(t("pages.evidence.messages.enterReportId"), "error");
 			return;
 		}
 		try {
 			const reportIdNum = Number(linkReportId.trim());
 			if (!reportIdNum) {
-				showStatus("Report ID must be a number", "error");
+			showStatus(t("pages.evidence.messages.reportIdNumber"), "error");
 				return;
 			}
 			const result = await evidenceService.linkEvidenceToReport(selectedEvidenceId, reportIdNum);
 			if (result?.success) {
-				showStatus("Evidence linked to Report #" + linkReportId.trim());
+				showStatus(t("pages.evidence.messages.linkedReport", { id: linkReportId.trim() }));
 				await loadEvidence(page);
 			} else {
-				showStatus((result as any)?.error || "Failed to link evidence to report", "error");
+				showStatus((result as any)?.error || t("pages.evidence.messages.linkReportFailed"), "error");
 			}
 		} catch {
-			showStatus("Failed to link evidence to report", "error");
+			showStatus(t("pages.evidence.messages.linkReportFailed"), "error");
 		}
 	}
 
@@ -302,7 +303,7 @@
 				selectedEvidence = items[idx];
 				linkCaseId = String(newCaseId);
 			}
-			showStatus("Case #" + newCaseId + " created");
+			showStatus(t("pages.evidence.messages.caseCreated", { id: newCaseId }));
 			return;
 		}
 		try {
@@ -311,14 +312,14 @@
 				selectedEvidence?.report_id ? Number(selectedEvidence.report_id) : undefined,
 			);
 			if (response?.success) {
-				showStatus("Case #" + (response.caseId || "") + " created from evidence");
+				showStatus(t("pages.evidence.messages.caseCreatedFromEvidence", { id: response.caseId || "" }));
 				linkCaseId = response.caseId ? String(response.caseId) : linkCaseId;
 				await loadEvidence(page);
 			} else {
-				showStatus((response as any)?.error || "Failed to create case", "error");
+				showStatus((response as any)?.error || t("pages.evidence.messages.createCaseFailed"), "error");
 			}
 		} catch {
-			showStatus("Failed to create case", "error");
+			showStatus(t("pages.evidence.messages.createCaseFailed"), "error");
 		}
 	}
 
@@ -350,7 +351,7 @@
 					label: sidebarImageLabelInput.trim() || "Evidence",
 				}];
 			}
-			uploadSuccess = "Image added successfully";
+			uploadSuccess = t("pages.evidence.messages.imageAdded");
 			sidebarImageUrlInput = "";
 			sidebarImageLabelInput = "";
 			sidebarImageUrlModalOpen = false;
@@ -375,12 +376,12 @@
 						label: sidebarImageLabelInput.trim(),
 					}];
 				}
-				uploadSuccess = "Image added successfully";
+				uploadSuccess = t("pages.evidence.messages.imageAdded");
 			} else {
-				evidenceError = "Failed to add image";
+				evidenceError = t("pages.evidence.messages.imageAddFailed");
 			}
 		} catch {
-			evidenceError = "Failed to add image";
+			evidenceError = t("pages.evidence.messages.imageAddFailed");
 		}
 
 		sidebarImageUrlInput = "";
@@ -399,7 +400,7 @@
 	}
 
 	function formatStored(value: boolean | number | undefined) {
-		return value ? "Stored" : "In Field";
+		return value ? t("pages.evidence.stored") : t("pages.evidence.inField");
 	}
 
 	onMount(async () => {
@@ -424,41 +425,41 @@
 	<div class="modal-backdrop" onclick={(e) => { if (e.target === e.currentTarget) sidebarImageUrlModalOpen = false; }}>
 		<div class="modal image-url-modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-header">
-				<h3>Add Evidence Image</h3>
+			<h3>{t("pages.evidence.addEvidenceImage")}</h3>
 				<button class="close-btn" onclick={() => sidebarImageUrlModalOpen = false}>
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
 			</div>
 			<div class="modal-body img-modal-body">
 				<div class="img-form-group">
-					<span class="img-label">Image URL</span>
+				<span class="img-label">{t("pages.evidence.imageUrl")}</span>
 					<input
 						class="img-input"
 						type="url"
-						placeholder="https://example.com/photo.jpg"
+					placeholder={t("pages.evidence.placeholders.imageUrl")}
 						bind:value={sidebarImageUrlInput}
 						onkeydown={(e) => { if (e.key === 'Enter') handleAddSidebarImageUrl(); if (e.key === 'Escape') sidebarImageUrlModalOpen = false; }}
 					/>
 				</div>
 				<div class="img-form-group">
-					<span class="img-label">Label <span class="img-label-optional">(optional)</span></span>
+				<span class="img-label">{t("pages.evidence.label")} <span class="img-label-optional">{t("pages.evidence.optional")}</span></span>
 					<input
 						class="img-input"
 						type="text"
-						placeholder="e.g. Crime scene photo"
+					placeholder={t("pages.evidence.placeholders.imageLabel")}
 						bind:value={sidebarImageLabelInput}
 						onkeydown={(e) => { if (e.key === 'Enter') handleAddSidebarImageUrl(); }}
 					/>
 				</div>
 				<span class="url-hint">
 					<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-					Use <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> to make sure your links persist forever.
+					{t("pages.evidence.fiveManagePrefix")} <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> {t("pages.evidence.fiveManageSuffix")}
 				</span>
 			</div>
 			<div class="modal-footer">
-				<button class="cancel-btn" onclick={() => sidebarImageUrlModalOpen = false} disabled={isSidebarUploading}>Cancel</button>
+				<button class="cancel-btn" onclick={() => sidebarImageUrlModalOpen = false} disabled={isSidebarUploading}>{t("common.actions.cancel")}</button>
 				<button class="save-btn" onclick={handleAddSidebarImageUrl} disabled={isSidebarUploading || !sidebarImageUrlInput.trim()}>
-					{isSidebarUploading ? "Adding…" : "Add Image"}
+					{isSidebarUploading ? t("pages.evidence.adding") : t("pages.evidence.addImage")}
 				</button>
 			</div>
 		</div>
@@ -471,18 +472,18 @@
 	<div class="modal-backdrop" onclick={(e) => { if (e.target === e.currentTarget) createImageUrlModalOpen = false; }}>
 		<div class="modal image-url-modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-header">
-				<h3>Add Image URL</h3>
+			<h3>{t("pages.evidence.addImageUrl")}</h3>
 				<button class="close-btn" onclick={() => createImageUrlModalOpen = false}>
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
 			</div>
 			<div class="modal-body img-modal-body">
 				<div class="img-form-group">
-					<span class="img-label">Image URL</span>
+				<span class="img-label">{t("pages.evidence.imageUrl")}</span>
 					<input
 						class="img-input"
 						type="url"
-						placeholder="https://example.com/photo.jpg"
+					placeholder={t("pages.evidence.placeholders.imageUrl")}
 						bind:value={createImageUrlInput}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' && createImageUrlInput.trim()) {
@@ -496,11 +497,11 @@
 				</div>
 				<span class="url-hint">
 					<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-					Use <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> to make sure your links persist forever.
+					{t("pages.evidence.fiveManagePrefix")} <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> {t("pages.evidence.fiveManageSuffix")}
 				</span>
 			</div>
 			<div class="modal-footer">
-				<button class="cancel-btn" onclick={() => createImageUrlModalOpen = false}>Cancel</button>
+				<button class="cancel-btn" onclick={() => createImageUrlModalOpen = false}>{t("common.actions.cancel")}</button>
 				<button class="save-btn" onclick={() => {
 					if (createImageUrlInput.trim()) {
 						createImageUrls = [...createImageUrls, { url: createImageUrlInput.trim(), label: "" }];
@@ -508,7 +509,7 @@
 						createImageUrlModalOpen = false;
 					}
 				}} disabled={!createImageUrlInput.trim()}>
-					Add URL
+					{t("pages.evidence.addUrl")}
 				</button>
 			</div>
 		</div>
@@ -522,14 +523,14 @@
 			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 			<input
 				type="text"
-				placeholder="Search by title, serial, location, stash..."
+				placeholder={t("pages.evidence.searchPlaceholder")}
 				bind:value={searchQuery}
 				onkeydown={(event) => {
 					if (event.key === "Enter") loadEvidence(1);
 				}}
 			/>
 		</div>
-		<button class="action-btn" onclick={() => loadEvidence(1)}>Search</button>
+			<button class="action-btn" onclick={() => loadEvidence(1)}>{t("common.actions.search")}</button>
 		<button class="create-btn" onclick={() => {
 			resetCreateForm();
 			const nextNum = total + 1;
@@ -542,7 +543,7 @@
 			if (latestCaseId > 0) createForm.caseId = String(latestCaseId);
 			showCreate = true;
 		}}>
-			New Evidence
+			{t("pages.evidence.newEvidence")}
 		</button>
 	</div>
 
@@ -558,19 +559,19 @@
 		<!-- Evidence List (left) -->
 		<div class="list-panel">
 			{#if isLoading}
-				<div class="empty-state">Loading evidence...</div>
+			<div class="empty-state">{t("pages.evidence.loading")}</div>
 			{:else if items.length === 0}
-				<div class="empty-state">No evidence found.</div>
+			<div class="empty-state">{t("pages.evidence.noneFound")}</div>
 			{:else}
 				<div class="table-header">
-					<span class="col-title">Title</span>
-					<span class="col-type">Type</span>
-					<span class="col-serial">Serial</span>
-					<span class="col-case">Case</span>
-					<span class="col-report">Report</span>
-					<span class="col-location">Location</span>
-					<span class="col-stored">Status</span>
-					<span class="col-date">Date</span>
+				<span class="col-title">{t("pages.evidence.title")}</span>
+				<span class="col-type">{t("pages.evidence.type")}</span>
+				<span class="col-serial">{t("pages.evidence.serial")}</span>
+				<span class="col-case">{t("pages.evidence.case")}</span>
+				<span class="col-report">{t("pages.evidence.report")}</span>
+				<span class="col-location">{t("pages.evidence.location")}</span>
+				<span class="col-stored">{t("pages.evidence.status")}</span>
+				<span class="col-date">{t("pages.evidence.date")}</span>
 				</div>
 				{#each items as item}
 					<button class="table-row" class:selected={selectedEvidenceId === item.id} onclick={() => selectEvidence(item)}>
@@ -614,19 +615,19 @@
 			{#if selectedEvidenceId}
 				<!-- Link Evidence + Custody -->
 				<div class="section">
-					<div class="section-title">Link Evidence</div>
+				<div class="section-title">{t("pages.evidence.linkEvidence")}</div>
 					<div class="section-actions">
-						<input class="form-input" placeholder="Case ID or CASE-2026-..." bind:value={linkCaseId} />
-						<button class="action-btn" onclick={handleLinkEvidenceCase}>Link to Case</button>
-						<button class="action-btn" onclick={handleCreateCaseFromEvidence}>Create Case</button>
+					<input class="form-input" placeholder={t("pages.evidence.placeholders.caseId")} bind:value={linkCaseId} />
+					<button class="action-btn" onclick={handleLinkEvidenceCase}>{t("pages.evidence.linkToCase")}</button>
+					<button class="action-btn" onclick={handleCreateCaseFromEvidence}>{t("pages.evidence.createCase")}</button>
 					</div>
 					<div class="section-actions">
-						<input class="form-input" placeholder="Report ID" bind:value={linkReportId} />
-						<button class="action-btn" onclick={handleLinkEvidenceReport}>Link to Report</button>
+					<input class="form-input" placeholder={t("pages.evidence.reportId")} bind:value={linkReportId} />
+					<button class="action-btn" onclick={handleLinkEvidenceReport}>{t("pages.evidence.linkToReport")}</button>
 					</div>
-					<div class="section-title" style="margin-top: 8px;">Custody Log</div>
+				<div class="section-title" style="margin-top: 8px;">{t("pages.evidence.custodyLog")}</div>
 					{#if custodyEntries.length === 0}
-						<p class="muted-text">No custody updates yet.</p>
+					<p class="muted-text">{t("pages.evidence.noCustodyUpdates")}</p>
 					{:else}
 						<div class="custody-list">
 							{#each custodyEntries as entry}
@@ -655,17 +656,17 @@
 
 				<!-- Transfer Evidence -->
 				<div class="section">
-					<div class="section-title">Transfer Evidence</div>
+				<div class="section-title">{t("pages.evidence.transferEvidence")}</div>
 					<div class="transfer-row">
-						<input class="form-input" placeholder="Citizen ID" bind:value={transferCitizenId} />
-						<input class="form-input" placeholder="Transfer notes" bind:value={transferNotes} />
-						<button class="action-btn" onclick={handleTransferEvidence}>Transfer</button>
+					<input class="form-input" placeholder={t("pages.evidence.citizenId")} bind:value={transferCitizenId} />
+					<input class="form-input" placeholder={t("pages.evidence.transferNotes")} bind:value={transferNotes} />
+					<button class="action-btn" onclick={handleTransferEvidence}>{t("pages.evidence.transfer")}</button>
 					</div>
 				</div>
 
 				<!-- Add Image via URL -->
 				<div class="section">
-					<div class="section-title">Evidence Images</div>
+				<div class="section-title">{t("pages.evidence.evidenceImages")}</div>
 					<button class="add-image-url-btn" onclick={() => {
 						sidebarImageUrlInput = "";
 						sidebarImageLabelInput = "";
@@ -699,7 +700,7 @@
 				<!-- Open Stash -->
 				{#if selectedEvidence?.stash_id}
 					<div class="section">
-						<div class="section-title">Evidence Stash</div>
+				<div class="section-title">{t("pages.evidence.evidenceStash")}</div>
 						<div class="stash-row">
 							<span class="stash-id">{selectedEvidence.stash_id}</span>
 							<button class="action-btn" onclick={() => openStash(selectedEvidence.stash_id)}>
@@ -712,7 +713,7 @@
 			{:else}
 				<div class="empty-detail">
 					<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.25; margin-bottom:10px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-					<p>Select an evidence item to view custody and uploads.</p>
+			<p>{t("pages.evidence.selectHint")}</p>
 				</div>
 			{/if}
 		</div>
@@ -726,7 +727,7 @@
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div class="modal" role="dialog" aria-modal="true" onclick={(event) => event.stopPropagation()}>
 			<div class="modal-header">
-				<h3>New Evidence</h3>
+			<h3>{t("pages.evidence.newEvidence")}</h3>
 				<button class="close-btn" onclick={() => (showCreate = false)}>
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
@@ -735,27 +736,27 @@
 				<!-- Row 1: IDs + Title + Type -->
 				<div class="form-grid form-grid-4">
 					<div class="form-group">
-						<span class="form-label">Case ID</span>
-						<input bind:value={createForm.caseId} placeholder="Numeric or CASE-..." class="form-input" />
+					<span class="form-label">{t("pages.evidence.caseId")}</span>
+					<input bind:value={createForm.caseId} placeholder={t("pages.evidence.placeholders.numericCaseId")} class="form-input" />
 					</div>
 					<div class="form-group">
-						<span class="form-label">Report ID</span>
-						<input bind:value={createForm.reportId} placeholder="Report ID" class="form-input" />
+					<span class="form-label">{t("pages.evidence.reportId")}</span>
+					<input bind:value={createForm.reportId} placeholder={t("pages.evidence.reportId")} class="form-input" />
 					</div>
 					<div class="form-group">
-						<span class="form-label">Title</span>
-						<input bind:value={createForm.title} placeholder="Evidence title" class="form-input" />
+					<span class="form-label">{t("pages.evidence.title")}</span>
+					<input bind:value={createForm.title} placeholder={t("pages.evidence.placeholders.title")} class="form-input" />
 					</div>
 					<div class="form-group">
-						<span class="form-label">Type</span>
+					<span class="form-label">{t("pages.evidence.type")}</span>
 						<select bind:value={createForm.type} class="form-input">
-							<option value="Physical">Physical</option>
-							<option value="Digital">Digital</option>
-							<option value="Document">Document</option>
-							<option value="Weapon">Weapon</option>
-							<option value="Drug">Drug</option>
-							<option value="Vehicle">Vehicle</option>
-							<option value="Other">Other</option>
+						<option value="Physical">{t("pages.evidence.types.physical")}</option>
+						<option value="Digital">{t("pages.evidence.types.digital")}</option>
+						<option value="Document">{t("pages.evidence.types.document")}</option>
+						<option value="Weapon">{t("pages.evidence.types.weapon")}</option>
+						<option value="Drug">{t("pages.evidence.types.drug")}</option>
+						<option value="Vehicle">{t("pages.evidence.types.vehicle")}</option>
+						<option value="Other">{t("pages.evidence.types.other")}</option>
 						</select>
 					</div>
 				</div>
@@ -764,7 +765,7 @@
 				<div class="form-grid">
 					{#if typeConfig.description}
 						<div class="form-group" style="grid-column: span 2;">
-							<span class="form-label">Description</span>
+					<span class="form-label">{t("pages.evidence.description")}</span>
 							<input bind:value={createForm.description} placeholder={typeConfig.descriptionPlaceholder || "Describe the evidence"} class="form-input" />
 						</div>
 					{/if}
@@ -776,14 +777,14 @@
 					{/if}
 					{#if typeConfig.plate}
 						<div class="form-group">
-							<span class="form-label">Plate Number</span>
-							<input bind:value={createForm.plateNumber} placeholder="License plate" class="form-input" />
+					<span class="form-label">{t("pages.evidence.plateNumber")}</span>
+					<input bind:value={createForm.plateNumber} placeholder={t("pages.evidence.placeholders.licensePlate")} class="form-input" />
 						</div>
 					{/if}
 					{#if typeConfig.quantity}
 						<div class="form-group">
-							<span class="form-label">Quantity</span>
-							<input bind:value={createForm.quantity} placeholder="Amount / weight" class="form-input" />
+					<span class="form-label">{t("pages.evidence.quantity")}</span>
+					<input bind:value={createForm.quantity} placeholder={t("pages.evidence.placeholders.quantity")} class="form-input" />
 						</div>
 					{/if}
 				</div>
@@ -791,12 +792,12 @@
 				<!-- Row 3: Location + Stash -->
 				<div class="form-grid">
 					<div class="form-group" style={typeConfig.stash ? "" : "grid-column: span 3;"}>
-						<span class="form-label">Location</span>
-						<input bind:value={createForm.location} placeholder="Location found" class="form-input" />
+					<span class="form-label">{t("pages.evidence.location")}</span>
+					<input bind:value={createForm.location} placeholder={t("pages.evidence.placeholders.location")} class="form-input" />
 					</div>
 					{#if typeConfig.stash}
 						<div class="form-group">
-							<span class="form-label">Stash ID</span>
+					<span class="form-label">{t("pages.evidence.stashId")}</span>
 							<input bind:value={createForm.stashId} placeholder="LOCKER-001" class="form-input mono-input" />
 						</div>
 					{/if}
@@ -805,13 +806,13 @@
 				{#if typeConfig.stored}
 					<label class="checkbox-label">
 						<input type="checkbox" bind:checked={createForm.stored} />
-						<span>Evidence is stored / secured</span>
+						<span>{t("pages.evidence.storedSecured")}</span>
 					</label>
 				{/if}
 
 				<div class="form-group">
-					<span class="form-label">Notes</span>
-					<textarea rows="4" bind:value={createForm.notes} placeholder="Additional notes..." class="form-input"></textarea>
+					<span class="form-label">{t("pages.evidence.notes")}</span>
+					<textarea rows="4" bind:value={createForm.notes} placeholder={t("pages.evidence.placeholders.notes")} class="form-input"></textarea>
 				</div>
 
 			</div>
@@ -819,8 +820,8 @@
 				<p class="error-text">{evidenceError}</p>
 			{/if}
 			<div class="modal-footer">
-				<button class="cancel-btn" onclick={() => (showCreate = false)}>Cancel</button>
-				<button class="save-btn" onclick={handleCreateEvidence}>Create Evidence</button>
+				<button class="cancel-btn" onclick={() => (showCreate = false)}>{t("common.actions.cancel")}</button>
+				<button class="save-btn" onclick={handleCreateEvidence}>{t("pages.evidence.createEvidence")}</button>
 			</div>
 		</div>
 	</div>

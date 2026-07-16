@@ -3,10 +3,10 @@
 ## Em andamento
 - [x] Inventariar textos visíveis e pontos de integração do locale.
 - [x] Implementar `en-US`, `pt-BR` e helper `t()`.
-- [ ] Migrar textos da UI para chaves de locale.
+- [x] Migrar textos da UI para chaves de locale.
 - [x] Adicionar auditoria automatizada de locales.
 - [x] Documentar processo de atualização futura.
-- [ ] Continuar migração dos arquivos restantes apontados pela auditoria.
+- [x] Continuar migração dos arquivos restantes apontados pela auditoria.
 - [x] Adicionar seletor de idioma nas preferências.
 
 ## Concluído
@@ -31,3 +31,35 @@
 - [x] Página `ImpoundForm.svelte` migrada.
 - [x] Página `Warrants.svelte` migrada.
 - [x] Página `web/src/pages/doj/CourtCalendar.svelte` migrada.
+- [x] Página `web/src/pages/doj/CourtCases.svelte` migrada.
+- [x] Página `web/src/pages/doj/CourtOrders.svelte` migrada.
+- [x] Página `web/src/pages/doj/LegalDocuments.svelte` migrada.
+- [x] Página `web/src/pages/doj/WarrantReview.svelte` migrada; pasta `web/src/pages/doj` concluída.
+- [x] Página `web/src/pages/Awards.svelte` migrada.
+- [x] Página `web/src/pages/Bolos.svelte` migrada.
+- [x] Página `web/src/pages/BulletInBoard.svelte` migrada.
+- [x] Página `web/src/pages/Cases.svelte` migrada.
+- [x] Página `web/src/pages/Charges.svelte` migrada.
+- [x] Página `web/src/pages/Citizens.svelte` migrada.
+- [x] Página `web/src/pages/CivilianView.svelte` migrada.
+- [x] Página `web/src/pages/ComplaintForm.svelte` migrada.
+- [x] Página `web/src/pages/Dashboard.svelte` migrada.
+- [x] Página `web/src/pages/Evidence.svelte` migrada.
+- [x] Página `web/src/pages/FTO.svelte` migrada.
+- [x] Página `web/src/pages/IA.svelte` migrada.
+- [x] Página `web/src/pages/Map.svelte` migrada.
+- [x] Página `web/src/pages/PPR.svelte` migrada.
+- [x] Página `web/src/pages/ReportEditor.svelte` migrada.
+- [x] Página `web/src/pages/Reports.svelte` migrada.
+- [x] Página `web/src/pages/Roster.svelte` migrada.
+- [x] Página `web/src/pages/SOP.svelte` migrada.
+- [x] Página `web/src/pages/Vehicles.svelte` migrada.
+- [x] Página `web/src/pages/Weapons.svelte` migrada.
+- [x] Constantes de apresentação em `web/src/constants/index.ts` migradas sem alterar IDs funcionais.
+- [x] Catálogo em `web/src/constants/management.ts` desacoplado dos textos traduzidos, preservando categorias e chaves de permissão.
+- [x] Mensagens visíveis de `web/src/services/authService.svelte.ts` migradas para i18n.
+- [x] Placeholders visíveis de `web/src/services/dashboardService.svelte.ts` migrados para i18n.
+- [x] Mensagens e fallbacks visíveis de `web/src/services/reportService.svelte.ts` migrados para i18n.
+- [x] Auditoria de locales concluída sem chaves ausentes, extras ou arquivos com hardcodes detectados.
+- [x] Auditoria ampliada concluída, incluindo textos não cobertos pelo scanner e atributos de acessibilidade.
+- [x] Build final do frontend concluído e `web/dist` atualizado localmente.

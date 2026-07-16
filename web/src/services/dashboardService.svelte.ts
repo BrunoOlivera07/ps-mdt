@@ -4,18 +4,19 @@ import { debugError } from "../utils/debug";
 import { isEnvBrowser } from "../utils/misc";
 import { NUI_EVENTS } from "../constants/nuiEvents";
 import type { DashboardData } from "../interfaces/IDashboard";
+import { t } from "../lib/i18n";
 
 export function createDashboardService() {
 	// State initialization with default values
 	const defaultState = {
-		jobInfo: { rank: "Loading...", payRate: "$0/hr" },
+		jobInfo: { rank: t("common.status.loading"), payRate: "$0/hr" },
 		reportsInfo: { totalThisWeek: 0, changeFromLastWeek: 0 },
 		weeklyTimeData: [] as Array<{ day: string; hours: number }>,
 		activeWarrants: [] as DashboardData["activeWarrants"],
 		recentReports: [] as DashboardData["recentReports"],
 		activeBolos: [] as DashboardData["activeBolos"],
 		bulletins: [
-			{ id: 1, content: "Loading..." },
+			{ id: 1, content: t("pages.dashboard.loadingBulletins") },
 		] as DashboardData["bulletins"],
 		activeUnits: { count: 0 },
 		recentDispatches: [] as DashboardData["recentDispatches"],
@@ -69,8 +70,8 @@ export function createDashboardService() {
 
 	let bulletinContent = $derived(
 		bulletins && bulletins.length > 0
-			? bulletins[currentBulletinIndex]?.content || "Loading bulletins..."
-			: "Loading bulletins...",
+			? bulletins[currentBulletinIndex]?.content || t("pages.dashboard.loadingBulletins")
+			: t("pages.dashboard.loadingBulletins"),
 	);
 
 	// Carousel functions
@@ -144,7 +145,7 @@ export function createDashboardService() {
 		if (
 			bulletins &&
 			bulletins.length > 1 &&
-			bulletins[0].content !== "Loading..."
+			bulletins[0].content !== t("pages.dashboard.loadingBulletins")
 		) {
 			startCarouselTimer();
 		}

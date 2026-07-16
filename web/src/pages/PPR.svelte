@@ -10,6 +10,7 @@
 	import PersonSearchModal from "../components/report-editor/PersonSearchModal.svelte";
 	import type { createTabService } from "../services/tabService.svelte";
 	import type { AuthService } from "../services/authService.svelte";
+	import { t } from "../lib/i18n";
 
 	let { tabService, authService }: { tabService?: ReturnType<typeof createTabService>; authService?: AuthService } = $props();
 
@@ -110,7 +111,7 @@
 			entries = data.entries || [];
 		} catch (e) {
 			console.error('[PPR] loadEntries error:', e);
-			globalNotifications.error("Failed to load PPR entries");
+			globalNotifications.error(t("pages.ppr.messages.loadFailed"));
 		}
 		loading = false;
 	}
@@ -133,7 +134,7 @@
 				editIncidentLocation = detail.entry.incident_location || "";
 			}
 		} catch {
-			globalNotifications.error("Failed to load PPR details");
+			globalNotifications.error(t("pages.ppr.messages.detailLoadFailed"));
 		}
 		loading = false;
 	}
@@ -177,16 +178,16 @@
 				{ success: true }
 			);
 			if (!result || result.success === false) {
-				globalNotifications.error(result?.error || "Failed to create PPR entry");
+				globalNotifications.error(result?.error || t("pages.ppr.messages.createFailed"));
 				isSubmitting = false;
 				return;
 			}
-			globalNotifications.success("PPR entry created");
+			globalNotifications.success(t("pages.ppr.messages.created"));
 			resetCreateForm();
 			showCreateForm = false;
 			if (!isEnvBrowser()) loadEntries();
 		} catch {
-			globalNotifications.error("Failed to create PPR entry");
+			globalNotifications.error(t("pages.ppr.messages.createFailed"));
 		}
 		isSubmitting = false;
 	}
@@ -207,7 +208,7 @@
 				{ success: true }
 			);
 			if (!result || result.success === false) {
-				globalNotifications.error(result?.error || "Failed to update PPR entry");
+				globalNotifications.error(result?.error || t("pages.ppr.messages.updateFailed"));
 				return;
 			}
 			selectedEntry.entry.title = editTitle.trim();
@@ -216,9 +217,9 @@
 			selectedEntry.entry.incident_date = editIncidentDate;
 			selectedEntry.entry.incident_location = editIncidentLocation.trim();
 			editMode = false;
-			globalNotifications.success("PPR entry updated");
+			globalNotifications.success(t("pages.ppr.messages.updated"));
 		} catch {
-			globalNotifications.error("Failed to update PPR entry");
+			globalNotifications.error(t("pages.ppr.messages.updateFailed"));
 		}
 	}
 
@@ -226,10 +227,10 @@
 		if (!selectedEntry || !canManage) return;
 		try {
 			await fetchNui(NUI_EVENTS.PPR.DELETE_PPR, { id: selectedEntry.entry.id }, { success: true });
-			globalNotifications.success("PPR entry deleted");
+			globalNotifications.success(t("pages.ppr.messages.deleted"));
 			goBack();
 		} catch {
-			globalNotifications.error("Failed to delete PPR entry");
+			globalNotifications.error(t("pages.ppr.messages.deleteFailed"));
 		}
 	}
 
@@ -244,7 +245,7 @@
 			noteContent = "";
 			await selectEntry(selectedEntry.entry.id);
 		} catch {
-			globalNotifications.error("Failed to add note");
+			globalNotifications.error(t("pages.ppr.messages.noteAddFailed"));
 		}
 		noteSubmitting = false;
 	}
@@ -258,7 +259,7 @@
 			});
 			await selectEntry(selectedEntry.entry.id);
 		} catch {
-			globalNotifications.error("Failed to delete note");
+			globalNotifications.error(t("pages.ppr.messages.noteDeleteFailed"));
 		}
 	}
 
@@ -280,7 +281,9 @@
 	}
 
 	function formatLabel(value: string): string {
-		return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		const key = `pages.ppr.categories.${value}`;
+		const translated = t(key);
+		return translated === key ? value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : translated;
 	}
 
 	function formatDateValue(value: string | undefined): string {
@@ -335,7 +338,7 @@
 		<div class="topbar">
 			<button class="back-btn" onclick={goBack}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-				Back to PPR List
+				{t("pages.ppr.backToList")}
 			</button>
 			<span class="topbar-case-number">{selectedEntry.entry.ppr_number}</span>
 			<span class="pill {getCategoryPillClass(selectedEntry.entry.category)}">{formatLabel(selectedEntry.entry.category)}</span>
@@ -347,14 +350,14 @@
 				<div class="detail-main">
 					<div class="section">
 						<div class="section-header">
-							<div class="section-title" style="margin-bottom:0;">Incident Details</div>
+							<div class="section-title" style="margin-bottom:0;">{t("pages.ppr.incidentDetails")}</div>
 							{#if canManage}
 								<div class="inline-controls">
 									{#if editMode}
-										<button class="action-btn" onclick={handleUpdateEntry}>Save</button>
-										<button class="action-btn" onclick={() => { editMode = false; }}>Cancel</button>
+										<button class="action-btn" onclick={handleUpdateEntry}>{t("common.actions.save")}</button>
+										<button class="action-btn" onclick={() => { editMode = false; }}>{t("common.actions.cancel")}</button>
 									{:else}
-										<button class="action-btn" onclick={() => { editMode = true; }}>Edit</button>
+										<button class="action-btn" onclick={() => { editMode = true; }}>{t("common.actions.edit")}</button>
 									{/if}
 								</div>
 							{/if}
@@ -362,50 +365,50 @@
 						{#if editMode && canManage}
 							<div class="field-row">
 								<div class="field-group">
-									<span class="field-label">Title</span>
-									<input type="text" class="form-input" bind:value={editTitle} placeholder="Title" />
+									<span class="field-label">{t("pages.ppr.title")}</span>
+									<input type="text" class="form-input" bind:value={editTitle} placeholder={t("pages.ppr.title")} />
 								</div>
 								<div class="field-group">
-									<span class="field-label">Category</span>
+									<span class="field-label">{t("pages.ppr.category")}</span>
 									<select class="form-select" bind:value={editCategory}>
-										<option value="positive">Positive</option>
-										<option value="coaching">Coaching</option>
-										<option value="disciplinary">Disciplinary</option>
+										<option value="positive">{t("pages.ppr.categories.positive")}</option>
+										<option value="coaching">{t("pages.ppr.categories.coaching")}</option>
+										<option value="disciplinary">{t("pages.ppr.categories.disciplinary")}</option>
 									</select>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Incident Date</span>
+									<span class="field-label">{t("pages.ppr.incidentDate")}</span>
 									<input type="date" class="form-input" bind:value={editIncidentDate} />
 								</div>
 								<div class="field-group">
-									<span class="field-label">Location</span>
-									<input type="text" class="form-input" bind:value={editIncidentLocation} placeholder="Location" />
+									<span class="field-label">{t("pages.ppr.location")}</span>
+									<input type="text" class="form-input" bind:value={editIncidentLocation} placeholder={t("pages.ppr.location")} />
 								</div>
 							</div>
 							<div class="field-group" style="margin-top:8px;">
-								<span class="field-label">Description</span>
-								<textarea class="form-textarea" rows="4" bind:value={editDescription} placeholder="Description"></textarea>
+								<span class="field-label">{t("pages.ppr.description")}</span>
+								<textarea class="form-textarea" rows="4" bind:value={editDescription} placeholder={t("pages.ppr.description")}></textarea>
 							</div>
 						{:else}
 							<div class="field-row">
 								<div class="field-group">
-									<span class="field-label">Officer</span>
+									<span class="field-label">{t("pages.ppr.officer")}</span>
 									<span class="field-value">{selectedEntry.entry.officer_name || '-'}</span>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Author</span>
+									<span class="field-label">{t("pages.ppr.author")}</span>
 									<span class="field-value">{selectedEntry.entry.author_name || '-'}</span>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Category</span>
+									<span class="field-label">{t("pages.ppr.category")}</span>
 									<span class="pill {getCategoryPillClass(selectedEntry.entry.category)}">{formatLabel(selectedEntry.entry.category)}</span>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Incident Date</span>
+									<span class="field-label">{t("pages.ppr.incidentDate")}</span>
 									<span class="field-value">{formatDateValue(selectedEntry.entry.incident_date)}</span>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Location</span>
+									<span class="field-label">{t("pages.ppr.location")}</span>
 									<span class="field-value">{selectedEntry.entry.incident_location || '-'}</span>
 								</div>
 							</div>
@@ -414,25 +417,25 @@
 
 					{#if !editMode}
 						<div class="section">
-							<div class="section-title">Title & Description</div>
+							<div class="section-title">{t("pages.ppr.titleDescription")}</div>
 							<p class="summary-text" style="font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:4px;">{selectedEntry.entry.title}</p>
-							<p class="summary-text">{selectedEntry.entry.description || 'No description provided.'}</p>
+							<p class="summary-text">{selectedEntry.entry.description || t("pages.ppr.noDescription")}</p>
 						</div>
 					{/if}
 
 					{#if selectedEntry.entry.linked_report_id || selectedEntry.entry.linked_case_id}
 						<div class="section">
-							<div class="section-title">Linked Records</div>
+							<div class="section-title">{t("pages.ppr.linkedRecords")}</div>
 							<div class="field-row">
 								{#if selectedEntry.entry.linked_report_id}
 									<div class="field-group">
-										<span class="field-label">Linked Report</span>
+										<span class="field-label">{t("pages.ppr.linkedReport")}</span>
 										<span class="field-value">Report #{selectedEntry.entry.linked_report_id}</span>
 									</div>
 								{/if}
 								{#if selectedEntry.entry.linked_case_id}
 									<div class="field-group">
-										<span class="field-label">Linked Case</span>
+										<span class="field-label">{t("pages.ppr.linkedCase")}</span>
 										<span class="field-value">Case #{selectedEntry.entry.linked_case_id}</span>
 									</div>
 								{/if}
@@ -445,28 +448,28 @@
 				<div class="detail-side">
 					{#if canManage}
 						<div class="section">
-							<div class="section-title">Actions</div>
+							<div class="section-title">{t("pages.ppr.actions")}</div>
 							<div class="inline-controls">
 								{#if !editMode}
-									<button class="action-btn" onclick={() => { editMode = true; }}>Edit</button>
+									<button class="action-btn" onclick={() => { editMode = true; }}>{t("common.actions.edit")}</button>
 								{/if}
-								<button class="action-btn danger" onclick={handleDeleteEntry}>Delete</button>
+								<button class="action-btn danger" onclick={handleDeleteEntry}>{t("common.actions.delete")}</button>
 							</div>
 						</div>
 					{/if}
 
 					<div class="section">
-						<div class="section-title">Notes</div>
+						<div class="section-title">{t("pages.ppr.notes")}</div>
 						{#if canManage}
 							<div class="note-input-row">
 								<textarea
 									class="form-textarea"
 									rows="2"
-									placeholder="Add a note..."
+									placeholder={t("pages.ppr.addNotePlaceholder")}
 									bind:value={noteContent}
 								></textarea>
 								<button class="action-btn" onclick={handleAddNote} disabled={noteSubmitting || !noteContent.trim()}>
-									{noteSubmitting ? 'Adding...' : 'Add Note'}
+									{noteSubmitting ? t("pages.ppr.adding") : t("pages.ppr.addNote")}
 								</button>
 							</div>
 						{/if}
@@ -488,7 +491,7 @@
 								{/each}
 							</div>
 						{:else}
-							<p class="muted-text">No notes yet.</p>
+							<p class="muted-text">{t("pages.ppr.noNotes")}</p>
 						{/if}
 					</div>
 				</div>
@@ -499,69 +502,69 @@
 		<div class="topbar">
 			<button class="back-btn" onclick={() => { showCreateForm = false; resetCreateForm(); }}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-				Back to PPR List
+				{t("pages.ppr.backToList")}
 			</button>
 		</div>
 
 		<div class="create-form">
-			<h3>New Performance Review</h3>
+			<h3>{t("pages.ppr.newReview")}</h3>
 
 			<div class="form-group">
-				<span class="form-label">Officer</span>
+				<span class="form-label">{t("pages.ppr.officer")}</span>
 				<button
 					class="officer-search-trigger"
 					class:placeholder={!newOfficerName}
 					onclick={() => (showOfficerSearch = true)}
 				>
-					{newOfficerName || 'Click to search for an officer...'}
+					{newOfficerName || t("pages.ppr.selectOfficer")}
 				</button>
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<span class="form-label">Category</span>
+					<span class="form-label">{t("pages.ppr.category")}</span>
 					<select class="form-select" bind:value={newCategory}>
-						<option value="positive">Positive</option>
-						<option value="coaching">Coaching</option>
-						<option value="disciplinary">Disciplinary</option>
+						<option value="positive">{t("pages.ppr.categories.positive")}</option>
+						<option value="coaching">{t("pages.ppr.categories.coaching")}</option>
+						<option value="disciplinary">{t("pages.ppr.categories.disciplinary")}</option>
 					</select>
 				</div>
 				<div class="form-group">
-					<span class="form-label">Incident Date</span>
+					<span class="form-label">{t("pages.ppr.incidentDate")}</span>
 					<input type="date" class="form-input" bind:value={newIncidentDate} />
 				</div>
 			</div>
 
 			<div class="form-group">
-				<span class="form-label">Title</span>
-				<input type="text" class="form-input" bind:value={newTitle} placeholder="Enter title..." />
+				<span class="form-label">{t("pages.ppr.title")}</span>
+				<input type="text" class="form-input" bind:value={newTitle} placeholder={t("pages.ppr.enterTitle")} />
 			</div>
 
 			<div class="form-group">
-				<span class="form-label">Description</span>
-				<textarea class="form-textarea" rows="4" bind:value={newDescription} placeholder="Enter description..."></textarea>
+				<span class="form-label">{t("pages.ppr.description")}</span>
+				<textarea class="form-textarea" rows="4" bind:value={newDescription} placeholder={t("pages.ppr.enterDescription")}></textarea>
 			</div>
 
 			<div class="form-group">
-				<span class="form-label">Incident Location</span>
-				<input type="text" class="form-input" bind:value={newIncidentLocation} placeholder="Enter location..." />
+				<span class="form-label">{t("pages.ppr.incidentLocation")}</span>
+				<input type="text" class="form-input" bind:value={newIncidentLocation} placeholder={t("pages.ppr.enterLocation")} />
 			</div>
 
 			<div class="form-row">
 				<div class="form-group">
-					<span class="form-label">Linked Report # (optional)</span>
+					<span class="form-label">{t("pages.ppr.linkedReportOptional")}</span>
 					<input type="number" class="form-input" bind:value={newLinkedReportId} placeholder="Report ID" />
 				</div>
 				<div class="form-group">
-					<span class="form-label">Linked Case # (optional)</span>
+					<span class="form-label">{t("pages.ppr.linkedCaseOptional")}</span>
 					<input type="number" class="form-input" bind:value={newLinkedCaseId} placeholder="Case ID" />
 				</div>
 			</div>
 
 			<div class="form-actions">
-				<button class="action-btn" onclick={() => { showCreateForm = false; resetCreateForm(); }}>Cancel</button>
+				<button class="action-btn" onclick={() => { showCreateForm = false; resetCreateForm(); }}>{t("common.actions.cancel")}</button>
 				<button class="primary-btn" onclick={handleCreatePPR} disabled={isSubmitting || !newTitle.trim() || !newOfficerCitizenId}>
-					{isSubmitting ? 'Submitting...' : 'Submit'}
+					{isSubmitting ? t("pages.ppr.submitting") : t("pages.ppr.submit")}
 				</button>
 			</div>
 		</div>
@@ -584,18 +587,18 @@
 		<div class="topbar">
 			<div class="search-box">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-				<input type="text" placeholder="Search PPR entries..." bind:value={searchQuery} />
+				<input type="text" placeholder={t("pages.ppr.searchPlaceholder")} bind:value={searchQuery} />
 			</div>
 			<div style="flex:1;"></div>
 			{#if canManage}
 				<button class="primary-btn" onclick={() => { showCreateForm = true; }}>
 					<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-					New PPR
+					{t("pages.ppr.newPpr")}
 				</button>
 			{/if}
 			<button class="back-btn" onclick={loadEntries} disabled={loading}>
 				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-				Refresh
+				{t("pages.ppr.refresh")}
 			</button>
 		</div>
 
@@ -603,22 +606,22 @@
 			{#if loading && entries.length === 0}
 				<div class="center-state">
 					<div class="loading-spinner"></div>
-					<p>Loading PPR entries...</p>
+					<p>{t("pages.ppr.loading")}</p>
 				</div>
 			{:else if paginatedEntries.length === 0}
 				<div class="center-state">
 					<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-					<h3>No PPR Entries Found</h3>
-					<p>{searchQuery ? "No entries match your search criteria." : "No performance reviews have been created yet."}</p>
+					<h3>{t("pages.ppr.noneFound")}</h3>
+					<p>{searchQuery ? t("pages.ppr.noMatches") : t("pages.ppr.noneCreated")}</p>
 				</div>
 			{:else}
 				<div class="table-header">
 					<span>#</span>
-					<span>Officer</span>
-					<span>Category</span>
-					<span>Title</span>
-					<span>Author</span>
-					<span>Date</span>
+					<span>{t("pages.ppr.officer")}</span>
+					<span>{t("pages.ppr.category")}</span>
+					<span>{t("pages.ppr.title")}</span>
+					<span>{t("pages.ppr.author")}</span>
+					<span>{t("pages.ppr.date")}</span>
 				</div>
 				<div class="table-body">
 					{#each paginatedEntries as item}
@@ -648,7 +651,7 @@
 
 <PersonSearchModal
 	show={showOfficerSearch}
-	title="Search Officers"
+	title={t("pages.ppr.searchOfficers")}
 	searchQuery={officerSearchQuery}
 	searchResults={searchService.state.results}
 	onClose={() => {

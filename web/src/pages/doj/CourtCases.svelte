@@ -9,6 +9,7 @@
 	import type { AuthService } from "../../services/authService.svelte";
 	import type { SearchResult } from "../../interfaces/IReportEditor";
 	import PersonSearchModal from "../../components/report-editor/PersonSearchModal.svelte";
+	import { t, tf } from "../../lib/i18n";
 
 	interface Props {
 		tabService: ReturnType<typeof createTabService>;
@@ -146,12 +147,12 @@
 			if (result.success) {
 				showNewDocModal = false;
 				newDocData = { title: "", type: "brief", content: "" };
-				globalNotifications.success("Legal document created");
+				globalNotifications.success(t("pages.doj.courtCases.messages.documentCreated"));
 			} else {
-				globalNotifications.error(result.error || "Failed to create document");
+				globalNotifications.error(result.error || t("pages.doj.courtCases.messages.documentCreateFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to create document");
+			globalNotifications.error(t("pages.doj.courtCases.messages.documentCreateFailed"));
 		}
 	}
 
@@ -177,7 +178,8 @@
 	}
 
 	function formatLabel(value: string): string {
-		return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		const fallback = value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		return tf(`pages.doj.courtCases.labels.${value}`, fallback);
 	}
 
 	function formatDateValue(value: string | undefined): string {
@@ -240,7 +242,7 @@
 			);
 			cases = data.cases || [];
 		} catch {
-			globalNotifications.error("Failed to load court cases");
+			globalNotifications.error(t("pages.doj.courtCases.messages.loadFailed"));
 		}
 		isLoading = false;
 	}
@@ -264,7 +266,7 @@
 				selectedCase = null;
 			}
 		} catch {
-			globalNotifications.error("Failed to load court case details");
+			globalNotifications.error(t("pages.doj.courtCases.messages.detailLoadFailed"));
 		}
 		isLoading = false;
 	}
@@ -291,13 +293,13 @@
 			if (result.success) {
 				showCreateModal = false;
 				newCase = { title: "", case_type: "criminal", defendant_citizenid: "", defendant_name: "" };
-				globalNotifications.success("Court case created");
+				globalNotifications.success(t("pages.doj.courtCases.messages.created"));
 				await loadCases();
 			} else {
-				globalNotifications.error(result.error || "Failed to create court case");
+				globalNotifications.error(result.error || t("pages.doj.courtCases.messages.createFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to create court case");
+			globalNotifications.error(t("pages.doj.courtCases.messages.createFailed"));
 		}
 		isLoading = false;
 	}
@@ -311,9 +313,9 @@
 				{ success: true },
 			);
 			await selectCase(selectedCase.court_case.id);
-			globalNotifications.success("Court case updated");
+			globalNotifications.success(t("pages.doj.courtCases.messages.updated"));
 		} catch {
-			globalNotifications.error("Failed to update court case");
+			globalNotifications.error(t("pages.doj.courtCases.messages.updateFailed"));
 		}
 	}
 </script>
@@ -334,50 +336,50 @@
 			<div class="detail-layout">
 				<div class="detail-main">
 					<div class="section">
-						<div class="section-title">Case Information</div>
+					<div class="section-title">{t("pages.doj.courtCases.caseInformation")}</div>
 						<h3 class="case-title">{selectedCase.court_case.title}</h3>
 						<div class="field-row">
 							<div class="field-group">
-								<span class="field-label">Case Number</span>
+							<span class="field-label">{t("pages.doj.courtCases.caseNumber")}</span>
 								<span class="field-value">{selectedCase.court_case.case_number}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Case Type</span>
+							<span class="field-label">{t("pages.doj.courtCases.caseType")}</span>
 								<span class="field-value">{formatLabel(selectedCase.court_case.case_type)}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Status</span>
+							<span class="field-label">{t("pages.doj.courtCases.status")}</span>
 								<span class="pill {getStatusPillClass(selectedCase.court_case.status)}">{formatLabel(selectedCase.court_case.status)}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Filed Date</span>
+							<span class="field-label">{t("pages.doj.courtCases.filedDate")}</span>
 								<span class="field-value">{formatDateValue(selectedCase.court_case.filed_date)}</span>
 							</div>
 						</div>
 					</div>
 
 					<div class="section">
-						<div class="section-title">Defendant</div>
+					<div class="section-title">{t("pages.doj.courtCases.defendant")}</div>
 						<div class="field-row">
 							<div class="field-group">
-								<span class="field-label">Name</span>
+							<span class="field-label">{t("pages.doj.courtCases.name")}</span>
 								<span class="field-value">{selectedCase.court_case.defendant_name || "-"}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Citizen ID</span>
+							<span class="field-label">{t("pages.doj.courtCases.citizenId")}</span>
 								<span class="field-value mono">{selectedCase.court_case.defendant_citizenid || "-"}</span>
 							</div>
 						</div>
 					</div>
 
 					<div class="section">
-						<div class="section-title">Hearing</div>
+					<div class="section-title">{t("pages.doj.courtCases.hearing")}</div>
 						<div class="field-row">
 							<div class="field-group" style="flex:1;">
-								<span class="field-label">Hearing Date</span>
+							<span class="field-label">{t("pages.doj.courtCases.hearingDate")}</span>
 								<div class="inline-edit-row">
 									<input type="datetime-local" class="form-input" bind:value={editingHearingDate} />
-									<button class="save-field-btn" onclick={saveHearingDate}>Save</button>
+								<button class="save-field-btn" onclick={saveHearingDate}>{t("common.actions.save")}</button>
 								</div>
 							</div>
 						</div>
@@ -385,14 +387,14 @@
 
 					<div class="section">
 						<div class="section-header-row">
-							<span class="section-title">Documents</span>
-							<button class="add-btn" onclick={() => { newDocData = { title: `${selectedCase.court_case.case_number} - `, type: "brief", content: "" }; showNewDocModal = true; }}>+ Add</button>
+						<span class="section-title">{t("pages.doj.courtCases.documents")}</span>
+						<button class="add-btn" onclick={() => { newDocData = { title: `${selectedCase.court_case.case_number} - `, type: "brief", content: "" }; showNewDocModal = true; }}>+ {t("common.actions.add")}</button>
 						</div>
 					</div>
 
 					{#if selectedCase.linked_reports.length > 0}
 						<div class="section">
-							<div class="section-title">Linked Reports</div>
+					<div class="section-title">{t("pages.doj.courtCases.linkedReports")}</div>
 							<div class="linked-items">
 								{#each selectedCase.linked_reports as report}
 									<span class="linked-chip">#{report.id} - {report.title}</span>
@@ -404,7 +406,7 @@
 
 				<div class="detail-side">
 					<div class="section">
-						<div class="section-title">Update Status</div>
+					<div class="section-title">{t("pages.doj.courtCases.updateStatus")}</div>
 						<select class="form-select" value={selectedCase.court_case.status} onchange={(e) => handleUpdateCase({ status: (e.target as HTMLSelectElement).value })}>
 							{#each statusOptions.filter((s) => s !== "all") as opt}
 								<option value={opt}>{formatLabel(opt)}</option>
@@ -414,11 +416,11 @@
 
 					<div class="section">
 						<div class="section-header-row">
-							<span class="section-title">Judge</span>
+						<span class="section-title">{t("pages.doj.courtCases.judge")}</span>
 							{#if selectedCase.court_case.presiding_judge_name}
-								<button class="add-btn" onclick={() => clearParty("judge")}>x Remove</button>
+							<button class="add-btn" onclick={() => clearParty("judge")}>x {t("common.actions.remove")}</button>
 							{:else}
-								<button class="add-btn" onclick={() => (partySearchTarget = "judge")}>+ Add</button>
+							<button class="add-btn" onclick={() => (partySearchTarget = "judge")}>+ {t("common.actions.add")}</button>
 							{/if}
 						</div>
 						{#if selectedCase.court_case.presiding_judge_name}
@@ -427,11 +429,11 @@
 					</div>
 					<div class="section">
 						<div class="section-header-row">
-							<span class="section-title">Prosecutor</span>
+						<span class="section-title">{t("pages.doj.courtCases.prosecutor")}</span>
 							{#if selectedCase.court_case.prosecutor_name}
-								<button class="add-btn" onclick={() => clearParty("prosecutor")}>x Remove</button>
+							<button class="add-btn" onclick={() => clearParty("prosecutor")}>x {t("common.actions.remove")}</button>
 							{:else}
-								<button class="add-btn" onclick={() => (partySearchTarget = "prosecutor")}>+ Add</button>
+							<button class="add-btn" onclick={() => (partySearchTarget = "prosecutor")}>+ {t("common.actions.add")}</button>
 							{/if}
 						</div>
 						{#if selectedCase.court_case.prosecutor_name}
@@ -440,11 +442,11 @@
 					</div>
 					<div class="section">
 						<div class="section-header-row">
-							<span class="section-title">Defense</span>
+						<span class="section-title">{t("pages.doj.courtCases.defense")}</span>
 							{#if selectedCase.court_case.defense_attorney_name}
-								<button class="add-btn" onclick={() => clearParty("defense")}>x Remove</button>
+							<button class="add-btn" onclick={() => clearParty("defense")}>x {t("common.actions.remove")}</button>
 							{:else}
-								<button class="add-btn" onclick={() => (partySearchTarget = "defense")}>+ Add</button>
+							<button class="add-btn" onclick={() => (partySearchTarget = "defense")}>+ {t("common.actions.add")}</button>
 							{/if}
 						</div>
 						{#if selectedCase.court_case.defense_attorney_name}
@@ -458,7 +460,7 @@
 		<!-- LIST VIEW -->
 		<div class="topbar">
 			<div class="search-box">
-				<input type="text" placeholder="Search cases..." bind:value={searchQuery} />
+				<input type="text" placeholder={t("pages.doj.courtCases.searchPlaceholder")} bind:value={searchQuery} />
 			</div>
 			<div class="filter-pills">
 				{#each statusOptions as opt}
@@ -468,9 +470,9 @@
 				{/each}
 			</div>
 			<div class="topbar-actions">
-				<span class="result-count">{allFilteredCases.length} case{allFilteredCases.length !== 1 ? "s" : ""}</span>
-				<button class="action-btn" onclick={loadCases} disabled={isLoading}>{isLoading ? "Loading..." : "Refresh"}</button>
-				<button class="primary-btn" onclick={() => (showCreateModal = true)}>New Court Case</button>
+				<span class="result-count">{t(allFilteredCases.length === 1 ? "pages.doj.courtCases.caseCountOne" : "pages.doj.courtCases.caseCountMany", { count: allFilteredCases.length })}</span>
+				<button class="action-btn" onclick={loadCases} disabled={isLoading}>{isLoading ? t("common.status.loading") : t("pages.doj.courtCases.refresh")}</button>
+				<button class="primary-btn" onclick={() => (showCreateModal = true)}>{t("pages.doj.courtCases.newCase")}</button>
 			</div>
 		</div>
 
@@ -478,22 +480,22 @@
 			{#if isLoading && cases.length === 0}
 				<div class="center-state">
 					<div class="loading-spinner"></div>
-					<p>Loading court cases...</p>
+					<p>{t("pages.doj.courtCases.loading")}</p>
 				</div>
 			{:else if allFilteredCases.length === 0}
 				<div class="center-state">
-					<h3>No Court Cases Found</h3>
-					<p>{searchQuery ? "No cases match your search criteria." : "No court cases available."}</p>
+					<h3>{t("pages.doj.courtCases.noneFound")}</h3>
+					<p>{searchQuery ? t("pages.doj.courtCases.noMatches") : t("pages.doj.courtCases.noneAvailable")}</p>
 				</div>
 			{:else}
 				<div class="table-header">
-					<span>Case #</span>
-					<span>Title</span>
-					<span>Defendant</span>
-					<span>Type</span>
-					<span>Status</span>
-					<span>Hearing</span>
-					<span>Filed</span>
+					<span>{t("pages.doj.courtCases.caseNumberShort")}</span>
+					<span>{t("pages.doj.courtCases.title")}</span>
+					<span>{t("pages.doj.courtCases.defendant")}</span>
+					<span>{t("pages.doj.courtCases.type")}</span>
+					<span>{t("pages.doj.courtCases.status")}</span>
+					<span>{t("pages.doj.courtCases.hearing")}</span>
+					<span>{t("pages.doj.courtCases.filed")}</span>
 				</div>
 				<div class="table-body">
 					{#each paginatedCases as item}
@@ -518,27 +520,27 @@
 	<div class="modal-backdrop" onclick={() => (showCreateModal = false)} role="presentation">
 		<div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
 			<div class="modal-header">
-				<span class="modal-title">New Court Case</span>
+				<span class="modal-title">{t("pages.doj.courtCases.newCase")}</span>
 				<button class="modal-close" onclick={() => (showCreateModal = false)}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
 			</div>
 			<div class="modal-body">
 				<div class="form-group">
-					<label class="form-label">Title</label>
-					<input type="text" class="form-input" placeholder="e.g. State v. John Doe" bind:value={newCase.title} />
+					<label class="form-label">{t("pages.doj.courtCases.title")}</label>
+					<input type="text" class="form-input" placeholder={t("pages.doj.courtCases.caseTitlePlaceholder")} bind:value={newCase.title} />
 				</div>
 				<div class="form-group">
-					<label class="form-label">Case Type</label>
+					<label class="form-label">{t("pages.doj.courtCases.caseType")}</label>
 					<select class="form-select" bind:value={newCase.case_type}>
-						<option value="criminal">Criminal</option>
-						<option value="civil">Civil</option>
-						<option value="appeal">Appeal</option>
-						<option value="motion">Motion</option>
+						<option value="criminal">{formatLabel("criminal")}</option>
+						<option value="civil">{formatLabel("civil")}</option>
+						<option value="appeal">{formatLabel("appeal")}</option>
+						<option value="motion">{formatLabel("motion")}</option>
 					</select>
 				</div>
 				<div class="form-group">
-					<label class="form-label">Defendant</label>
+					<label class="form-label">{t("pages.doj.courtCases.defendant")}</label>
 					{#if newCase.defendant_citizenid}
 						<div class="selected-citizen">
 							<span class="citizen-name">{newCase.defendant_name}</span>
@@ -546,13 +548,13 @@
 							<button type="button" class="remove-citizen-btn" onclick={() => { newCase.defendant_citizenid = ""; newCase.defendant_name = ""; }}>x</button>
 						</div>
 					{:else}
-						<button type="button" class="form-input search-citizen-btn" onclick={() => (showDefendantSearch = true)}>Search citizen...</button>
+						<button type="button" class="form-input search-citizen-btn" onclick={() => (showDefendantSearch = true)}>{t("pages.doj.courtCases.searchCitizen")}</button>
 					{/if}
 				</div>
 				</div>
 			<div class="modal-footer">
-				<button class="back-btn" onclick={() => (showCreateModal = false)}>Cancel</button>
-				<button class="primary-btn" disabled={!newCase.title.trim()} onclick={handleCreateCase}>Create Case</button>
+				<button class="back-btn" onclick={() => (showCreateModal = false)}>{t("common.actions.cancel")}</button>
+				<button class="primary-btn" disabled={!newCase.title.trim()} onclick={handleCreateCase}>{t("pages.doj.courtCases.createCase")}</button>
 			</div>
 		</div>
 	</div>
@@ -560,7 +562,7 @@
 
 <PersonSearchModal
 	show={showDefendantSearch}
-	title="Search Defendant"
+	title={t("pages.doj.courtCases.searchDefendant")}
 	searchResults={defendantSearchResults}
 	onClose={() => { showDefendantSearch = false; defendantSearchResults = []; }}
 	onSearch={handleDefendantSearch}
@@ -569,7 +571,7 @@
 
 <PersonSearchModal
 	show={partySearchTarget !== null}
-	title={partySearchTarget === "judge" ? "Search Judge" : partySearchTarget === "prosecutor" ? "Search Prosecutor" : "Search Defense Attorney"}
+	title={partySearchTarget === "judge" ? t("pages.doj.courtCases.searchJudge") : partySearchTarget === "prosecutor" ? t("pages.doj.courtCases.searchProsecutor") : t("pages.doj.courtCases.searchDefense")}
 	searchResults={partySearchResults}
 	onClose={() => { partySearchTarget = null; partySearchResults = []; }}
 	onSearch={handlePartySearch}
@@ -580,36 +582,36 @@
 <div class="modal-backdrop" onclick={() => (showNewDocModal = false)} role="presentation">
 	<div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
 		<div class="modal-header">
-			<span class="modal-title">New Legal Document</span>
+				<span class="modal-title">{t("pages.doj.courtCases.newDocument")}</span>
 			<button class="modal-close" onclick={() => (showNewDocModal = false)}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 			</button>
 		</div>
 		<div class="modal-body">
 			<div class="form-group">
-				<label class="form-label">Title</label>
+					<label class="form-label">{t("pages.doj.courtCases.title")}</label>
 				<input type="text" class="form-input" bind:value={newDocData.title} />
 			</div>
 			<div class="form-group">
-				<label class="form-label">Type</label>
+					<label class="form-label">{t("pages.doj.courtCases.type")}</label>
 				<select class="form-select" bind:value={newDocData.type}>
-					<option value="brief">Brief</option>
-					<option value="motion">Motion</option>
-					<option value="ruling">Ruling</option>
-					<option value="opinion">Opinion</option>
-					<option value="plea_deal">Plea Deal</option>
-					<option value="sentencing">Sentencing</option>
-					<option value="other">Other</option>
+						<option value="brief">{formatLabel("brief")}</option>
+						<option value="motion">{formatLabel("motion")}</option>
+						<option value="ruling">{formatLabel("ruling")}</option>
+						<option value="opinion">{formatLabel("opinion")}</option>
+						<option value="plea_deal">{formatLabel("plea_deal")}</option>
+						<option value="sentencing">{formatLabel("sentencing")}</option>
+						<option value="other">{formatLabel("other")}</option>
 				</select>
 			</div>
 			<div class="form-group">
-				<label class="form-label">Content</label>
-				<textarea class="form-textarea" rows="6" placeholder="Document content..." bind:value={newDocData.content}></textarea>
+					<label class="form-label">{t("pages.doj.courtCases.content")}</label>
+					<textarea class="form-textarea" rows="6" placeholder={t("pages.doj.courtCases.documentContentPlaceholder")} bind:value={newDocData.content}></textarea>
 			</div>
 		</div>
 		<div class="modal-footer">
-			<button class="back-btn" onclick={() => (showNewDocModal = false)}>Cancel</button>
-			<button class="primary-btn" disabled={!newDocData.title.trim()} onclick={handleCreateDocument}>Create Document</button>
+				<button class="back-btn" onclick={() => (showNewDocModal = false)}>{t("common.actions.cancel")}</button>
+				<button class="primary-btn" disabled={!newDocData.title.trim()} onclick={handleCreateDocument}>{t("pages.doj.courtCases.createDocument")}</button>
 		</div>
 	</div>
 </div>

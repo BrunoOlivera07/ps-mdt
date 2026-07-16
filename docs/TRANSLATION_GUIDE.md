@@ -25,6 +25,7 @@
 
 ## Build
 - Run `npm run build` from `web/`.
+- The build writes `web/dist`, which is consumed by `fxmanifest.lua` but ignored by Git in this repository.
 
 ## Update workflow
 1. Create a backup commit or branch.
@@ -35,6 +36,12 @@
 6. Translate them into `pt-BR.ts`.
 7. Run type check and build.
 8. Validate the resource.
+
+## Adding upstream permissions
+1. Preserve the permission key in `web/src/constants/management.ts`.
+2. Add its label and description under `management.permissions.catalog.items` in both locale files.
+3. Preserve category keys and add category labels under `management.permissions.catalog.categories`.
+4. Run the locale audit and production build.
 
 ## Conflict strategy
 - Keep locale files as the translation source of truth.

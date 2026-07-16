@@ -42,6 +42,7 @@
     import { NUI_EVENTS } from "../constants/nuiEvents";
     import { globalNotifications } from "../services/notificationService.svelte";
     import type { AuthService } from "../services/authService.svelte";
+    import { t } from "../lib/i18n";
 
     interface Props {
         authService?: AuthService;
@@ -214,9 +215,9 @@
     function dispatchAge(t?: number): string {
         if (!t) return "";
         const mins = Math.max(0, Math.round((Date.now() - t) / 60000));
-        if (mins < 1) return "now";
-        if (mins < 60) return `${mins}m ago`;
-        return `${Math.floor(mins / 60)}h ${mins % 60}m ago`;
+        if (mins < 1) return t("pages.map.now");
+        if (mins < 60) return t("pages.map.minutesAgo", { count: mins });
+        return t("pages.map.hoursMinutesAgo", { hours: Math.floor(mins / 60), minutes: mins % 60 });
     }
 
     function unitLabel(u: DispatchUnitLite): string {
@@ -226,7 +227,7 @@
         // charinfo is missing, and only ever fall back to "Unit" — never show a
         // raw citizenid to the dispatcher.
         const fromRoster = officers.find(o => o.citizenid === u.citizenid)?.name;
-        const display = name || fromRoster || "Unit";
+        const display = name || fromRoster || t("pages.map.unit");
         return cs ? `${cs} · ${display}` : display;
     }
 
@@ -244,10 +245,10 @@
 
     function dispatchTooltip(d: MapDispatch): string {
         const parts = [
-            `<b>${esc(d.code || d.codename || "Call")}</b>`,
+            `<b>${esc(d.code || d.codename || t("pages.map.call"))}</b>`,
             d.message ? esc(d.message) : "",
             [d.street ? esc(d.street) : "", d.time ? esc(dispatchAge(d.time)) : ""].filter(Boolean).join(" · "),
-            `${(d.units || []).length} unit${(d.units || []).length === 1 ? "" : "s"} attached`,
+            t("pages.map.unitsAttached", { count: (d.units || []).length }),
         ].filter(Boolean);
         return parts.join("<br>");
     }
@@ -351,15 +352,15 @@
             if (res?.success) {
                 const n = res.assigned ?? citizenids.length;
                 globalNotifications.success(action === "attach"
-                    ? `Assigned ${n} unit${n === 1 ? "" : "s"} to the call — waypoint set`
-                    : "Unit removed from the call");
-                if (res.offline) globalNotifications.error(`${res.offline} unit(s) offline — skipped`);
+                    ? t("pages.map.messages.unitsAssigned", { count: n })
+                    : t("pages.map.messages.unitRemoved"));
+                if (res.offline) globalNotifications.error(t("pages.map.messages.unitsOffline", { count: res.offline }));
                 setTimeout(loadDispatches, 400);
             } else {
-                globalNotifications.error(res?.error || "Assignment failed");
+                globalNotifications.error(res?.error || t("pages.map.messages.assignmentFailed"));
             }
         } catch {
-            globalNotifications.error("Assignment failed");
+        globalNotifications.error(t("pages.map.messages.assignmentFailed"));
         } finally {
             assignBusy = false;
         }
@@ -392,7 +393,7 @@
         if (!selectedDispatch) return;
         const attached = attachedIds(selectedDispatch);
         const ids = p.memberIds.filter(cid => officers.some(o => o.citizenid === cid) && !attached.has(cid));
-        if (ids.length === 0) { globalNotifications.error("No online members left to assign"); return; }
+        if (ids.length === 0) { globalNotifications.error(t("pages.map.messages.noOnlineMembers")); return; }
         assignUnits(ids, "attach");
     }
 
@@ -516,8 +517,8 @@
 
     async function submitCreateCall() {
         if (ccBusy) return;
-        if (!ccCode) { globalNotifications.error("Pick a 10-code"); return; }
-        if (!ccPickedGta) { globalNotifications.error("Pick a location on the map"); return; }
+        if (!ccCode) { globalNotifications.error(t("pages.map.messages.pickCode")); return; }
+        if (!ccPickedGta) { globalNotifications.error(t("pages.map.messages.pickLocation")); return; }
         ccBusy = true;
         try {
             const res = await fetchNui<{ success: boolean; id?: string; error?: string }>(
@@ -533,7 +534,7 @@
                 { success: true, id: "preview" },
             );
             if (!res?.success || !res.id) {
-                globalNotifications.error(res?.error || "Failed to create call");
+                globalNotifications.error(res?.error || t("pages.map.messages.callCreateFailed"));
                 return;
             }
             // Attach every online member of the selected patrols.
@@ -549,11 +550,11 @@
                     coords: { x: ccPickedGta.x, y: ccPickedGta.y },
                 }, { success: true });
             }
-            globalNotifications.success(`Call created${ids.length ? ` — ${ids.length} unit${ids.length === 1 ? "" : "s"} assigned` : ""}`);
+            globalNotifications.success(ids.length ? t("pages.map.messages.callCreatedAssigned", { count: ids.length }) : t("pages.map.messages.callCreated"));
             showCreateCall = false;
             setTimeout(loadDispatches, 300);
         } catch {
-            globalNotifications.error("Failed to create call");
+            globalNotifications.error(t("pages.map.messages.callCreateFailed"));
         } finally {
             ccBusy = false;
         }
@@ -622,14 +623,14 @@
             const res = await fetchNui<{ success: boolean; error?: string }>(
                 NUI_EVENTS.DISPATCH.SET_DISPATCH_NOTE, { dispatch_id: d.id, text }, { success: true });
             if (res?.success) {
-                globalNotifications.success("Note saved");
+            globalNotifications.success(t("pages.map.messages.noteSaved"));
                 noteEditing = false;
                 setTimeout(loadDispatches, 300);
             } else {
-                globalNotifications.error(res?.error || "Failed to save note");
+            globalNotifications.error(res?.error || t("pages.map.messages.noteSaveFailed"));
             }
         } catch {
-            globalNotifications.error("Failed to save note");
+        globalNotifications.error(t("pages.map.messages.noteSaveFailed"));
         } finally {
             noteBusy = false;
         }
@@ -642,14 +643,14 @@
             const res = await fetchNui<{ success: boolean; error?: string }>(
                 NUI_EVENTS.DISPATCH.DELETE_DISPATCH_NOTE, { dispatch_id: d.id }, { success: true });
             if (res?.success) {
-                globalNotifications.success("Note removed");
+            globalNotifications.success(t("pages.map.messages.noteRemoved"));
                 noteEditing = false;
                 setTimeout(loadDispatches, 300);
             } else {
-                globalNotifications.error(res?.error || "Failed to remove note");
+            globalNotifications.error(res?.error || t("pages.map.messages.noteRemoveFailed"));
             }
         } catch {
-            globalNotifications.error("Failed to remove note");
+        globalNotifications.error(t("pages.map.messages.noteRemoveFailed"));
         } finally {
             noteBusy = false;
         }
@@ -680,12 +681,12 @@
             const res = await fetchNui<{ success: boolean; error?: string }>(
                 NUI_EVENTS.DISPATCH.DISMISS_DISPATCH, { dispatch_id: id }, { success: true });
             if (res?.success) {
-                globalNotifications.success("Call dismissed for all units");
+        globalNotifications.success(t("pages.map.messages.callDismissed"));
             } else {
-                globalNotifications.error(res?.error || "Failed to dismiss call");
+        globalNotifications.error(res?.error || t("pages.map.messages.callDismissFailed"));
             }
         } catch {
-            globalNotifications.error("Failed to dismiss call");
+        globalNotifications.error(t("pages.map.messages.callDismissFailed"));
         }
     }
 
@@ -783,7 +784,7 @@
             if (ownCitizenId) applyStatusUpdate({ citizenid: ownCitizenId, status: id, note, updatedAt: Date.now() });
             statusPickerOpen = false;
         } catch {
-            globalNotifications.error("Failed to update status.");
+            globalNotifications.error(t("pages.map.messages.statusUpdateFailed"));
         } finally {
             // Small cooldown mirrors the server's anti-spam window so the
             // button can't be hammered while the request is in flight.
@@ -895,12 +896,12 @@
                     ${officer.callsign ? `<div class="op-callsign-badge">${officer.callsign}</div>` : ""}
                 </div>
                 <div class="op-body">
-                    ${officer.rank ? `<div class="op-row"><span class="op-label">Rank</span><span class="op-value">${officer.rank}</span></div>` : ""}
-                    <div class="op-row"><span class="op-label">Availability</span>${availabilityHtml}</div>
-                    <div class="op-row"><span class="op-label">Patrol</span>${patrolHtml}</div>
-                    <div class="op-row"><span class="op-label">Status</span>${vehicleBadge}</div>
+					${officer.rank ? `<div class="op-row"><span class="op-label">${t("pages.map.rank")}</span><span class="op-value">${officer.rank}</span></div>` : ""}
+					<div class="op-row"><span class="op-label">${t("pages.map.availability")}</span>${availabilityHtml}</div>
+					<div class="op-row"><span class="op-label">${t("pages.map.patrol")}</span>${patrolHtml}</div>
+					<div class="op-row"><span class="op-label">${t("pages.map.status")}</span>${vehicleBadge}</div>
                     <div class="op-row op-row--coords">
-                        <span class="op-label">Heading</span>
+						<span class="op-label">${t("pages.map.heading")}</span>
                         ${heading}
                     </div>
                 </div>
@@ -926,26 +927,26 @@
             : "";
 
         const status = cached
-            ? `<span class="op-badge op-badge--foot">🅿️ Parked</span>`
-            : `<span class="op-badge op-badge--vehicle">🚔 Active</span>`;
+            ? `<span class="op-badge op-badge--foot">🅿️ ${t("pages.map.parked")}</span>`
+            : `<span class="op-badge op-badge--vehicle">🚔 ${t("common.status.active")}</span>`;
 
         const action = (!cached && plate)
             ? `<button class="veh-dashcam-btn" data-plate="${plate}">
                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-                   View Dashcam
+				   ${t("pages.map.viewDashcam")}
                </button>`
-            : `<div class="veh-note">No live dashcam (last known position)</div>`;
+            : `<div class="veh-note">${t("pages.map.noLiveDashcam")}</div>`;
 
         return `
             <div class="op-wrap veh-wrap">
                 <div class="op-header" style="--op-color:#f97316">
-                    <div class="op-name">${plate || "Unknown Vehicle"}</div>
+					<div class="op-name">${plate || t("pages.map.unknownVehicle")}</div>
                     <div class="op-callsign-badge">VEH</div>
                 </div>
                 <div class="op-body">
-                    <div class="op-row"><span class="op-label">Status</span>${status}</div>
+					<div class="op-row"><span class="op-label">${t("pages.map.status")}</span>${status}</div>
                     <div class="op-row op-row--coords">
-                        <span class="op-label">Heading</span>
+						<span class="op-label">${t("pages.map.heading")}</span>
                         ${heading}
                     </div>
                     <div class="veh-actions">${action}</div>
@@ -962,10 +963,10 @@
         try {
             const res: any = await fetchNui(NUI_EVENTS.CAMERA.VIEW_CAMERA, plate);
             if (res && res.success === false) {
-                globalNotifications.error(res.message || "No dashcam available for this vehicle");
+                globalNotifications.error(res.message || t("pages.map.messages.noDashcam"));
             }
         } catch {
-            globalNotifications.error("No dashcam available for this vehicle");
+            globalNotifications.error(t("pages.map.messages.noDashcam"));
         }
     }
 
@@ -1258,7 +1259,7 @@
         createCursorDot();
         map.on("mousemove", onDrawMouseMove);
         map.on("click", onDrawClick);
-        globalNotifications.info("Click to place points • snaps to nearby vertices • Enter to finish • Backspace to undo • Esc to cancel");
+        globalNotifications.info(t("pages.map.messages.drawInstructions"));
     }
 
     // The MDT is commonly scaled by CSS `zoom` (and sometimes `transform: scale()`)
@@ -1349,7 +1350,7 @@
     }
 
     async function finishDrawing() {
-        if (drawPoints.length < 3) { globalNotifications.error("Need at least 3 points."); return; }
+        if (drawPoints.length < 3) { globalNotifications.error(t("pages.map.messages.minimumPoints")); return; }
         const id = drawingPatrolId;
         if (!id) return;
         const gtaPoints = drawPoints.map(toGtaCoords);
@@ -1358,14 +1359,14 @@
         const patrol = patrols.find(p => p.id === id);
         if (patrol) refreshZoneForPatrol(patrol);
         try { await fetchNui(NUI_EVENTS.MAP.SET_PATROL_ZONE, { id, points: gtaPoints }, { success: true }); }
-        catch { globalNotifications.error("Failed to save zone."); }
+        catch { globalNotifications.error(t("pages.map.messages.zoneSaveFailed")); }
     }
 
     async function clearZone(id: string) {
         patrols = patrols.map(p => p.id === id ? { ...p, zonePoints: null } : p);
         removeZoneById(id);
         try { await fetchNui(NUI_EVENTS.MAP.SET_PATROL_ZONE, { id, points: null }, { success: true }); }
-        catch { globalNotifications.error("Failed to clear zone."); }
+        catch { globalNotifications.error(t("pages.map.messages.zoneClearFailed")); }
     }
 
     function stopDrawing(notify = true) {
@@ -1381,7 +1382,7 @@
         mapContainer?.classList.remove("map-cursor-none");
         drawingPatrolId = null;
         drawPoints = [];
-        if (notify) globalNotifications.info("Zone drawing cancelled.");
+        if (notify) globalNotifications.info(t("pages.map.messages.zoneDrawingCancelled"));
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -1933,7 +1934,7 @@
             refreshPatrolLabels();
             renderAllZones();
         } catch {
-            globalNotifications.error("Failed to load patrols");
+            globalNotifications.error(t("pages.map.messages.patrolLoadFailed"));
         }
     }
 
@@ -1945,7 +1946,7 @@
         const name = newPatrolName.trim();
         if (!name) return;
         if (patrolNameExists(name)) {
-            globalNotifications.error(`Patrol "${name}" already exists`);
+            globalNotifications.error(t("pages.map.messages.patrolExists", { name }));
             return;
         }
         const id = crypto.randomUUID();
@@ -1966,7 +1967,7 @@
 
     async function renamePatrolOnServer(id: string, name: string) {
         if (patrolNameExists(name, id)) {
-            globalNotifications.error(`Patrol "${name}" already exists`);
+            globalNotifications.error(t("pages.map.messages.patrolExists", { name }));
             return;
         }
         try {
@@ -2210,7 +2211,7 @@
         {#if showCalls && tickerAll.length > 0}
             <div class="call-ticker">
                 {#if tickerPages > 1}
-                    <button class="ticker-nav" disabled={tickerPage === 0} title="Previous calls (←)" onclick={() => tickerNav(-1)}>‹</button>
+		<button class="ticker-nav" disabled={tickerPage === 0} title={t("pages.map.previousCalls")} onclick={() => tickerNav(-1)}>‹</button>
                 {/if}
                 {#each tickerCalls as d (d.id)}
                     <div class="ticker-chip" class:active={String(d.id) === selectedDispatchId}>
@@ -2221,13 +2222,13 @@
                             <span class="ticker-age">{dispatchAge(d.time)}</span>
                         </button>
                         {#if canAssignUnits}
-                            <button class="ticker-x" title="Dismiss call for everyone" onclick={() => requestDismiss(String(d.id))}>✕</button>
+				<button class="ticker-x" title={t("pages.map.dismissForEveryone")} onclick={() => requestDismiss(String(d.id))}>✕</button>
                         {/if}
                     </div>
                 {/each}
                 {#if tickerPages > 1}
                     <span class="ticker-page">{tickerPage + 1}/{tickerPages}</span>
-                    <button class="ticker-nav" disabled={tickerPage === tickerPages - 1} title="Next calls (→)" onclick={() => tickerNav(1)}>›</button>
+		<button class="ticker-nav" disabled={tickerPage === tickerPages - 1} title={t("pages.map.nextCalls")} onclick={() => tickerNav(1)}>›</button>
                 {/if}
             </div>
         {/if}
@@ -2241,11 +2242,11 @@
                     <span class="call-prio-dot" style="background:{priorityColor(selectedDispatch.priority)}"></span>
                     <span class="call-title">{selectedDispatch.code || selectedDispatch.codename || "Call"}{#if selectedDispatch.codename && selectedDispatch.code} · {selectedDispatch.codename}{/if}</span>
                     {#if canAssignUnits}
-                        <button class="call-close call-dismiss" title="Dismiss call for everyone (removes it from all MDTs)" aria-label="Dismiss" onclick={() => requestDismiss(String(selectedDispatch!.id))}>
+			<button class="call-close call-dismiss" title={t("pages.map.dismissCallHint")} aria-label={t("pages.map.dismiss")} onclick={() => requestDismiss(String(selectedDispatch!.id))}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
                     {/if}
-                    <button class="call-close" aria-label="Close" onclick={() => { selectedDispatchId = null; renderDispatchMarkers(); }}>
+			<button class="call-close" aria-label={t("common.actions.close")} onclick={() => { selectedDispatchId = null; renderDispatchMarkers(); }}>
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
@@ -2261,15 +2262,15 @@
                     <!-- Dispatch note (one per call) -->
                     <div class="call-note-block">
                         <div class="call-note-head">
-                            <span class="call-section-label">Dispatch note</span>
+				<span class="call-section-label">{t("pages.map.dispatchNote")}</span>
                             {#if canManageNotes && !noteEditing}
                                 {#if selectedDispatch.note}
                                     <div class="call-note-actions">
-                                        <button class="note-mini-btn" title="Edit note" disabled={noteBusy} onclick={startNoteEdit}>Edit</button>
-                                        <button class="note-mini-btn danger" title="Remove note" disabled={noteBusy} onclick={deleteNote}>Remove</button>
+						<button class="note-mini-btn" title={t("pages.map.editNote")} disabled={noteBusy} onclick={startNoteEdit}>{t("common.actions.edit")}</button>
+						<button class="note-mini-btn danger" title={t("pages.map.removeNote")} disabled={noteBusy} onclick={deleteNote}>{t("common.actions.remove")}</button>
                                     </div>
                                 {:else}
-                                    <button class="note-mini-btn" title="Add a note for units on this call" disabled={noteBusy} onclick={startNoteEdit}>+ Add</button>
+					<button class="note-mini-btn" title={t("pages.map.addNoteHint")} disabled={noteBusy} onclick={startNoteEdit}>+ {t("common.actions.add")}</button>
                                 {/if}
                             {/if}
                         </div>
@@ -2280,13 +2281,13 @@
                                 bind:value={noteDraft}
                                 maxlength={NOTE_MAX}
                                 rows="3"
-                                placeholder="Info for assigned units — e.g. suspect fled north, approach with caution…"
+					placeholder={t("pages.map.notePlaceholder")}
                             ></textarea>
                             <div class="note-edit-row">
                                 <span class="note-count">{noteDraft.length}/{NOTE_MAX}</span>
                                 <div class="note-edit-btns">
-                                    <button class="call-btn call-btn-ghost" disabled={noteBusy} onclick={cancelNoteEdit}>Cancel</button>
-                                    <button class="call-btn call-btn-accent" disabled={noteBusy || !noteDraft.trim()} onclick={saveNote}>Save note</button>
+					<button class="call-btn call-btn-ghost" disabled={noteBusy} onclick={cancelNoteEdit}>{t("common.actions.cancel")}</button>
+					<button class="call-btn call-btn-accent" disabled={noteBusy || !noteDraft.trim()} onclick={saveNote}>{t("pages.map.saveNote")}</button>
                                 </div>
                             </div>
                         {:else if selectedDispatch.note}
@@ -2309,40 +2310,40 @@
                                 <span class="call-unit-chip">
                                     {unitLabel(u)}
                                     {#if canAssignUnits || (ownCitizenId && u.citizenid === ownCitizenId)}
-                                        <button class="unit-remove" title="Remove from call" disabled={assignBusy} onclick={() => removeUnitFromCall(u.citizenid)}>✕</button>
+					<button class="unit-remove" title={t("pages.map.removeFromCall")} disabled={assignBusy} onclick={() => removeUnitFromCall(u.citizenid)}>✕</button>
                                     {/if}
                                 </span>
                             {/each}
                         </div>
                     {:else}
-                        <div class="call-empty">No units attached yet</div>
+				<div class="call-empty">{t("pages.map.noUnitsAttached")}</div>
                     {/if}
 
                     <div class="call-self-row">
                         {#if isSelfAttached}
-                            <button class="call-btn call-btn-ghost" disabled={assignBusy} onclick={() => selfAttachToCall(false)}>Detach yourself</button>
+				<button class="call-btn call-btn-ghost" disabled={assignBusy} onclick={() => selfAttachToCall(false)}>{t("pages.map.detachYourself")}</button>
                         {:else}
-                            <button class="call-btn call-btn-accent" disabled={assignBusy} onclick={() => selfAttachToCall(true)}>Attach yourself</button>
+				<button class="call-btn call-btn-accent" disabled={assignBusy} onclick={() => selfAttachToCall(true)}>{t("pages.map.attachYourself")}</button>
                         {/if}
                     </div>
 
                     <!-- Dispatcher: quick-assign -->
                     {#if canAssignUnits}
                         {#if nearbyUnits.length > 0}
-                            <div class="call-section-label">Assign nearby units</div>
+				<div class="call-section-label">{t("pages.map.assignNearbyUnits")}</div>
                             <div class="call-nearby">
                                 {#each nearbyUnits as { o, dist } (o.citizenid)}
                                     <div class="nearby-row">
                                         <span class="nearby-dot" style="background:{statusDef(o.status).color}"></span>
                                         <span class="nearby-name">{o.callsign ? `${o.callsign} · ` : ""}{o.name}</span>
                                         <span class="nearby-dist">{fmtDist(dist)}</span>
-                                        <button class="nearby-add" title="Assign — sets their waypoint" disabled={assignBusy} onclick={() => assignUnits([o.citizenid], "attach")}>+</button>
+					<button class="nearby-add" title={t("pages.map.assignWaypoint")} disabled={assignBusy} onclick={() => assignUnits([o.citizenid], "attach")}>+</button>
                                     </div>
                                 {/each}
                             </div>
                         {/if}
                         {#if nearbyPatrols.length > 0}
-                            <div class="call-section-label">Nearest available patrols</div>
+				<div class="call-section-label">{t("pages.map.nearestPatrols")}</div>
                             <div class="call-nearby">
                                 {#each nearbyPatrols as { p, dist, count, st } (p.id)}
                                     <div class="nearby-row">
@@ -2350,7 +2351,7 @@
                                         <span class="nearby-name">{p.name}</span>
                                         <span class="patrol-status-mini" style="color:{st.color}">{st.label}</span>
                                         <span class="nearby-dist">{count} 👤 · {fmtDist(dist)}</span>
-                                        <button class="nearby-add" title="Assign all online members — sets their waypoints" disabled={assignBusy} onclick={() => assignPatrolToCall(p)}>+</button>
+					<button class="nearby-add" title={t("pages.map.assignPatrolWaypoint")} disabled={assignBusy} onclick={() => assignPatrolToCall(p)}>+</button>
                                     </div>
                                 {/each}
                             </div>
@@ -2369,11 +2370,11 @@
                     <div class="confirm-icon">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     </div>
-                    <div class="confirm-title">Dismiss this call?</div>
-                    <div class="confirm-text">It will be removed from the map and ticker for <b>every unit</b>. This can't be undone.</div>
+			<div class="confirm-title">{t("pages.map.dismissConfirmTitle")}</div>
+			<div class="confirm-text">{t("pages.map.dismissConfirmText")}</div>
                     <div class="confirm-btns">
-                        <button class="call-btn call-btn-ghost" onclick={() => dismissConfirmId = null}>Cancel</button>
-                        <button class="call-btn call-btn-danger" onclick={() => dismissCall(dismissConfirmId!)}>Dismiss call</button>
+				<button class="call-btn call-btn-ghost" onclick={() => dismissConfirmId = null}>{t("common.actions.cancel")}</button>
+				<button class="call-btn call-btn-danger" onclick={() => dismissCall(dismissConfirmId!)}>{t("pages.map.dismissCall")}</button>
                     </div>
                 </div>
             </div>
@@ -2391,15 +2392,15 @@
                             <span>{ccPendingGta ? "Location set — confirm or click again to move it" : "Click anywhere on the map to place the call"}</span>
                         </div>
                         <div class="cc-pick-actions">
-                            <button class="call-btn call-btn-ghost" onclick={cancelPick}>Cancel</button>
-                            <button class="call-btn call-btn-accent" disabled={!ccPendingGta} onclick={confirmPick}>Use this location</button>
+				<button class="call-btn call-btn-ghost" onclick={cancelPick}>{t("common.actions.cancel")}</button>
+				<button class="call-btn call-btn-accent" disabled={!ccPendingGta} onclick={confirmPick}>{t("pages.map.useLocation")}</button>
                         </div>
                     </div>
                 {:else}
                     <div class="cc-modal" role="dialog" aria-modal="true">
                         <div class="cc-head">
-                            <span class="cc-title-txt">Create Call</span>
-                            <button class="call-close" aria-label="Close" onclick={() => showCreateCall = false}>
+			<span class="cc-title-txt">{t("pages.map.createCall")}</span>
+			<button class="call-close" aria-label={t("common.actions.close")} onclick={() => showCreateCall = false}>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             </button>
                         </div>
@@ -2415,21 +2416,21 @@
                             </div>
 
                             <div class="cc-field">
-                                <span class="cc-label">Title <span class="cc-optional">(optional — uses the code's label if empty)</span></span>
+				<span class="cc-label">{t("pages.map.title")} <span class="cc-optional">{t("pages.map.titleOptional")}</span></span>
                                 <input class="cc-input" bind:value={ccTitle} maxlength="80" placeholder={ccSelectedCode?.label ? `Default: ${ccSelectedCode.label}` : "Short summary…"} />
                             </div>
 
                             <div class="cc-field">
-                                <span class="cc-label">Note <span class="cc-optional">(optional)</span></span>
-                                <textarea class="cc-input cc-textarea" bind:value={ccNote} maxlength={CC_NOTE_MAX} rows="2" placeholder="Extra info for assigned units…"></textarea>
+				<span class="cc-label">{t("pages.map.note")} <span class="cc-optional">{t("pages.map.optional")}</span></span>
+				<textarea class="cc-input cc-textarea" bind:value={ccNote} maxlength={CC_NOTE_MAX} rows="2" placeholder={t("pages.map.extraInfoPlaceholder")}></textarea>
                             </div>
 
                             <div class="cc-field">
-                                <span class="cc-label">Location</span>
+				<span class="cc-label">{t("pages.map.location")}</span>
                                 {#if ccPickedGta}
                                     <div class="cc-location-set">
                                         <span class="cc-loc-street">{ccStreet || "Location set"}</span>
-                                        <button class="cc-loc-repick" onclick={startLocationPick}>Re-pick</button>
+					<button class="cc-loc-repick" onclick={startLocationPick}>{t("pages.map.repick")}</button>
                                     </div>
                                 {:else}
                                     <button class="cc-pick-btn" onclick={startLocationPick}>
@@ -2440,11 +2441,11 @@
                             </div>
 
                             <div class="cc-field">
-                                <span class="cc-label">Assign patrols <span class="cc-optional">(available, nearest)</span></span>
+				<span class="cc-label">{t("pages.map.assignPatrols")} <span class="cc-optional">{t("pages.map.availableNearest")}</span></span>
                                 {#if !ccPickedGta}
-                                    <div class="cc-empty">Pick a location first to see nearby patrols.</div>
+					<div class="cc-empty">{t("pages.map.pickLocationFirst")}</div>
                                 {:else if ccNearbyPatrols.length === 0}
-                                    <div class="cc-empty">No available patrols near this location.</div>
+					<div class="cc-empty">{t("pages.map.noNearbyPatrols")}</div>
                                 {:else}
                                     <div class="cc-units">
                                         {#each ccNearbyPatrols as { p, dist, count, st } (p.id)}
@@ -2463,8 +2464,8 @@
                         <div class="cc-footer">
                             <span class="cc-footer-hint">{ccSelectedPatrols.size} patrol{ccSelectedPatrols.size === 1 ? "" : "s"} selected</span>
                             <div class="cc-footer-btns">
-                                <button class="call-btn call-btn-ghost" disabled={ccBusy} onclick={() => showCreateCall = false}>Cancel</button>
-                                <button class="call-btn call-btn-accent" disabled={ccBusy || !ccCode || !ccPickedGta} onclick={submitCreateCall}>Create call</button>
+			<button class="call-btn call-btn-ghost" disabled={ccBusy} onclick={() => showCreateCall = false}>{t("common.actions.cancel")}</button>
+			<button class="call-btn call-btn-accent" disabled={ccBusy || !ccCode || !ccPickedGta} onclick={submitCreateCall}>{t("pages.map.createCall")}</button>
                             </div>
                         </div>
                     </div>
@@ -2473,15 +2474,15 @@
         {/if}
 
         <div class="map-controls">
-            <span class="controls-header">Tracking</span>
+			<span class="controls-header">{t("pages.map.tracking")}</span>
             <div class="controls-group">
                 <label class="control-toggle">
                     <input type="checkbox" bind:checked={showVehicles} onchange={() => localStorage.setItem("mdt_map_vehicles", String(showVehicles))} />
-                    <span class="toggle-label">Vehicles</span>
+				<span class="toggle-label">{t("pages.map.vehicles")}</span>
                 </label>
                 <label class="control-toggle">
                     <input type="checkbox" bind:checked={showCalls} onchange={() => localStorage.setItem("mdt_map_calls", String(showCalls))} />
-                    <span class="toggle-label">Calls</span>
+				<span class="toggle-label">{t("pages.map.calls")}</span>
                 </label>
                 <label class="control-toggle">
                     <input type="checkbox" bind:checked={showBodycams} onchange={() => localStorage.setItem("mdt_map_bodycams", String(showBodycams))} />
@@ -2489,25 +2490,25 @@
                 </label>
                 <label class="control-toggle">
                     <input type="checkbox" bind:checked={showPatrols} onchange={() => localStorage.setItem("mdt_map_patrols_layer", String(showPatrols))} />
-                    <span class="toggle-label">Patrols</span>
+				<span class="toggle-label">{t("pages.map.patrols")}</span>
                 </label>
                 <label class="control-toggle">
                     <input type="checkbox" bind:checked={showZones} onchange={() => localStorage.setItem("mdt_map_zones", String(showZones))} />
-                    <span class="toggle-label">Zones</span>
+				<span class="toggle-label">{t("pages.map.zones")}</span>
                 </label>
             </div>
             <div class="controls-divider"></div>
             {#if canAssignUnits}
                 <button class="create-call-btn" onclick={openCreateCall}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Create Call
+			{t("pages.map.createCall")}
                 </button>
                 <div class="controls-divider"></div>
             {/if}
             <div class="legend">
-                <span class="legend-item vehicle">Vehicle</span>
-                <span class="legend-item vehicle-parked">Parked</span>
-                <span class="legend-item bodycam-unassigned">Unassigned</span>
+			<span class="legend-item vehicle">{t("pages.map.vehicle")}</span>
+			<span class="legend-item vehicle-parked">{t("pages.map.parked")}</span>
+			<span class="legend-item bodycam-unassigned">{t("pages.map.unassigned")}</span>
                 {#each patrols.filter(p => p.memberIds.length > 0) as patrol}
                     <span class="legend-item" style="--dot:{patrol.color}">{patrol.name}</span>
                 {/each}
@@ -2522,15 +2523,15 @@
                     Drawing zone for <strong>{drawPatrol?.name}</strong>
                 </div>
                 <div class="drawing-hud-hints">
-                    <kbd>Click</kbd> Place point &nbsp;·&nbsp;
-                    <kbd>Enter</kbd> Finish &nbsp;·&nbsp;
+			<kbd>{t("pages.map.click")}</kbd> {t("pages.map.placePoint")} &nbsp;·&nbsp;
+			<kbd>Enter</kbd> {t("pages.map.finish")} &nbsp;·&nbsp;
                     <kbd>⌫</kbd> Undo &nbsp;·&nbsp;
-                    <kbd>Esc</kbd> Cancel
+			<kbd>Esc</kbd> {t("common.actions.cancel")}
                 </div>
                 <div class="drawing-hud-count">{drawPoints.length} point{drawPoints.length !== 1 ? "s" : ""}{drawPoints.length >= 3 ? " ✓" : ""}</div>
                 <div class="drawing-hud-actions">
-                    <button class="hud-btn hud-btn--finish" onclick={() => finishDrawing()} disabled={drawPoints.length < 3} type="button">Finish</button>
-                    <button class="hud-btn hud-btn--cancel" onclick={() => stopDrawing(true)} type="button">Cancel</button>
+		<button class="hud-btn hud-btn--finish" onclick={() => finishDrawing()} disabled={drawPoints.length < 3} type="button">{t("pages.map.finish")}</button>
+		<button class="hud-btn hud-btn--cancel" onclick={() => stopDrawing(true)} type="button">{t("common.actions.cancel")}</button>
                 </div>
             </div>
         {/if}
@@ -2546,17 +2547,17 @@
                     <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 {/if}
             </svg>
-            {#if !sidebarOpen}<span class="sidebar-toggle-label">Patrols</span>{/if}
+		{#if !sidebarOpen}<span class="sidebar-toggle-label">{t("pages.map.patrols")}</span>{/if}
         </button>
 
         <div class="sidebar" class:sidebar--open={sidebarOpen}>
             <div class="panel" class:panel--open={officersOpen} class:panel--closed={!officersOpen}>
                 <div class="panel-header panel-header--clickable" onclick={toggleOfficers}>
                     {#if officersOpen}
-                        <span class="panel-title">Officers</span>
+					<span class="panel-title">{t("pages.map.officers")}</span>
                         <span class="tab-badge">{officers.length}</span>
                     {:else}
-                        <span class="panel-title-vertical">Officers</span>
+				<span class="panel-title-vertical">{t("pages.map.officers")}</span>
                     {/if}
                     <svg class="panel-chevron" class:rotated={!officersOpen} width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 4.5l4 4 4-4"/></svg>
                 </div>
@@ -2569,7 +2570,7 @@
                         class="my-status-trigger"
                         class:disabled={statusChangePending}
                         onclick={() => { statusPickerOpen = !statusPickerOpen; statusNoteDraft = myStatusNote; }}
-                        title="Set your status"
+										title={t("pages.map.setStatus")}
                     >
                         <span class="my-status-dot" style="background:{statusDef(myStatusId).color}"></span>
                         <span class="my-status-label">{myStatusNote || statusDef(myStatusId).label}</span>
@@ -2589,7 +2590,7 @@
                             {/each}
                             <input
                                 class="my-status-note-input"
-                                placeholder="Optional note (e.g. Traffic Stop)…"
+										placeholder={t("pages.map.statusNotePlaceholder")}
                                 maxlength="60"
                                 bind:value={statusNoteDraft}
                                 onkeydown={(e) => { if (e.key === "Enter") setMyStatus(myStatusId, statusNoteDraft.trim() || undefined); }}
@@ -2613,7 +2614,7 @@
                 </div>
                 <div class="panel-content panel-officers-content">
                     {#if officers.length === 0}
-                        <div class="empty-hint">No officers on duty.</div>
+						<div class="empty-hint">{t("pages.map.noOfficersOnDuty")}</div>
                     {:else if totalVisibleOfficers === 0}
                         <div class="empty-hint">No officers match {statusFilter.size > 0 ? "the selected status" : `"${officerSearch}"`}.</div>
                     {/if}
@@ -2655,7 +2656,7 @@
                                     </div>
                                     <span class="officer-status-badge" style={statusPillStyle(sDef.color)}>{officer!.statusNote || sDef.label}</span>
                                     {#if canManagePatrols}
-                                        <button class="officer-kick" onmousedown={(e) => e.stopPropagation()} onclick={(e) => { e.stopPropagation(); removeFromPatrol(officer!.citizenid); }} title="Remove">×</button>
+							<button class="officer-kick" onmousedown={(e) => e.stopPropagation()} onclick={(e) => { e.stopPropagation(); removeFromPatrol(officer!.citizenid); }} title={t("common.actions.remove")}>×</button>
                                     {/if}
                                 </div>
                             {/each}
@@ -2664,8 +2665,8 @@
                 </div>
                 <div class="officer-search">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-                    <input class="officer-search-input" placeholder="Search officers…" bind:value={officerSearch} />
-                    {#if officerSearch}<button class="officer-search-clear" onclick={() => (officerSearch = "")} type="button" title="Clear">×</button>{/if}
+					<input class="officer-search-input" placeholder={t("pages.map.searchOfficers")} bind:value={officerSearch} />
+					{#if officerSearch}<button class="officer-search-clear" onclick={() => (officerSearch = "")} type="button" title={t("pages.map.clear")}>×</button>{/if}
                 </div>
                 {/if}
             </div>
@@ -2675,15 +2676,15 @@
             <div class="panel" class:panel--open={patrolsOpen} class:panel--closed={!patrolsOpen}>
                 <div class="panel-header panel-header--clickable" onclick={togglePatrols}>
                     {#if patrolsOpen}
-                        <span class="panel-title">Patrols</span>
+					<span class="panel-title">{t("pages.map.patrols")}</span>
                         <span class="tab-badge">{patrols.length}</span>
                         {#if canEditPatrols}
-                            <button class="btn-icon-add" onmousedown={(e) => e.stopPropagation()} onclick={(e) => { e.stopPropagation(); showCreateForm = !showCreateForm; }} type="button" title="New patrol">
+					<button class="btn-icon-add" onmousedown={(e) => e.stopPropagation()} onclick={(e) => { e.stopPropagation(); showCreateForm = !showCreateForm; }} type="button" title={t("pages.map.newPatrol")}>
                                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg>
                             </button>
                         {/if}
                     {:else}
-                        <span class="panel-title-vertical">Patrols</span>
+				<span class="panel-title-vertical">{t("pages.map.patrols")}</span>
                     {/if}
                     <svg class="panel-chevron" class:rotated={!patrolsOpen} width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 4.5l4 4 4-4"/></svg>
                 </div>
@@ -2691,28 +2692,28 @@
                 {#if patrolsOpen}
                 {#if showCreateForm && canEditPatrols}
                     <div class="create-form">
-                        <input class="create-input" placeholder="Patrol name…" bind:value={newPatrolName} onkeydown={(e) => e.key === "Enter" && createPatrol()} autofocus />
+					<input class="create-input" placeholder={t("pages.map.patrolName")} bind:value={newPatrolName} onkeydown={(e) => e.key === "Enter" && createPatrol()} autofocus />
                         <div class="color-row">
                             {#each PATROL_COLORS as c}
                                 <button class="color-swatch" class:selected={newPatrolColor === c} style="background:{c}" onclick={() => (newPatrolColor = c)} type="button"></button>
                             {/each}
                         </div>
                         <div class="create-actions">
-                            <button class="btn-create" onclick={createPatrol} type="button">Create</button>
-                            <button class="btn-cancel" onclick={() => (showCreateForm = false)} type="button">Cancel</button>
+					<button class="btn-create" onclick={createPatrol} type="button">{t("common.actions.create")}</button>
+					<button class="btn-cancel" onclick={() => (showCreateForm = false)} type="button">{t("common.actions.cancel")}</button>
                         </div>
                     </div>
                 {/if}
 
                 <div class="panel-content">
-                    {#if patrols.length === 0}<div class="empty-hint">No patrols yet.<br/>Press + above.</div>{/if}
+				{#if patrols.length === 0}<div class="empty-hint">{t("pages.map.noPatrols")}</div>{/if}
 
                     {#each patrols as patrol, idx (patrol.id)}
                         {@const pStatus = getPatrolStatus(patrol)}
                         <div class="patrol-card" class:drag-over={dragOverPatrolId === patrol.id} class:sort-over={dragOverPatrolSortId === patrol.id} data-patrol-id={patrol.id}>
                             <div class="patrol-header">
                                 {#if canEditPatrols}
-                                    <div class="patrol-sort-handle" title="Drag to reorder" onmousedown={(e) => onMouseDown(e, "patrol", patrol.id, patrol.name)}>⠿</div>
+						<div class="patrol-sort-handle" title={t("pages.map.dragToReorder")} onmousedown={(e) => onMouseDown(e, "patrol", patrol.id, patrol.name)}>⠿</div>
                                 {/if}
                                 <div class="patrol-color-bar" style="background:{patrol.color}"></div>
                                 {#if editingPatrolId === patrol.id && canEditPatrols}
@@ -2729,10 +2730,10 @@
                                 {/if}
                                 {#if canEditPatrols}
                                     <div class="patrol-sort-arrows">
-                                        <button class="sort-arrow" onclick={() => movePatrol(patrol.id, -1)} disabled={idx === 0} type="button" title="Move up">▲</button>
-                                        <button class="sort-arrow" onclick={() => movePatrol(patrol.id, 1)} disabled={idx === patrols.length - 1} type="button" title="Move down">▼</button>
+							<button class="sort-arrow" onclick={() => movePatrol(patrol.id, -1)} disabled={idx === 0} type="button" title={t("pages.map.moveUp")}>▲</button>
+							<button class="sort-arrow" onclick={() => movePatrol(patrol.id, 1)} disabled={idx === patrols.length - 1} type="button" title={t("pages.map.moveDown")}>▼</button>
                                     </div>
-                                    <button class="patrol-delete" onclick={() => deletePatrol(patrol.id)} type="button" title="Delete">
+						<button class="patrol-delete" onclick={() => deletePatrol(patrol.id)} type="button" title={t("common.actions.delete")}>
                                         <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l8 8M10 2L2 10"/></svg>
                                     </button>
                                 {/if}
@@ -2750,10 +2751,10 @@
                                                 <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 11 L3 5 L8 1 L11 4 L7 9 Z"/></svg>
                                                 Zone · {patrol.zonePoints.length} pts
                                             </span>
-                                            <button class="zone-btn zone-btn--edit" onclick={() => startDrawing(patrol.id)} title="Redraw zone" type="button">
+							<button class="zone-btn zone-btn--edit" onclick={() => startDrawing(patrol.id)} title={t("pages.map.redrawZone")} type="button">
                                                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 1.5l2 2L4 10 1.5 10.5 2 8z"/><path d="M7 3l2 2"/></svg>
                                             </button>
-                                            <button class="zone-btn zone-btn--clear" onclick={() => clearZone(patrol.id)} title="Clear zone" type="button">
+							<button class="zone-btn zone-btn--clear" onclick={() => clearZone(patrol.id)} title={t("pages.map.clearZone")} type="button">
                                                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l8 8M10 2L2 10"/></svg>
                                             </button>
                                         </div>
@@ -2768,13 +2769,13 @@
                                 <div class="zone-controls">
                                     <div class="zone-info">
                                         <span class="zone-indicator" style="background:{patrol.color}"></span>
-                                        <span class="zone-pts">Zone active</span>
+								<span class="zone-pts">{t("pages.map.zoneActive")}</span>
                                     </div>
                                 </div>
                             {/if}
 
                             {#if patrol.memberIds.length === 0}
-                                {#if canManagePatrols}<div class="drop-hint">Drag an officer here →</div>{/if}
+						{#if canManagePatrols}<div class="drop-hint">{t("pages.map.dragOfficerHere")}</div>{/if}
                             {:else}
                                 {#each patrol.memberIds as mid}
                                     {@const officer = officers.find(o => o.citizenid === mid)}

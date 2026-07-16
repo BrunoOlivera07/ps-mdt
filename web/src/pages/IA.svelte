@@ -10,6 +10,7 @@
 	import PersonSearchModal from "../components/report-editor/PersonSearchModal.svelte";
 	import type { createTabService } from "../services/tabService.svelte";
 	import type { AuthService } from "../services/authService.svelte";
+	import { t } from "../lib/i18n";
 
 	let { tabService, authService }: { tabService?: ReturnType<typeof createTabService>; authService?: AuthService } = $props();
 
@@ -98,7 +99,7 @@
 			complaints = data.complaints || [];
 		} catch (e) {
 			console.error('[IA] loadComplaints error:', e);
-			globalNotifications.error("Failed to load complaints");
+			globalNotifications.error(t("pages.ia.messages.loadFailed"));
 		}
 		loading = false;
 	}
@@ -122,7 +123,7 @@
 				editIncidentLocation = detail.complaint.incident_location || "";
 			}
 		} catch {
-			globalNotifications.error("Failed to load complaint details");
+			globalNotifications.error(t("pages.ia.messages.detailLoadFailed"));
 		}
 		loading = false;
 	}
@@ -145,18 +146,18 @@
 				{ success: true }
 			);
 			if (!result || result.success === false) {
-				globalNotifications.error(result?.error || "Failed to update status");
+				globalNotifications.error(result?.error || t("pages.ia.messages.statusUpdateFailed"));
 				return;
 			}
 			// Update local state immediately
 			selectedComplaint.complaint.status = newStatus;
 			const idx = complaints.findIndex(c => c.id === complaintId);
 			if (idx !== -1) complaints[idx].status = newStatus;
-			globalNotifications.success("Status updated");
+			globalNotifications.success(t("pages.ia.messages.statusUpdated"));
 			// Refresh list in background
 			loadComplaints();
 		} catch {
-			globalNotifications.error("Failed to update status");
+			globalNotifications.error(t("pages.ia.messages.statusUpdateFailed"));
 		}
 	}
 
@@ -164,7 +165,7 @@
 		if (!selectedComplaint) return;
 		const cid = authService?.playerData?.citizenid;
 		if (!cid) {
-			globalNotifications.error("Could not determine your citizen ID");
+			globalNotifications.error(t("pages.ia.messages.citizenIdMissing"));
 			return;
 		}
 		try {
@@ -173,9 +174,9 @@
 				citizenid: cid,
 			});
 			await selectComplaint(selectedComplaint.complaint.id);
-			globalNotifications.success("Assigned to you");
+			globalNotifications.success(t("pages.ia.messages.assignedToYou"));
 		} catch {
-			globalNotifications.error("Failed to assign investigator");
+			globalNotifications.error(t("pages.ia.messages.assignFailed"));
 		}
 	}
 
@@ -187,9 +188,9 @@
 				citizenid: "__unassign__",
 			});
 			await selectComplaint(selectedComplaint.complaint.id);
-			globalNotifications.success("Investigator unassigned");
+			globalNotifications.success(t("pages.ia.messages.unassigned"));
 		} catch {
-			globalNotifications.error("Failed to unassign investigator");
+			globalNotifications.error(t("pages.ia.messages.unassignFailed"));
 		}
 	}
 
@@ -215,9 +216,9 @@
 			searchService.clearResults();
 			investigatorSearchQuery = "";
 			await selectComplaint(selectedComplaint.complaint.id);
-			globalNotifications.success("Investigator assigned");
+			globalNotifications.success(t("pages.ia.messages.assigned"));
 		} catch {
-			globalNotifications.error("Failed to assign investigator");
+			globalNotifications.error(t("pages.ia.messages.assignFailed"));
 		}
 	}
 
@@ -232,7 +233,7 @@
 			noteContent = "";
 			await selectComplaint(selectedComplaint.complaint.id);
 		} catch {
-			globalNotifications.error("Failed to add note");
+			globalNotifications.error(t("pages.ia.messages.noteAddFailed"));
 		}
 		noteSubmitting = false;
 	}
@@ -246,7 +247,7 @@
 			});
 			await selectComplaint(selectedComplaint.complaint.id);
 		} catch {
-			globalNotifications.error("Failed to delete note");
+			globalNotifications.error(t("pages.ia.messages.noteDeleteFailed"));
 		}
 	}
 
@@ -262,9 +263,9 @@
 			});
 			editMode = false;
 			await selectComplaint(selectedComplaint.complaint.id);
-			globalNotifications.success("Complaint info updated");
+			globalNotifications.success(t("pages.ia.messages.infoUpdated"));
 		} catch {
-			globalNotifications.error("Failed to update complaint info");
+			globalNotifications.error(t("pages.ia.messages.infoUpdateFailed"));
 		}
 	}
 
@@ -284,7 +285,9 @@
 	}
 
 	function formatLabel(value: string): string {
-		return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		const key = `pages.ia.labels.${value}`;
+		const translated = t(key);
+		return translated === key ? value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : translated;
 	}
 
 	function formatDateValue(value: string | undefined): string {
@@ -354,7 +357,7 @@
 		<div class="topbar">
 			<button class="back-btn" onclick={goBack}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-				Back to Complaints
+				{t("pages.ia.backToComplaints")}
 			</button>
 			<span class="topbar-case-number">{selectedComplaint.complaint.complaint_number}</span>
 			<span class="pill {getStatusPillClass(selectedComplaint.complaint.status)}">{formatLabel(selectedComplaint.complaint.status)}</span>
@@ -366,14 +369,14 @@
 				<div class="detail-main">
 					<div class="section">
 						<div class="section-header">
-							<div class="section-title" style="margin-bottom:0;">Complaint Information</div>
+							<div class="section-title" style="margin-bottom:0;">{t("pages.ia.complaintInformation")}</div>
 							{#if canManage}
 								<div class="inline-controls">
 									{#if editMode}
-										<button class="action-btn" onclick={handleSaveComplaintInfo}>Save</button>
-										<button class="action-btn" onclick={() => { editMode = false; }}>Cancel</button>
+										<button class="action-btn" onclick={handleSaveComplaintInfo}>{t("common.actions.save")}</button>
+										<button class="action-btn" onclick={() => { editMode = false; }}>{t("common.actions.cancel")}</button>
 									{:else}
-										<button class="action-btn" onclick={() => { editMode = true; }}>Edit</button>
+										<button class="action-btn" onclick={() => { editMode = true; }}>{t("common.actions.edit")}</button>
 									{/if}
 								</div>
 							{/if}
@@ -381,41 +384,41 @@
 						{#if editMode && canManage}
 							<div class="field-row">
 								<div class="field-group">
-									<span class="field-label">Officer</span>
+									<span class="field-label">{t("pages.ia.officer")}</span>
 									<div class="inline-controls">
-										<input type="text" class="form-input" bind:value={editOfficerName} placeholder="Officer name" />
-										<button class="action-btn" onclick={() => (showOfficerSearchForEdit = true)}>Search</button>
+										<input type="text" class="form-input" bind:value={editOfficerName} placeholder={t("pages.ia.officerName")} />
+										<button class="action-btn" onclick={() => (showOfficerSearchForEdit = true)}>{t("common.actions.search")}</button>
 									</div>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Badge</span>
-									<input type="text" class="form-input" bind:value={editOfficerBadge} placeholder="Badge #" />
+									<span class="field-label">{t("pages.ia.badge")}</span>
+									<input type="text" class="form-input" bind:value={editOfficerBadge} placeholder={t("pages.ia.badgePlaceholder")} />
 								</div>
 								<div class="field-group">
-									<span class="field-label">Incident Date</span>
+									<span class="field-label">{t("pages.ia.incidentDate")}</span>
 									<input type="date" class="form-input" bind:value={editIncidentDate} />
 								</div>
 								<div class="field-group">
-									<span class="field-label">Location</span>
-									<input type="text" class="form-input" bind:value={editIncidentLocation} placeholder="Location" />
+									<span class="field-label">{t("pages.ia.location")}</span>
+									<input type="text" class="form-input" bind:value={editIncidentLocation} placeholder={t("pages.ia.location")} />
 								</div>
 							</div>
 						{:else}
 							<div class="field-row">
 								<div class="field-group">
-									<span class="field-label">Officer</span>
+									<span class="field-label">{t("pages.ia.officer")}</span>
 									<span class="field-value">{selectedComplaint.complaint.officer_name || '-'}{selectedComplaint.complaint.officer_badge ? ` (#${selectedComplaint.complaint.officer_badge})` : ''}</span>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Category</span>
+									<span class="field-label">{t("pages.ia.category")}</span>
 									<span class="field-value">{formatLabel(selectedComplaint.complaint.category)}</span>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Incident Date</span>
+									<span class="field-label">{t("pages.ia.incidentDate")}</span>
 									<span class="field-value">{formatDateValue(selectedComplaint.complaint.incident_date)}</span>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Location</span>
+									<span class="field-label">{t("pages.ia.location")}</span>
 									<span class="field-value">{selectedComplaint.complaint.incident_location || '-'}</span>
 								</div>
 							</div>
@@ -423,13 +426,13 @@
 					</div>
 
 					<div class="section">
-						<div class="section-title">Description</div>
-						<p class="summary-text">{selectedComplaint.complaint.description || 'No description provided.'}</p>
+						<div class="section-title">{t("pages.ia.description")}</div>
+						<p class="summary-text">{selectedComplaint.complaint.description || t("pages.ia.noDescription")}</p>
 					</div>
 
 					{#if selectedComplaint.complaint.witnesses}
 						<div class="section">
-							<div class="section-title">Witnesses</div>
+							<div class="section-title">{t("pages.ia.witnesses")}</div>
 							<p class="summary-text">{selectedComplaint.complaint.witnesses}</p>
 						</div>
 					{/if}
@@ -438,12 +441,12 @@
 						{@const evidenceLinks = parseEvidence(selectedComplaint.complaint.evidence)}
 						{#if evidenceLinks.length > 0}
 							<div class="section">
-								<div class="section-title">Evidence</div>
+								<div class="section-title">{t("pages.ia.evidence")}</div>
 								<div class="evidence-links">
 									{#each evidenceLinks as link, i}
 										<a href={link} target="_blank" rel="noopener noreferrer" class="evidence-link">
 											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-											Evidence #{i + 1}
+											{t("pages.ia.evidenceNumber", { number: i + 1 })}
 										</a>
 									{/each}
 								</div>
@@ -455,14 +458,14 @@
 				<!-- Right Column: Sidebar -->
 				<div class="detail-side">
 					<div class="section">
-						<div class="section-title">Complainant</div>
+						<div class="section-title">{t("pages.ia.complainant")}</div>
 						<div class="field-group">
-							<span class="field-label">Name</span>
+							<span class="field-label">{t("pages.ia.name")}</span>
 							<span class="field-value">{selectedComplaint.complaint.complainant_name}</span>
 						</div>
 						{#if selectedComplaint.complaint.complainant_phone}
 							<div class="field-group">
-								<span class="field-label">Phone</span>
+								<span class="field-label">{t("pages.ia.phone")}</span>
 								<span class="field-value">{selectedComplaint.complaint.complainant_phone}</span>
 							</div>
 						{/if}
@@ -470,45 +473,45 @@
 
 					{#if canManage}
 						<div class="section">
-							<div class="section-title">Status Management</div>
+							<div class="section-title">{t("pages.ia.statusManagement")}</div>
 							<div class="inline-controls">
 								<select class="form-select" bind:value={statusUpdateValue}>
 									{#each statusOptions.filter(s => s !== 'all') as opt}
 										<option value={opt}>{formatLabel(opt)}</option>
 									{/each}
 								</select>
-								<button class="primary-btn" onclick={handleUpdateStatus}>Update</button>
+								<button class="primary-btn" onclick={handleUpdateStatus}>{t("common.actions.update")}</button>
 							</div>
 						</div>
 
 						<div class="section">
-							<div class="section-title">Investigator</div>
+							<div class="section-title">{t("pages.ia.investigator")}</div>
 							{#if selectedComplaint.complaint.assigned_to_name}
 								<p class="assigned-name">{selectedComplaint.complaint.assigned_to_name}</p>
 							{:else}
-								<p class="muted-text">No investigator assigned</p>
+								<p class="muted-text">{t("pages.ia.noInvestigator")}</p>
 							{/if}
 							<div class="inline-controls">
-								<button class="action-btn" onclick={() => (showInvestigatorSearch = true)}>Search</button>
-								<button class="action-btn" onclick={handleSelfAssign}>Self</button>
+								<button class="action-btn" onclick={() => (showInvestigatorSearch = true)}>{t("common.actions.search")}</button>
+								<button class="action-btn" onclick={handleSelfAssign}>{t("pages.ia.self")}</button>
 								{#if selectedComplaint.complaint.assigned_to_name}
-									<button class="action-btn danger" onclick={handleUnassign}>Unassign</button>
+									<button class="action-btn danger" onclick={handleUnassign}>{t("pages.ia.unassign")}</button>
 								{/if}
 							</div>
 						</div>
 					{/if}
 
 					<div class="section">
-						<div class="section-title">Internal Notes</div>
+						<div class="section-title">{t("pages.ia.internalNotes")}</div>
 						<div class="note-input-row">
 							<textarea
 								class="form-textarea"
 								rows="2"
-								placeholder="Add a note..."
+								placeholder={t("pages.ia.addNotePlaceholder")}
 								bind:value={noteContent}
 							></textarea>
 							<button class="action-btn" onclick={handleAddNote} disabled={noteSubmitting || !noteContent.trim()}>
-								{noteSubmitting ? 'Adding...' : 'Add Note'}
+								{noteSubmitting ? t("pages.ia.adding") : t("pages.ia.addNote")}
 							</button>
 						</div>
 						{#if selectedComplaint.notes.length > 0}
@@ -529,7 +532,7 @@
 								{/each}
 							</div>
 						{:else}
-							<p class="muted-text">No notes yet.</p>
+							<p class="muted-text">{t("pages.ia.noNotes")}</p>
 						{/if}
 					</div>
 				</div>
@@ -545,7 +548,7 @@
 						class:active={statusFilter === opt}
 						onclick={() => { statusFilter = opt; }}
 					>
-						{opt === 'all' ? 'All' : formatLabel(opt)}
+						{formatLabel(opt)}
 					</button>
 				{/each}
 			</div>
@@ -554,12 +557,12 @@
 		<div class="topbar">
 			<div class="search-box">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-				<input type="text" placeholder="Search complaints..." bind:value={searchQuery} />
+				<input type="text" placeholder={t("pages.ia.searchPlaceholder")} bind:value={searchQuery} />
 			</div>
 			<div style="flex:1;"></div>
 			<button class="back-btn" onclick={loadComplaints} disabled={loading}>
 				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-				Refresh
+				{t("pages.ia.refresh")}
 			</button>
 		</div>
 
@@ -567,23 +570,23 @@
 			{#if loading && complaints.length === 0}
 				<div class="center-state">
 					<div class="loading-spinner"></div>
-					<p>Loading complaints...</p>
+					<p>{t("pages.ia.loading")}</p>
 				</div>
 			{:else if paginatedComplaints.length === 0}
 				<div class="center-state">
 					<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-					<h3>No Complaints Found</h3>
-					<p>{searchQuery ? "No complaints match your search criteria." : "No complaints have been filed yet."}</p>
+					<h3>{t("pages.ia.noneFound")}</h3>
+					<p>{searchQuery ? t("pages.ia.noMatches") : t("pages.ia.noneFiled")}</p>
 				</div>
 			{:else}
 				<div class="table-header">
 					<span>#</span>
-					<span>Status</span>
-					<span>Category</span>
-					<span>Officer</span>
-					<span>Complainant</span>
-					<span>Date</span>
-					<span>Assigned To</span>
+					<span>{t("pages.ia.status")}</span>
+					<span>{t("pages.ia.category")}</span>
+					<span>{t("pages.ia.officer")}</span>
+					<span>{t("pages.ia.complainant")}</span>
+					<span>{t("pages.ia.date")}</span>
+					<span>{t("pages.ia.assignedTo")}</span>
 				</div>
 				<div class="table-body">
 					{#each paginatedComplaints as item}
@@ -596,7 +599,7 @@
 							<span>{item.officer_name}</span>
 							<span>{item.complainant_name}</span>
 							<span>{formatDateValue(item.created_at)}</span>
-							<span>{item.assigned_to_name || 'Unassigned'}</span>
+							<span>{item.assigned_to_name || t("pages.ia.unassigned")}</span>
 						</button>
 					{/each}
 				</div>
@@ -614,7 +617,7 @@
 
 <PersonSearchModal
 	show={showInvestigatorSearch}
-	title="Search Officers"
+	title={t("pages.ia.searchOfficers")}
 	searchQuery={investigatorSearchQuery}
 	searchResults={searchService.state.results}
 	onClose={() => {
@@ -627,7 +630,7 @@
 
 <PersonSearchModal
 	show={showOfficerSearchForEdit}
-	title="Search Officer"
+	title={t("pages.ia.searchOfficer")}
 	searchQuery=""
 	searchResults={searchService.state.results}
 	onClose={() => {

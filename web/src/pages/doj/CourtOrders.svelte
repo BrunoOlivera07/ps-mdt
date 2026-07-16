@@ -9,6 +9,7 @@
 	import type { AuthService } from "../../services/authService.svelte";
 	import type { SearchResult } from "../../interfaces/IReportEditor";
 	import PersonSearchModal from "../../components/report-editor/PersonSearchModal.svelte";
+	import { t, tf } from "../../lib/i18n";
 
 	interface Props {
 		tabService: ReturnType<typeof createTabService>;
@@ -76,13 +77,8 @@
 	}
 
 	const typeOptions: { value: string; label: string }[] = [
-		{ value: "all", label: "All Types" },
-		{ value: "restraining_order", label: "Restraining Order" },
-		{ value: "subpoena", label: "Subpoena" },
-		{ value: "bail_conditions", label: "Bail Conditions" },
-		{ value: "search_warrant", label: "Search Warrant" },
-		{ value: "arrest_warrant", label: "Arrest Warrant" },
-		{ value: "other", label: "Other" },
+		{ value: "all", label: t("pages.doj.courtOrders.allTypes") },
+		...(["restraining_order", "subpoena", "bail_conditions", "search_warrant", "arrest_warrant", "other"].map((value) => ({ value, label: formatLabel(value) }))),
 	];
 
 	const statusOptions = ["active", "expired", "revoked", "all"];
@@ -108,7 +104,8 @@
 	}
 
 	function formatLabel(value: string): string {
-		return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		const fallback = value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		return tf(`pages.doj.courtOrders.labels.${value}`, fallback);
 	}
 
 	function formatDateValue(value: string | undefined): string {
@@ -149,7 +146,7 @@
 				{ id: 1, order_number: "CO-2026-00001", type: "restraining_order", title: "Restraining Order - Johnson v. Smith", target_name: "James Smith", target_citizenid: "ABC123", content: "Respondent must maintain a distance of 100 meters from petitioner at all times.", status: "active", effective_date: "2026-03-01T00:00:00Z", expiry_date: "2026-09-01T00:00:00Z", issued_by: "Hon. Patricia Wells", created_at: "2026-03-01T10:00:00Z" },
 				{ id: 2, order_number: "CO-2026-00002", type: "subpoena", title: "Subpoena - State v. Chen", target_name: "David Chen", target_citizenid: "DEF456", content: "Witness is ordered to appear in court on the specified date.", status: "active", effective_date: "2026-03-20T00:00:00Z", issued_by: "Hon. Robert Kim", created_at: "2026-03-15T14:00:00Z" },
 				{ id: 3, order_number: "CO-2026-00003", type: "bail_conditions", title: "Bail Conditions - Tony Ramirez", target_name: "Tony Ramirez", target_citizenid: "GHI789", content: "Defendant must report to probation officer weekly. No contact with co-defendants. Must remain within city limits.", status: "active", effective_date: "2026-03-10T00:00:00Z", expiry_date: "2026-06-10T00:00:00Z", issued_by: "Hon. Patricia Wells", created_at: "2026-03-10T09:00:00Z" },
-				{ id: 4, order_number: "CO-2026-00004", type: "search_warrant", title: "Search Warrant - 123 Grove St", target_name: "Marcus Johnson", target_citizenid: "JKL012", content: "Authorization to search premises at 123 Grove Street for evidence related to drug trafficking.", status: "expired", effective_date: "2026-02-15T00:00:00Z", expiry_date: "2026-02-22T00:00:00Z", issued_by: "Hon. Robert Kim", created_at: "2026-02-14T16:00:00Z" },
+				{ id: 4, order_number: "CO-2026-00004", type: "search_warrant", title: t("pages.doj.courtOrders.samples.searchTitle"), target_name: "Marcus Johnson", target_citizenid: "JKL012", content: t("pages.doj.courtOrders.samples.searchContent"), status: "expired", effective_date: "2026-02-15T00:00:00Z", expiry_date: "2026-02-22T00:00:00Z", issued_by: "Hon. Robert Kim", created_at: "2026-02-14T16:00:00Z" },
 				{ id: 5, order_number: "CO-2026-00005", type: "arrest_warrant", title: "Arrest Warrant - Lisa Park", target_name: "Lisa Park", target_citizenid: "MNO345", content: "Warrant for arrest on charges of fraud and embezzlement.", status: "revoked", effective_date: "2026-01-20T00:00:00Z", issued_by: "Hon. Patricia Wells", created_at: "2026-01-20T08:00:00Z" },
 			];
 			mounted = true;
@@ -169,7 +166,7 @@
 			);
 			orders = data.orders || [];
 		} catch {
-			globalNotifications.error("Failed to load court orders");
+			globalNotifications.error(t("pages.doj.courtOrders.messages.loadFailed"));
 		}
 		isLoading = false;
 	}
@@ -202,13 +199,13 @@
 			if (result.success) {
 				showCreateModal = false;
 				newOrder = { type: "restraining_order", title: "", target_citizenid: "", target_name: "", content: "", effective_date: "", expiry_date: "" };
-				globalNotifications.success("Court order created");
+				globalNotifications.success(t("pages.doj.courtOrders.messages.created"));
 				await loadOrders();
 			} else {
-				globalNotifications.error(result.error || "Failed to create court order");
+				globalNotifications.error(result.error || t("pages.doj.courtOrders.messages.createFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to create court order");
+			globalNotifications.error(t("pages.doj.courtOrders.messages.createFailed"));
 		}
 		isLoading = false;
 	}
@@ -223,14 +220,14 @@
 				{ success: true },
 			);
 			if (result.success) {
-				globalNotifications.success("Court order revoked");
+				globalNotifications.success(t("pages.doj.courtOrders.messages.revoked"));
 				goBack();
 				await loadOrders();
 			} else {
-				globalNotifications.error(result.error || "Failed to revoke court order");
+				globalNotifications.error(result.error || t("pages.doj.courtOrders.messages.revokeFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to revoke court order");
+			globalNotifications.error(t("pages.doj.courtOrders.messages.revokeFailed"));
 		}
 		isLoading = false;
 	}
@@ -253,66 +250,66 @@
 			<div class="detail-layout">
 				<div class="detail-main">
 					<div class="section">
-						<div class="section-title">Order Information</div>
+					<div class="section-title">{t("pages.doj.courtOrders.orderInformation")}</div>
 						<h3 class="order-title">{selectedOrder.title}</h3>
 						<div class="field-row">
 							<div class="field-group">
-								<span class="field-label">Order Number</span>
+							<span class="field-label">{t("pages.doj.courtOrders.orderNumber")}</span>
 								<span class="field-value">{selectedOrder.order_number}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Type</span>
+							<span class="field-label">{t("pages.doj.courtOrders.type")}</span>
 								<span class="pill {getTypePillClass(selectedOrder.type)}">{formatLabel(selectedOrder.type)}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Status</span>
+							<span class="field-label">{t("pages.doj.courtOrders.status")}</span>
 								<span class="pill {getStatusPillClass(selectedOrder.status)}">{formatLabel(selectedOrder.status)}</span>
 							</div>
 						</div>
 					</div>
 
 					<div class="section">
-						<div class="section-title">Target</div>
+					<div class="section-title">{t("pages.doj.courtOrders.target")}</div>
 						<div class="field-row">
 							<div class="field-group">
-								<span class="field-label">Name</span>
+							<span class="field-label">{t("pages.doj.courtOrders.name")}</span>
 								<span class="field-value">{selectedOrder.target_name}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Citizen ID</span>
+							<span class="field-label">{t("pages.doj.courtOrders.citizenId")}</span>
 								<span class="field-value mono">{selectedOrder.target_citizenid}</span>
 							</div>
 						</div>
 					</div>
 
 					<div class="section">
-						<div class="section-title">Content</div>
-						<p class="summary-text">{selectedOrder.content || "No content."}</p>
+					<div class="section-title">{t("pages.doj.courtOrders.content")}</div>
+					<p class="summary-text">{selectedOrder.content || t("pages.doj.courtOrders.noContent")}</p>
 					</div>
 				</div>
 
 				<div class="detail-side">
 					<div class="section">
-						<div class="section-title">Dates</div>
+						<div class="section-title">{t("pages.doj.courtOrders.dates")}</div>
 						<div class="field-group">
-							<span class="field-label">Effective Date</span>
+							<span class="field-label">{t("pages.doj.courtOrders.effectiveDate")}</span>
 							<span class="field-value">{formatDateValue(selectedOrder.effective_date)}</span>
 						</div>
 						<div class="field-group">
-							<span class="field-label">Expiry Date</span>
+							<span class="field-label">{t("pages.doj.courtOrders.expiryDate")}</span>
 							<span class="field-value">{formatDateValue(selectedOrder.expiry_date)}</span>
 						</div>
 						<div class="field-group">
-							<span class="field-label">Issued By</span>
+							<span class="field-label">{t("pages.doj.courtOrders.issuedBy")}</span>
 							<span class="field-value">{selectedOrder.issued_by || "-"}</span>
 						</div>
 					</div>
 
 					{#if selectedOrder.status === "active"}
 						<div class="section">
-							<div class="section-title">Actions</div>
+							<div class="section-title">{t("pages.doj.courtOrders.actions")}</div>
 							<button class="danger-btn" onclick={handleRevokeOrder} disabled={isLoading}>
-								Revoke Order
+								{t("pages.doj.courtOrders.revokeOrder")}
 							</button>
 						</div>
 					{/if}
@@ -323,7 +320,7 @@
 		<!-- LIST VIEW -->
 		<div class="topbar">
 			<div class="search-box">
-				<input type="text" placeholder="Search orders..." bind:value={searchQuery} />
+				<input type="text" placeholder={t("pages.doj.courtOrders.searchPlaceholder")} bind:value={searchQuery} />
 			</div>
 			<div class="filter-pills">
 				{#each statusOptions as opt}
@@ -338,9 +335,9 @@
 				{/each}
 			</select>
 			<div class="topbar-actions">
-				<span class="result-count">{allFilteredOrders.length} order{allFilteredOrders.length !== 1 ? "s" : ""}</span>
-				<button class="action-btn" onclick={loadOrders} disabled={isLoading}>{isLoading ? "Loading..." : "Refresh"}</button>
-				<button class="primary-btn" onclick={() => (showCreateModal = true)}>New Court Order</button>
+				<span class="result-count">{t(allFilteredOrders.length === 1 ? "pages.doj.courtOrders.countOne" : "pages.doj.courtOrders.countMany", { count: allFilteredOrders.length })}</span>
+				<button class="action-btn" onclick={loadOrders} disabled={isLoading}>{isLoading ? t("common.status.loading") : t("pages.doj.courtOrders.refresh")}</button>
+				<button class="primary-btn" onclick={() => (showCreateModal = true)}>{t("pages.doj.courtOrders.newOrder")}</button>
 			</div>
 		</div>
 
@@ -348,22 +345,22 @@
 			{#if isLoading && orders.length === 0}
 				<div class="center-state">
 					<div class="loading-spinner"></div>
-					<p>Loading court orders...</p>
+					<p>{t("pages.doj.courtOrders.loading")}</p>
 				</div>
 			{:else if allFilteredOrders.length === 0}
 				<div class="center-state">
-					<h3>No Court Orders Found</h3>
-					<p>{searchQuery ? "No orders match your search criteria." : "No court orders available."}</p>
+					<h3>{t("pages.doj.courtOrders.noneFound")}</h3>
+					<p>{searchQuery ? t("pages.doj.courtOrders.noMatches") : t("pages.doj.courtOrders.noneAvailable")}</p>
 				</div>
 			{:else}
 				<div class="table-header">
-					<span>Order #</span>
-					<span>Type</span>
-					<span>Title</span>
-					<span>Target</span>
-					<span>Status</span>
-					<span>Effective</span>
-					<span>Expires</span>
+					<span>{t("pages.doj.courtOrders.orderNumberShort")}</span>
+					<span>{t("pages.doj.courtOrders.type")}</span>
+					<span>{t("pages.doj.courtOrders.title")}</span>
+					<span>{t("pages.doj.courtOrders.target")}</span>
+					<span>{t("pages.doj.courtOrders.status")}</span>
+					<span>{t("pages.doj.courtOrders.effective")}</span>
+					<span>{t("pages.doj.courtOrders.expires")}</span>
 				</div>
 				<div class="table-body">
 					{#each allFilteredOrders as item}
@@ -388,29 +385,29 @@
 	<div class="modal-backdrop" onclick={() => (showCreateModal = false)} role="presentation">
 		<div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
 			<div class="modal-header">
-				<span class="modal-title">New Court Order</span>
+				<span class="modal-title">{t("pages.doj.courtOrders.newOrder")}</span>
 				<button class="modal-close" onclick={() => (showCreateModal = false)}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
 			</div>
 			<div class="modal-body">
 				<div class="form-group">
-					<label class="form-label">Type</label>
+					<label class="form-label">{t("pages.doj.courtOrders.type")}</label>
 					<select class="form-select" bind:value={newOrder.type}>
-						<option value="restraining_order">Restraining Order</option>
-						<option value="subpoena">Subpoena</option>
-						<option value="bail_conditions">Bail Conditions</option>
-						<option value="search_warrant">Search Warrant</option>
-						<option value="arrest_warrant">Arrest Warrant</option>
-						<option value="other">Other</option>
+						<option value="restraining_order">{formatLabel("restraining_order")}</option>
+						<option value="subpoena">{formatLabel("subpoena")}</option>
+						<option value="bail_conditions">{formatLabel("bail_conditions")}</option>
+						<option value="search_warrant">{formatLabel("search_warrant")}</option>
+						<option value="arrest_warrant">{formatLabel("arrest_warrant")}</option>
+						<option value="other">{formatLabel("other")}</option>
 					</select>
 				</div>
 				<div class="form-group">
-					<label class="form-label">Title</label>
-					<input type="text" class="form-input" placeholder="Order title..." bind:value={newOrder.title} />
+					<label class="form-label">{t("pages.doj.courtOrders.title")}</label>
+					<input type="text" class="form-input" placeholder={t("pages.doj.courtOrders.titlePlaceholder")} bind:value={newOrder.title} />
 				</div>
 				<div class="form-group">
-					<label class="form-label">Target Citizen</label>
+					<label class="form-label">{t("pages.doj.courtOrders.targetCitizen")}</label>
 					{#if newOrder.target_citizenid}
 						<div class="selected-citizen">
 							<span class="citizen-name">{newOrder.target_name}</span>
@@ -418,27 +415,27 @@
 							<button type="button" class="remove-citizen-btn" onclick={() => { newOrder.target_citizenid = ""; newOrder.target_name = ""; }}>x</button>
 						</div>
 					{:else}
-						<button type="button" class="form-input search-citizen-btn" onclick={() => (showTargetSearch = true)}>Search citizen...</button>
+						<button type="button" class="form-input search-citizen-btn" onclick={() => (showTargetSearch = true)}>{t("pages.doj.courtOrders.searchCitizen")}</button>
 					{/if}
 				</div>
 				<div class="form-group">
-					<label class="form-label">Content</label>
-					<textarea class="form-textarea" style="min-height: 100px;" placeholder="Order content..." bind:value={newOrder.content}></textarea>
+					<label class="form-label">{t("pages.doj.courtOrders.content")}</label>
+					<textarea class="form-textarea" style="min-height: 100px;" placeholder={t("pages.doj.courtOrders.contentPlaceholder")} bind:value={newOrder.content}></textarea>
 				</div>
 				<div class="form-row">
 					<div class="form-group" style="flex: 1;">
-						<label class="form-label">Effective Date</label>
+						<label class="form-label">{t("pages.doj.courtOrders.effectiveDate")}</label>
 						<input type="date" class="form-input" bind:value={newOrder.effective_date} />
 					</div>
 					<div class="form-group" style="flex: 1;">
-						<label class="form-label">Expiry Date (optional)</label>
+						<label class="form-label">{t("pages.doj.courtOrders.expiryOptional")}</label>
 						<input type="date" class="form-input" bind:value={newOrder.expiry_date} />
 					</div>
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button class="back-btn" onclick={() => (showCreateModal = false)}>Cancel</button>
-				<button class="primary-btn" disabled={!newOrder.title.trim()} onclick={handleCreateOrder}>Create Order</button>
+				<button class="back-btn" onclick={() => (showCreateModal = false)}>{t("common.actions.cancel")}</button>
+				<button class="primary-btn" disabled={!newOrder.title.trim()} onclick={handleCreateOrder}>{t("pages.doj.courtOrders.createOrder")}</button>
 			</div>
 		</div>
 	</div>
@@ -446,7 +443,7 @@
 
 <PersonSearchModal
 	show={showTargetSearch}
-	title="Search Target Citizen"
+	title={t("pages.doj.courtOrders.searchTarget")}
 	searchResults={targetSearchResults}
 	onClose={() => { showTargetSearch = false; targetSearchResults = []; }}
 	onSearch={handleTargetSearch}

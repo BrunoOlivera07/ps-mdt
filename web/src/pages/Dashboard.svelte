@@ -11,6 +11,7 @@
 	import ReportItem from "../components/dashboard/ReportItem.svelte";
 	import DispatchStatusWidget from "../components/dashboard/DispatchStatusWidget.svelte";
 	import type { PlayerData } from "@/interfaces/IPlayerData";
+	import { t } from "../lib/i18n";
 
 	interface ActiveBolo {
 		id: number;
@@ -47,8 +48,8 @@
 		const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
 		const isTomorrow = d.toDateString() === tomorrow.toDateString();
 		const hm = formatTime(d);
-		if (sameDay) return `Today ${hm}`;
-		if (isTomorrow) return `Tomorrow ${hm}`;
+		if (sameDay) return t("pages.dashboard.todayAt", { time: hm });
+		if (isTomorrow) return t("pages.dashboard.tomorrowAt", { time: hm });
 		return `${formatDate(d)} ${hm}`;
 	}
 	function hearingCatColor(cat?: string): string {
@@ -276,7 +277,7 @@
 							{#if dashboardService.reportsInfo.changeFromLastWeek > 0}+{/if}{dashboardService.reportsInfo.changeFromLastWeek}
 						</span>
 					</span>
-					<span class="stat-label">Reports this week</span>
+					<span class="stat-label">{t("pages.dashboard.reportsThisWeek")}</span>
 				</div>
 			</div>
 			<div class="stat-divider"></div>
@@ -287,8 +288,8 @@
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
 				</div>
 				<div class="stat-content">
-					<span class="stat-value">{dashboardService.activeUnits.count} <span class="stat-badge">On Duty</span></span>
-					<span class="stat-label">Active units</span>
+					<span class="stat-value">{dashboardService.activeUnits.count} <span class="stat-badge">{t("pages.dashboard.onDuty")}</span></span>
+					<span class="stat-label">{t("pages.dashboard.activeUnits")}</span>
 				</div>
 			</div>
 			<div class="stat-divider"></div>
@@ -296,8 +297,8 @@
 			<!-- Impound -->
 			{#if impound.held > 0 || impound.outstanding > 0}
 				<div class="stat-item" title={impound.oldestDays > 0
-					? `Oldest vehicle has been held for ${impound.oldestDays} day${impound.oldestDays === 1 ? '' : 's'}`
-					: 'Vehicles currently held in impound'}>
+					? t("pages.dashboard.oldestVehicleHeld", { count: impound.oldestDays })
+					: t("pages.dashboard.vehiclesHeldInImpound")}>
 					<div class="stat-icon impound-icon">
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
 					</div>
@@ -305,11 +306,11 @@
 						<span class="stat-value">
 							{impound.held}
 							{#if impound.outstanding > 0}
-								<span class="stat-badge owed">${impound.outstanding.toLocaleString()} due</span>
+								<span class="stat-badge owed">{t("pages.dashboard.amountDue", { amount: `$${impound.outstanding.toLocaleString()}` })}</span>
 							{/if}
 						</span>
 						<span class="stat-label">
-							In impound{#if impound.oldestDays > 0} · oldest {impound.oldestDays}d{/if}
+							{t("pages.dashboard.inImpound")}{#if impound.oldestDays > 0} · {t("pages.dashboard.oldestDays", { count: impound.oldestDays })}{/if}
 						</span>
 					</div>
 				</div>
@@ -340,7 +341,7 @@
 										class:active={index === dashboardService.currentBulletinIndex}
 										style="opacity: {getCarouselDotOpacity(index)}"
 										onclick={() => dashboardService.goToBulletin(index)}
-										aria-label="Go to bulletin {index + 1}"
+										aria-label={t("pages.dashboard.goToBulletin", { number: index + 1 })}
 									></button>
 								{/each}
 							</div>
@@ -349,7 +350,7 @@
 							<div class="bulletin-tooltip">{currentBulletinContent}</div>
 						{/if}
 					{:else}
-						<span class="bulletin-empty">No active bulletins</span>
+						<span class="bulletin-empty">{t("pages.dashboard.noActiveBulletins")}</span>
 					{/if}
 				</div>
 			</div>
@@ -358,20 +359,20 @@
 			<!-- Callsign -->
 			{#if !callsignLoading}
 				{#if hasCallsign}
-					<button class="callsign-display" onclick={openCallsignModal} title="Change callsign">
+					<button class="callsign-display" onclick={openCallsignModal} title={t("pages.dashboard.changeCallsign")}>
 						<div class="stat-icon callsign-icon">
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M14 9h4M14 12h4M14 15h2"/></svg>
 						</div>
 						<div class="stat-content">
 							<span class="stat-value callsign-value">{localCallsign}</span>
-							<span class="stat-label">Callsign</span>
+							<span class="stat-label">{t("pages.dashboard.callsign")}</span>
 						</div>
 					</button>
 				{:else}
 					<div class="callsign-warn">
 						<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cs-warn-icon"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-						<span class="cs-warn-text">No callsign set</span>
-						<button class="cs-warn-btn" onclick={openCallsignModal}>Set Callsign</button>
+						<span class="cs-warn-text">{t("pages.dashboard.noCallsignSet")}</span>
+						<button class="cs-warn-btn" onclick={openCallsignModal}>{t("pages.dashboard.setCallsign")}</button>
 					</div>
 				{/if}
 				<div class="stat-divider"></div>
@@ -379,10 +380,10 @@
 
 			<!-- Quick Actions -->
 			<div class="quick-actions">
-				<button class="qa-btn qa-duty" onclick={toggleDuty} title="Toggle Duty">
+				<button class="qa-btn qa-duty" onclick={toggleDuty} title={t("pages.dashboard.toggleDuty")}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
 				</button>
-				<button class="qa-btn qa-signout" onclick={handleSignOut} title="Sign Out">
+				<button class="qa-btn qa-signout" onclick={handleSignOut} title={t("pages.dashboard.signOut")}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
 				</button>
 			</div>
@@ -395,22 +396,22 @@
 		<div class="column">
 			<div class="panel">
 				<div class="panel-header">
-					<span class="panel-title">Warrants</span>
+					<span class="panel-title">{t("pages.dashboard.warrants")}</span>
 					<span class="panel-count">{dashboardService.activeWarrants.length}</span>
 				</div>
 				<div class="panel-body">
 					{#if dashboardService.activeWarrants.length === 0}
-						<div class="empty-state">No active warrants</div>
+						<div class="empty-state">{t("pages.dashboard.noActiveWarrants")}</div>
 					{:else}
 						{#each pagedWarrants as warrant}
 							<button class="list-item" onclick={() => openWarrant(warrant.reportid)}>
 								<div class="item-left">
 									<span class="item-name">{warrant.name}</span>
-									<span class="item-meta">#{warrant.reportid} · Exp. {formatDate(warrant.expirydate)}</span>
+									<span class="item-meta">#{warrant.reportid} · {t("pages.dashboard.expiresShort", { date: formatDate(warrant.expirydate) })}</span>
 									<div class="pill-row">
-										{#if warrant.felonies > 0}<span class="pill pill-red">{warrant.felonies} Felony</span>{/if}
-										{#if warrant.misdemeanors > 0}<span class="pill pill-orange">{warrant.misdemeanors} Misd.</span>{/if}
-										{#if warrant.infractions > 0}<span class="pill pill-green">{warrant.infractions} Infr.</span>{/if}
+										{#if warrant.felonies > 0}<span class="pill pill-red">{t("pages.dashboard.felonyCount", { count: warrant.felonies })}</span>{/if}
+										{#if warrant.misdemeanors > 0}<span class="pill pill-orange">{t("pages.dashboard.misdemeanorCount", { count: warrant.misdemeanors })}</span>{/if}
+										{#if warrant.infractions > 0}<span class="pill pill-green">{t("pages.dashboard.infractionCount", { count: warrant.infractions })}</span>{/if}
 									</div>
 								</div>
 								<svg class="item-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -420,11 +421,11 @@
 				</div>
 				{#if warrantTotalPages > 1}
 					<div class="pager">
-						<button class="pager-btn" disabled={warrantPage === 0} onclick={() => warrantPage--}>
+						<button class="pager-btn" aria-label={t("pagination.previous")} disabled={warrantPage === 0} onclick={() => warrantPage--}>
 							<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
 						</button>
 						<span class="pager-info">{warrantPage + 1}/{warrantTotalPages}</span>
-						<button class="pager-btn" disabled={warrantPage >= warrantTotalPages - 1} onclick={() => warrantPage++}>
+						<button class="pager-btn" aria-label={t("pagination.next")} disabled={warrantPage >= warrantTotalPages - 1} onclick={() => warrantPage++}>
 							<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
 						</button>
 					</div>
@@ -433,12 +434,12 @@
 
 			<div class="panel">
 				<div class="panel-header">
-					<span class="panel-title">BOLOs</span>
+					<span class="panel-title">{t("pages.dashboard.bolos")}</span>
 					<span class="panel-count">{(dashboardService.activeBolos || []).length}</span>
 				</div>
 				<div class="panel-body">
 					{#if (dashboardService.activeBolos || []).length === 0}
-						<div class="empty-state">No active BOLOs</div>
+						<div class="empty-state">{t("pages.dashboard.noActiveBolos")}</div>
 					{:else}
 						{#each pagedBolos as bolo}
 							<button class="list-item" onclick={() => viewBolo(bolo.id)}>
@@ -456,11 +457,11 @@
 				</div>
 				{#if boloTotalPages > 1}
 					<div class="pager">
-						<button class="pager-btn" disabled={boloPage === 0} onclick={() => boloPage--}>
+						<button class="pager-btn" aria-label={t("pagination.previous")} disabled={boloPage === 0} onclick={() => boloPage--}>
 							<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
 						</button>
 						<span class="pager-info">{boloPage + 1}/{boloTotalPages}</span>
-						<button class="pager-btn" disabled={boloPage >= boloTotalPages - 1} onclick={() => boloPage++}>
+						<button class="pager-btn" aria-label={t("pagination.next")} disabled={boloPage >= boloTotalPages - 1} onclick={() => boloPage++}>
 							<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
 						</button>
 					</div>
@@ -473,12 +474,12 @@
 		<div class="column">
 			<div class="panel">
 				<div class="panel-header">
-					<span class="panel-title">Recent Reports</span>
+					<span class="panel-title">{t("pages.dashboard.recentReports")}</span>
 					<span class="panel-count">{dashboardService.recentReports.length}</span>
 				</div>
 				<div class="panel-body">
 					{#if dashboardService.recentReports.length === 0}
-						<div class="empty-state">No recent reports</div>
+						<div class="empty-state">{t("pages.dashboard.noRecentReports")}</div>
 					{:else}
 						{#each dashboardService.recentReports as report}
 							<ReportItem
@@ -491,7 +492,7 @@
 					{/if}
 				</div>
 				{#if dashboardService.recentReportsHasMore}
-					<button class="load-more-btn" onclick={loadMoreReports}>Load more</button>
+					<button class="load-more-btn" onclick={loadMoreReports}>{t("pages.dashboard.loadMore")}</button>
 				{/if}
 			</div>
 		</div>
@@ -501,12 +502,12 @@
 			{#if isDOJ}
 				<div class="panel">
 					<div class="panel-header">
-						<span class="panel-title">Pending Warrant Reviews</span>
+						<span class="panel-title">{t("pages.dashboard.pendingWarrantReviews")}</span>
 						<span class="panel-count">{dojWarrantReviews.length}</span>
 					</div>
 					<div class="panel-body">
 						{#if dojWarrantReviews.length === 0}
-							<div class="empty-state">No pending warrants</div>
+							<div class="empty-state">{t("pages.dashboard.noPendingWarrants")}</div>
 						{:else}
 							{#each dojWarrantReviews as wr}
 								<button class="list-item-btn" onclick={() => tabService.openTab('warrant_review')}>
@@ -519,12 +520,12 @@
 				</div>
 				<div class="panel">
 					<div class="panel-header">
-						<span class="panel-title">Court Cases</span>
+						<span class="panel-title">{t("pages.dashboard.courtCases")}</span>
 						<span class="panel-count">{dojCourtCases.length}</span>
 					</div>
 					<div class="panel-body">
 						{#if dojCourtCases.length === 0}
-							<div class="empty-state">No court cases</div>
+							<div class="empty-state">{t("pages.dashboard.noCourtCases")}</div>
 						{:else}
 							{#each dojCourtCases as cc}
 								<button class="list-item-btn" onclick={() => tabService.openTab('court_cases')}>
@@ -537,12 +538,12 @@
 				</div>
 				<div class="panel">
 					<div class="panel-header">
-						<span class="panel-title">Court Orders</span>
+						<span class="panel-title">{t("pages.dashboard.courtOrders")}</span>
 						<span class="panel-count">{dojCourtOrders.length}</span>
 					</div>
 					<div class="panel-body">
 						{#if dojCourtOrders.length === 0}
-							<div class="empty-state">No court orders</div>
+							<div class="empty-state">{t("pages.dashboard.noCourtOrders")}</div>
 						{:else}
 							{#each dojCourtOrders as co}
 								<button class="list-item-btn" onclick={() => tabService.openTab('court_orders')}>
@@ -557,12 +558,12 @@
 				<!-- Upcoming hearings (dispatches now live on the Map tab) -->
 				<div class="panel" class:panel--half={isLEOJob}>
 					<div class="panel-header">
-						<span class="panel-title">Upcoming Hearings</span>
+						<span class="panel-title">{t("pages.dashboard.upcomingHearings")}</span>
 						<span class="panel-count">{dashboardService.upcomingHearings.length}</span>
 					</div>
 					<div class="panel-body">
 						{#if dashboardService.upcomingHearings.length === 0}
-							<span class="panel-empty">No upcoming appointments</span>
+							<span class="panel-empty">{t("pages.dashboard.noUpcomingAppointments")}</span>
 						{/if}
 						{#each dashboardService.upcomingHearings as h (h.id)}
 							<div class="list-row">
@@ -574,7 +575,7 @@
 									</span>
 								</div>
 								{#if h.status === "in_session"}
-									<span class="live-pill">LIVE</span>
+									<span class="live-pill">{t("pages.dashboard.live")}</span>
 								{/if}
 							</div>
 						{/each}
@@ -584,19 +585,19 @@
 				{#if isLEOJob}
 					<div class="panel panel--half">
 						<div class="panel-header">
-							<span class="panel-title">Open Cases</span>
+							<span class="panel-title">{t("pages.dashboard.openCases")}</span>
 							<span class="panel-count">{dashboardService.openCases.length}</span>
 						</div>
 						<div class="panel-body">
 							{#if dashboardService.openCases.length === 0}
-								<span class="panel-empty">No open investigations</span>
+								<span class="panel-empty">{t("pages.dashboard.noOpenInvestigations")}</span>
 							{/if}
 							{#each dashboardService.openCases as c (c.id)}
 								<div class="list-row">
 									<div class="priority-bar" style="background: {casePrioColor(c.priority)}"></div>
 									<div class="item-left">
 										<span class="item-name">{c.case_number} · {c.title}</span>
-										<span class="item-meta">{c.status === "in_progress" ? "In progress" : "Open"}{#if c.priority} · {c.priority} priority{/if}</span>
+										<span class="item-meta">{c.status === "in_progress" ? t("pages.dashboard.inProgress") : t("pages.dashboard.open")}{#if c.priority} · {t("pages.dashboard.priority", { priority: c.priority })}{/if}</span>
 									</div>
 								</div>
 							{/each}
@@ -614,13 +615,13 @@
 		<div class="cs-modal-overlay" onclick={(e) => { if (e.target === e.currentTarget) closeCallsignModal(); }}>
 			<div class="cs-modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
 				<div class="cs-modal-header">
-					<span class="cs-modal-title">{hasCallsign ? 'Change Callsign' : 'Set Callsign'}</span>
-					<button class="cs-modal-close" onclick={closeCallsignModal} aria-label="Close">
+					<span class="cs-modal-title">{hasCallsign ? t("pages.dashboard.changeCallsign") : t("pages.dashboard.setCallsign")}</span>
+					<button class="cs-modal-close" onclick={closeCallsignModal} aria-label={t("common.actions.close")}>
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 					</button>
 				</div>
 				<div class="cs-modal-body">
-					<span class="cs-input-label">Callsign</span>
+					<span class="cs-input-label">{t("pages.dashboard.callsign")}</span>
 					<input
 						class="cs-input"
 						type="text"
@@ -632,12 +633,12 @@
 						spellcheck={false}
 						autofocus
 					/>
-					<span class="cs-hint">{callsignInput.length}/6 · format: PD-XX</span>
+					<span class="cs-hint">{t("pages.dashboard.callsignFormat", { count: callsignInput.length })}</span>
 				</div>
 				<div class="cs-modal-footer">
-					<button class="cs-btn-cancel" onclick={closeCallsignModal} disabled={callsignSaving}>Cancel</button>
+					<button class="cs-btn-cancel" onclick={closeCallsignModal} disabled={callsignSaving}>{t("common.actions.cancel")}</button>
 					<button class="cs-btn-confirm" onclick={saveCallsign} disabled={callsignSaving || !isValidCallsign(callsignInput)}>
-						{callsignSaving ? "Saving..." : "Save"}
+						{callsignSaving ? t("common.status.saving") : t("common.actions.save")}
 					</button>
 				</div>
 			</div>

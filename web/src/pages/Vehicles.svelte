@@ -10,6 +10,7 @@
 	import { openReportInEditor } from "../stores/reportsStore";
 	import type { createTabService } from "../services/tabService.svelte";
 	import Pagination from "../components/Pagination.svelte";
+	import { t } from "../lib/i18n";
 
 	import type { AuthService } from "../services/authService.svelte";
 
@@ -56,9 +57,9 @@
 	function holdLeft(seconds: number): string {
 		const d = Math.floor(seconds / 86400);
 		const h = Math.floor((seconds % 86400) / 3600);
-		if (d > 0) return `${d}d ${h}h left`;
-		if (h > 0) return `${h}h left`;
-		return `${Math.max(1, Math.floor(seconds / 60))}m left`;
+		if (d > 0) return t("pages.vehicles.timeLeftDays", { days: d, hours: h });
+		if (h > 0) return t("pages.vehicles.timeLeftHours", { hours: h });
+		return t("pages.vehicles.timeLeftMinutes", { minutes: Math.max(1, Math.floor(seconds / 60)) });
 	}
 
 	let canOverride = $derived(authService ? (authService.hasPermission("vehicle_impound_override") ?? false) : true);
@@ -131,7 +132,7 @@
 	}
 
 	function lotLabel(id: string | null): string {
-		if (!id) return "Unknown lot";
+		if (!id) return t("pages.vehicles.unknownLot");
 		return impoundLots.find(l => l.id === id)?.label ?? id;
 	}
 
@@ -178,7 +179,7 @@
 	async function submitImpound() {
 		const plate = selectedVehicle?.plate;
 		if (!plate || impoundBusy) return;
-		if (!imReason) { globalNotifications.error("Pick an impound reason"); return; }
+		if (!imReason) { globalNotifications.error(t("pages.vehicles.messages.pickImpoundReason")); return; }
 		impoundBusy = true;
 		try {
 			const res = await fetchNui<{ success: boolean; message?: string }>(
@@ -186,16 +187,16 @@
 				{ plate, reason: imReason, fee: imFee, lot: imLot, duration: imDuration, notes: imNotes.trim() || undefined, photo: imPhoto.trim() || undefined },
 				{ success: true, message: "Impounded" });
 			if (res?.success) {
-				globalNotifications.success(res.message || "Vehicle impounded");
+				globalNotifications.success(res.message || t("pages.vehicles.messages.impounded"));
 				showImpoundModal = false;
 				if (selectedVehicle) selectedVehicle = { ...selectedVehicle, core_state: 2 };
 				await loadImpoundHistory(plate);
 				await refreshVehicles();
 			} else {
-				globalNotifications.error(res?.message || "Failed to impound vehicle");
+				globalNotifications.error(res?.message || t("pages.vehicles.messages.impoundFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to impound vehicle");
+			globalNotifications.error(t("pages.vehicles.messages.impoundFailed"));
 		} finally {
 			impoundBusy = false;
 		}
@@ -208,14 +209,14 @@
 			const res = await fetchNui<{ success: boolean; message?: string }>(
 				NUI_EVENTS.IMPOUND.PAY_IMPOUND_FEE, { plate }, { success: true, message: "Fee collected" });
 			if (res?.success) {
-				globalNotifications.success(res.message || "Fee collected");
+				globalNotifications.success(res.message || t("pages.vehicles.messages.feeCollected"));
 				await loadImpoundHistory(plate);
 				if (showLotView) await loadLot();
 			} else {
-				globalNotifications.error(res?.message || "Failed to collect fee");
+				globalNotifications.error(res?.message || t("pages.vehicles.messages.feeCollectFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to collect fee");
+			globalNotifications.error(t("pages.vehicles.messages.feeCollectFailed"));
 		} finally {
 			impoundBusy = false;
 		}
@@ -230,7 +231,7 @@
 				{ plate, override: !!override, overrideReason: override?.reason },
 				{ success: true, message: "Released" });
 			if (res?.success) {
-				globalNotifications.success(res.message || "Vehicle released");
+				globalNotifications.success(res.message || t("pages.vehicles.messages.released"));
 				if (selectedVehicle?.plate === plate) {
 					selectedVehicle = { ...selectedVehicle, core_state: 0 };
 					await loadImpoundHistory(plate);
@@ -238,10 +239,10 @@
 				if (showLotView) await loadLot();
 				await refreshVehicles();
 			} else {
-				globalNotifications.error(res?.message || "Failed to release vehicle");
+				globalNotifications.error(res?.message || t("pages.vehicles.messages.releaseFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to release vehicle");
+			globalNotifications.error(t("pages.vehicles.messages.releaseFailed"));
 		} finally {
 			impoundBusy = false;
 		}
@@ -358,12 +359,12 @@
 			if (response?.success) {
 				selectedVehicle = { ...selectedVehicle, information: notesValue };
 				editingNotes = false;
-				globalNotifications.success("Notes saved");
+				globalNotifications.success(t("pages.vehicles.messages.notesSaved"));
 			} else {
-				globalNotifications.error(response?.message || "Failed to save notes");
+				globalNotifications.error(response?.message || t("pages.vehicles.messages.notesSaveFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to save notes");
+			globalNotifications.error(t("pages.vehicles.messages.notesSaveFailed"));
 		}
 		notesSaving = false;
 	}
@@ -390,13 +391,13 @@
 			if (response?.success) {
 				selectedVehicle = { ...selectedVehicle, image: url };
 				vehicleList = vehicleList.map(v => v.plate === selectedVehicle?.plate ? { ...v, image: url } : v);
-				globalNotifications.success("Vehicle image updated");
+				globalNotifications.success(t("pages.vehicles.messages.imageUpdated"));
 				imageModalOpen = false;
 			} else {
-				globalNotifications.error(response?.message || "Failed to update image");
+				globalNotifications.error(response?.message || t("pages.vehicles.messages.imageUpdateFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to update image");
+			globalNotifications.error(t("pages.vehicles.messages.imageUpdateFailed"));
 		}
 		imageSaving = false;
 	}
@@ -567,11 +568,11 @@
 				loadImpoundConfig();
 				loadImpoundHistory(plate);
 			} else {
-				vehicleDetailError = response?.message || "Failed to load vehicle";
+				vehicleDetailError = response?.message || t("pages.vehicles.messages.loadDetailFailed");
 			}
 		} catch (error) {
-			globalNotifications.error("Failed to load vehicle");
-			vehicleDetailError = "Failed to load vehicle";
+			globalNotifications.error(t("pages.vehicles.messages.loadDetailFailed"));
+			vehicleDetailError = t("pages.vehicles.messages.loadDetailFailed");
 		} finally {
 			vehicleDetailLoading = false;
 		}
@@ -622,7 +623,7 @@
 				points: pointsDraft,
 			});
 			if (!response?.success) {
-				globalNotifications.error(response?.message || "Failed to update points");
+				globalNotifications.error(response?.message || t("pages.vehicles.messages.pointsUpdateFailed"));
 				return;
 			}
 			selectedVehicle = { ...selectedVehicle, points: pointsDraft };
@@ -631,9 +632,9 @@
 					? { ...vehicle, points: pointsDraft }
 					: vehicle,
 			);
-			globalNotifications.success("Points updated");
+			globalNotifications.success(t("pages.vehicles.messages.pointsUpdated"));
 		} catch (error) {
-			globalNotifications.error("Failed to update points");
+			globalNotifications.error(t("pages.vehicles.messages.pointsUpdateFailed"));
 		} finally {
 			pointsSaving = false;
 		}
@@ -668,7 +669,7 @@
 				const response = await fetchNui(NUI_EVENTS.VEHICLE.GET_VEHICLES);
 				applyVehiclesResponse(response);
 			} catch (error) {
-				globalNotifications.error("Failed to load vehicles");
+				globalNotifications.error(t("pages.vehicles.messages.loadFailed"));
 				vehicleList = [];
 			}
 			loading = false;
@@ -682,7 +683,7 @@
 			const response = await fetchNui(NUI_EVENTS.VEHICLE.GET_VEHICLES);
 			applyVehiclesResponse(response);
 		} catch (error) {
-			globalNotifications.error("Failed to load vehicles");
+			globalNotifications.error(t("pages.vehicles.messages.loadFailed"));
 			vehicleList = [];
 		}
 		loading = false;
@@ -695,7 +696,7 @@
 		<div class="topbar">
 			<button class="back-btn" onclick={closeVehicle}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-				Back
+				{t("common.actions.back")}
 			</button>
 			{#if selectedVehicle}
 				<div class="topbar-info">
@@ -704,7 +705,7 @@
 				</div>
 				<div class="topbar-flags">
 					{#if selectedVehicle.stolen}
-						<span class="pill pill-red">Stolen</span>
+						<span class="pill pill-red">{t("pages.vehicles.stolen")}</span>
 					{/if}
 					{#if selectedVehicle.boloactive}
 						<span class="pill pill-orange">BOLO</span>
@@ -715,14 +716,14 @@
 						</span>
 					{/if}
 					{#if features.registration && !isVehicleRegistered(selectedVehicle)}
-						<span class="pill pill-red" title={selectedVehicle.registrationReason?.trim() || undefined}>Unregistered</span>
+						<span class="pill pill-red" title={selectedVehicle.registrationReason?.trim() || undefined}>{t("pages.vehicles.unregistered")}</span>
 					{/if}
 				</div>
 			{/if}
 		</div>
 
 		{#if vehicleDetailLoading}
-			<div class="loading-state">Loading vehicle details...</div>
+			<div class="loading-state">{t("pages.vehicles.loadingDetails")}</div>
 		{:else if vehicleDetailError}
 			<div class="error-state">{vehicleDetailError}</div>
 		{:else if selectedVehicle}
@@ -737,51 +738,51 @@
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
 								<img 
 									src={selectedVehicle.image} 
-									alt="Vehicle" 
+									alt={t("pages.vehicles.vehicle")}
 									class="info-card-img" 
 									onclick={openVehicleLightbox}
 									style="cursor:zoom-in;"
 									onerror={() => vehicleImageBroken = true}
 								/>
 							{/if}
-							<button class="img-edit-btn" onclick={openImageModal} title="Set vehicle image">
+							<button class="img-edit-btn" onclick={openImageModal} title={t("pages.vehicles.setImage")}>
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
 							</button>
 						</div>
 						<div class="info-card-body">
-							<span class="info-card-label">Owner</span>
+							<span class="info-card-label">{t("pages.vehicles.owner")}</span>
 							<span class="info-card-value">{selectedVehicle.owner}</span>
 						</div>
 					</div>
-					<div class="info-item"><span class="info-label">Plate</span><span class="info-value mono">{selectedVehicle.plate}</span></div>
-					<div class="info-item"><span class="info-label">Model</span><span class="info-value">{selectedVehicle.label}</span></div>
-					<div class="info-item"><span class="info-label">Class</span><span class="info-value">{selectedVehicle.class}</span></div>
-					<div class="info-item"><span class="info-label">Type</span><span class="info-value">{selectedVehicle.type}</span></div>
-					<div class="info-item"><span class="info-label">Brand</span><span class="info-value">{selectedVehicle.brand || 'Unknown'}</span></div>
-					<div class="info-item"><span class="info-label">Reports</span><span class="info-value">{selectedVehicle.seenIn || 0}</span></div>
+					<div class="info-item"><span class="info-label">{t("pages.vehicles.plate")}</span><span class="info-value mono">{selectedVehicle.plate}</span></div>
+					<div class="info-item"><span class="info-label">{t("pages.vehicles.model")}</span><span class="info-value">{selectedVehicle.label}</span></div>
+					<div class="info-item"><span class="info-label">{t("pages.vehicles.class")}</span><span class="info-value">{selectedVehicle.class}</span></div>
+					<div class="info-item"><span class="info-label">{t("pages.vehicles.type")}</span><span class="info-value">{selectedVehicle.type}</span></div>
+					<div class="info-item"><span class="info-label">{t("pages.vehicles.brand")}</span><span class="info-value">{selectedVehicle.brand || t("common.unknown")}</span></div>
+					<div class="info-item"><span class="info-label">{t("pages.vehicles.reports")}</span><span class="info-value">{selectedVehicle.seenIn || 0}</span></div>
 					{#if features.points}
-						<div class="info-item"><span class="info-label">Points</span><span class="info-value" class:accent-red={(selectedVehicle.points ?? 0) > 0}>{selectedVehicle.points ?? 0}</span></div>
+						<div class="info-item"><span class="info-label">{t("pages.vehicles.points")}</span><span class="info-value" class:accent-red={(selectedVehicle.points ?? 0) > 0}>{selectedVehicle.points ?? 0}</span></div>
 					{/if}
 					{#if features.insurance}
 						<div class="info-item">
-							<span class="info-label">Insurance</span>
+							<span class="info-label">{t("pages.vehicles.insurance")}</span>
 							<span class="info-value" class:state-active={isVehicleInsured(selectedVehicle)} class:accent-red={!isVehicleInsured(selectedVehicle)}>
-								{isVehicleInsured(selectedVehicle) ? 'Insured' : 'Uninsured'}
+								{isVehicleInsured(selectedVehicle) ? t("pages.vehicles.insured") : t("pages.vehicles.uninsured")}
 							</span>
 						</div>
 					{/if}
 					{#if features.registration}
 						<div class="info-item">
-							<span class="info-label">Registration</span>
+							<span class="info-label">{t("pages.vehicles.registration")}</span>
 							<span class="info-value" class:state-active={isVehicleRegistered(selectedVehicle)} class:accent-red={!isVehicleRegistered(selectedVehicle)}>
-								{isVehicleRegistered(selectedVehicle) ? 'Registered' : 'Unregistered'}
+								{isVehicleRegistered(selectedVehicle) ? t("pages.vehicles.registered") : t("pages.vehicles.unregistered")}
 							</span>
 						</div>
 					{/if}
 					<div class="info-item">
-						<span class="info-label">State</span>
+						<span class="info-label">{t("pages.vehicles.state")}</span>
 						<span class="info-value" class:state-active={selectedVehicle.core_state === 0} class:state-garaged={selectedVehicle.core_state === 1} class:state-impounded-state={selectedVehicle.core_state === 2}>
-							{selectedVehicle.core_state === 0 ? 'Out' : selectedVehicle.core_state === 1 ? 'Garaged' : selectedVehicle.core_state === 2 ? 'Impounded' : 'Unknown'}
+							{selectedVehicle.core_state === 0 ? t("pages.vehicles.out") : selectedVehicle.core_state === 1 ? t("pages.vehicles.garaged") : selectedVehicle.core_state === 2 ? t("pages.vehicles.impounded") : t("common.unknown")}
 						</span>
 					</div>
 				</div>
@@ -789,46 +790,46 @@
 				<!-- ═══ Impound ═══ -->
 				<div class="section">
 					<div class="section-title">
-						Impound
+						{t("pages.vehicles.impound")}
 						{#if !activeImpound && canImpound}
-							<button class="danger-btn" onclick={openImpoundModal}>Impound vehicle</button>
+							<button class="danger-btn" onclick={openImpoundModal}>{t("pages.vehicles.impoundVehicle")}</button>
 						{/if}
 					</div>
 
 					{#if activeImpound}
 						<div class="imp-card">
 							<div class="imp-card-head">
-								<span class="imp-badge">Impounded</span>
+								<span class="imp-badge">{t("pages.vehicles.impounded")}</span>
 								<span class="imp-lot">{lotLabel(activeImpound.lot)}</span>
 							</div>
 
 							<div class="imp-rows">
 								<div class="imp-row">
-									<span class="imp-label">Reason</span>
+									<span class="imp-label">{t("pages.vehicles.reason")}</span>
 									<span class="imp-value">{activeImpound.reason || '—'}</span>
 								</div>
 								<div class="imp-row">
-									<span class="imp-label">Officer</span>
+									<span class="imp-label">{t("pages.vehicles.officer")}</span>
 									<span class="imp-value">{activeImpound.officer_name || '—'}</span>
 								</div>
 								<div class="imp-row">
-									<span class="imp-label">Impounded</span>
+									<span class="imp-label">{t("pages.vehicles.impounded")}</span>
 									<span class="imp-value">{formatDateTime(activeImpound.time)}</span>
 								</div>
 								<div class="imp-row">
-									<span class="imp-label">Fee</span>
+									<span class="imp-label">{t("pages.vehicles.fee")}</span>
 									<span class="imp-value">
 										{money(activeImpound.total ?? activeImpound.fee)}
 										{#if (activeImpound.total ?? activeImpound.fee) > 0}
 											<span class="imp-fee-pill" class:paid={!!activeImpound.fee_paid}>
-												{activeImpound.fee_paid ? 'Paid' : 'Unpaid'}
+												{activeImpound.fee_paid ? t("pages.vehicles.paid") : t("pages.vehicles.unpaid")}
 											</span>
 										{/if}
 									</span>
 								</div>
 								{#if (activeImpound.storage ?? 0) > 0}
 									<div class="imp-row">
-										<span class="imp-label">Storage</span>
+										<span class="imp-label">{t("pages.vehicles.storage")}</span>
 										<span class="imp-value imp-storage">
 											{money(activeImpound.fee)} impound + {money(activeImpound.storage ?? 0)} storage
 											<span class="imp-days">{activeImpound.days_held} day{activeImpound.days_held === 1 ? '' : 's'} held</span>
@@ -837,7 +838,7 @@
 								{/if}
 								{#if activeImpound.linkedreport}
 									<div class="imp-row">
-										<span class="imp-label">Report</span>
+										<span class="imp-label">{t("pages.vehicles.report")}</span>
 										<button class="imp-link" onclick={() => openReportInEditor(String(activeImpound!.linkedreport))}>
 											#{activeImpound.linkedreport}
 										</button>
@@ -846,17 +847,17 @@
 							</div>
 
 							<div class="imp-row">
-								<span class="imp-label">Hold</span>
+								<span class="imp-label">{t("pages.vehicles.hold")}</span>
 								<span class="imp-value">
 									{#if activeImpound.hold_type === 'indefinite'}
-										<span class="hold-pill hold-locked">Until released by an officer</span>
+										<span class="hold-pill hold-locked">{t("pages.vehicles.untilOfficerRelease")}</span>
 									{:else if activeImpound.hold_type === 'timed' && !activeImpound.hold_releasable}
 										<span class="hold-pill hold-timed">
 											{activeImpound.hold_label || 'Held'} · {holdLeft(activeImpound.hold_seconds_left ?? 0)}
 										</span>
 										<span class="hold-until">until {formatDateTime(activeImpound.hold_until ?? 0)}</span>
 									{:else}
-										<span class="hold-pill hold-free">Releasable</span>
+										<span class="hold-pill hold-free">{t("pages.vehicles.releasable")}</span>
 									{/if}
 								</span>
 							</div>
@@ -866,9 +867,9 @@
 							{/if}
 
 							{#if activeImpound.photo}
-								<button class="imp-photo-thumb" type="button" title="Click to enlarge"
+								<button class="imp-photo-thumb" type="button" title={t("pages.vehicles.clickToEnlarge")}
 									onclick={() => (photoLightbox = activeImpound!.photo ?? null)}>
-									<img src={activeImpound.photo} alt="Vehicle condition at impound" />
+									<img src={activeImpound.photo} alt={t("pages.vehicles.impoundCondition")} />
 									<span class="imp-photo-zoom">
 										<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
 									</span>
@@ -880,20 +881,20 @@
 									{#if (activeImpound.total ?? activeImpound.fee) > 0 && !activeImpound.fee_paid}
 										<button class="primary-btn" disabled={impoundBusy}
 											onclick={() => payFee(selectedVehicle!.plate)}>
-											Collect {money(activeImpound.total ?? activeImpound.fee)}
+											{t("pages.vehicles.collectAmount", { amount: money(activeImpound.total ?? activeImpound.fee) })}
 										</button>
 									{/if}
 									{#if activeImpound.hold_releasable === false && canOverride}
 										<button class="danger-btn" disabled={impoundBusy}
 											onclick={() => { overridePlate = selectedVehicle!.plate; overrideReason = ""; overrideOpen = true; }}>
-											Early release
+											{t("pages.vehicles.earlyRelease")}
 										</button>
 									{/if}
 									<button class="release-btn"
 										disabled={impoundBusy || activeImpound.hold_releasable === false}
 										title={activeImpound.hold_releasable === false ? (activeImpound.hold_reason ?? '') : ''}
 										onclick={() => releaseVehicle(selectedVehicle!.plate)}>
-										Release vehicle
+										{t("pages.vehicles.releaseVehicle")}
 									</button>
 								</div>
 								{#if activeImpound.hold_releasable === false}
@@ -901,14 +902,14 @@
 										{activeImpound.hold_reason}{#if !canOverride} — you are not authorised to override this hold{/if}
 									</div>
 								{:else if requireFeePaid && (activeImpound.total ?? activeImpound.fee) > 0 && !activeImpound.fee_paid}
-									<div class="imp-hint">The fee must be collected before this vehicle can be released.</div>
+									<div class="imp-hint">{t("pages.vehicles.feeRequired")}</div>
 								{:else}
-									<div class="imp-hint">Releasing returns the vehicle to the owner's garage.</div>
+									<div class="imp-hint">{t("pages.vehicles.releaseHint")}</div>
 								{/if}
 							{/if}
 						</div>
 					{:else}
-						<div class="imp-empty">This vehicle is not impounded.</div>
+						<div class="imp-empty">{t("pages.vehicles.notImpounded")}</div>
 					{/if}
 
 					{#if impoundHistory.filter(r => r.status === 'released').length > 0}
@@ -939,11 +940,11 @@
 
 				<div class="section">
 					<div class="section-title">
-						Notes
+						{t("pages.vehicles.notes")}
 						{#if !editingNotes}
 							<button class="notes-edit-btn" onclick={startEditNotes}>
 								<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-								Edit
+								{t("common.actions.edit")}
 							</button>
 						{/if}
 					</div>
@@ -951,16 +952,16 @@
 						<textarea
 							class="notes-textarea"
 							bind:value={notesValue}
-							placeholder="Enter notes..."
+							placeholder={t("pages.vehicles.notesPlaceholder")}
 							maxlength={500}
 							onkeydown={(e) => { if (e.key === 'Enter' && e.ctrlKey) saveNotes(); if (e.key === 'Escape') { editingNotes = false; } }}
 						></textarea>
 						<div class="notes-actions">
 							<div style="display:flex;gap:6px;">
 								<button class="notes-save-btn" onclick={saveNotes} disabled={notesSaving}>
-									{notesSaving ? 'Saving...' : 'Save'}
+									{notesSaving ? t("common.status.saving") : t("common.actions.save")}
 								</button>
-								<button class="notes-cancel-btn" onclick={() => { editingNotes = false; }}>Cancel</button>
+								<button class="notes-cancel-btn" onclick={() => { editingNotes = false; }}>{t("common.actions.cancel")}</button>
 							</div>
 							<span class="notes-char-count" class:notes-char-warn={notesValue.length > 450}>
 								{notesValue.length}/500
@@ -970,14 +971,14 @@
 						{#if selectedVehicle.information?.trim()}
 							<p class="section-text">{selectedVehicle.information}</p>
 						{:else}
-							<div class="section-empty">No notes on file.</div>
+							<div class="section-empty">{t("pages.vehicles.noNotes")}</div>
 						{/if}
 					{/if}
 				</div>
 
 				{#if selectedVehicle.flags?.filter(f => !f.toLowerCase().startsWith('status:')).length}
 					<div class="section">
-						<div class="section-title">Flags</div>
+						<div class="section-title">{t("pages.vehicles.flags")}</div>
 						<div class="flags-row">
 							{#each selectedVehicle.flags.filter(f => !f.toLowerCase().startsWith('status:')) as flag}
 								<span class={getFlagClass(flag)}>{flag}</span>
@@ -989,7 +990,7 @@
 				{#if features.points}
 					<div class="section">
 						<div class="section-title">
-							License Points
+							{t("pages.vehicles.licensePoints")}
 							{#if pointsDirty}
 								<span class="points-pending">{pointsDelta > 0 ? `+${pointsDelta}` : pointsDelta} unsaved</span>
 							{/if}
@@ -998,11 +999,11 @@
 						{#if canEditPoints}
 							<div class="points-editor">
 								<div class="points-stepper">
-									<button class="pt-step" onclick={() => adjustPoints(-1)} disabled={pointsDraft <= 0} title="Remove one point" type="button" aria-label="Remove one point">
+									<button class="pt-step" onclick={() => adjustPoints(-1)} disabled={pointsDraft <= 0} title={t("pages.vehicles.removePoint")} type="button" aria-label={t("pages.vehicles.removePoint")}>
 										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
 									</button>
 									<div class="pt-value" class:pt-value-zero={pointsDraft === 0}>{pointsDraft}</div>
-									<button class="pt-step" onclick={() => adjustPoints(1)} disabled={pointsDraft >= 1000} title="Add one point" type="button" aria-label="Add one point">
+									<button class="pt-step" onclick={() => adjustPoints(1)} disabled={pointsDraft >= 1000} title={t("pages.vehicles.addPoint")} type="button" aria-label={t("pages.vehicles.addPoint")}>
 										<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
 									</button>
 								</div>
@@ -1017,26 +1018,26 @@
 								</div>
 
 								<div class="pt-presets">
-									<span class="pt-presets-label">Quick add</span>
+									<span class="pt-presets-label">{t("pages.vehicles.quickAdd")}</span>
 									{#each POINT_PRESETS as preset}
 										<button class="pt-chip" onclick={() => adjustPoints(preset)} type="button">+{preset}</button>
 									{/each}
-									<button class="pt-chip pt-chip-reset" onclick={resetPoints} disabled={pointsDraft === 0} type="button">Reset</button>
+									<button class="pt-chip pt-chip-reset" onclick={resetPoints} disabled={pointsDraft === 0} type="button">{t("pages.vehicles.reset")}</button>
 								</div>
 
 								<div class="pt-actions">
 									<button class="pt-save" onclick={savePoints} disabled={pointsSaving || !pointsDirty} type="button">
-										{pointsSaving ? "Saving..." : pointsDirty ? "Save points" : "Saved"}
+										{pointsSaving ? t("common.status.saving") : pointsDirty ? t("pages.vehicles.savePoints") : t("pages.vehicles.saved")}
 									</button>
 									{#if pointsDirty}
-										<button class="pt-revert" onclick={() => pointsDraft = savedPoints} type="button">Revert</button>
+										<button class="pt-revert" onclick={() => pointsDraft = savedPoints} type="button">{t("pages.vehicles.revert")}</button>
 									{/if}
 								</div>
 							</div>
 						{:else}
 							<div class="points-readonly" class:accent-red={(selectedVehicle.points ?? 0) > 0}>
 								<span class="pt-readonly-value">{selectedVehicle.points ?? 0}</span>
-								<span class="pt-readonly-label">points on record</span>
+								<span class="pt-readonly-label">{t("pages.vehicles.pointsOnRecord")}</span>
 							</div>
 						{/if}
 					</div>
@@ -1044,7 +1045,7 @@
 
 				{#if selectedVehicle.bolos && selectedVehicle.bolos.length}
 					<div class="section">
-						<div class="section-title">Related BOLOs</div>
+						<div class="section-title">{t("pages.vehicles.relatedBolos")}</div>
 						<div class="bolos-list">
 							{#each selectedVehicle.bolos as bolo}
 								<div class="bolo-item">
@@ -1062,9 +1063,9 @@
 				{/if}
 
 				<div class="section">
-					<div class="section-title">Linked Reports <span class="report-count">{linkedReports.length}</span></div>
+					<div class="section-title">{t("pages.vehicles.linkedReports")} <span class="report-count">{linkedReports.length}</span></div>
 					{#if linkedReportsLoading}
-						<div class="section-empty">Loading reports...</div>
+						<div class="section-empty">{t("pages.vehicles.loadingReports")}</div>
 					{:else if linkedReports.length > 0}
 						<div class="linked-reports-list">
 							{#each linkedReports as lr}
@@ -1073,12 +1074,12 @@
 										<span class="lr-title">{lr.title}</span>
 										<span class="lr-meta">{lr.type} &middot; {lr.authorplaintext} &middot; {formatDate(lr.datecreated)}</span>
 									</div>
-									<button class="lr-view-btn" onclick={() => goToReport(lr.id)}>View</button>
+									<button class="lr-view-btn" onclick={() => goToReport(lr.id)}>{t("common.actions.view")}</button>
 								</div>
 							{/each}
 						</div>
 					{:else}
-						<div class="section-empty">No reports linked to this vehicle</div>
+						<div class="section-empty">{t("pages.vehicles.noLinkedReports")}</div>
 					{/if}
 				</div>
 			</div>
@@ -1091,7 +1092,7 @@
 				<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
 					<div class="modal-header">
 						<h3>Impound {selectedVehicle.plate}</h3>
-						<button class="close-btn" aria-label="Close" onclick={() => (showImpoundModal = false)}>
+						<button class="close-btn" aria-label={t("common.actions.close")} onclick={() => (showImpoundModal = false)}>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 								<line x1="18" y1="6" x2="6" y2="18"/>
 								<line x1="6" y1="6" x2="18" y2="18"/>
@@ -1123,8 +1124,8 @@
 								: "No fee will be charged"}
 						</span>
 						<div class="modal-footer-right">
-							<button class="cancel-btn" disabled={impoundBusy} onclick={() => (showImpoundModal = false)}>Cancel</button>
-							<button class="danger-btn" disabled={impoundBusy || !imReason} onclick={submitImpound}>Impound</button>
+							<button class="cancel-btn" disabled={impoundBusy} onclick={() => (showImpoundModal = false)}>{t("common.actions.cancel")}</button>
+							<button class="danger-btn" disabled={impoundBusy || !imReason} onclick={submitImpound}>{t("pages.vehicles.impound")}</button>
 						</div>
 					</div>
 				</div>
@@ -1137,13 +1138,13 @@
 			<div class="img-modal-overlay" onclick={(e) => { if (e.target === e.currentTarget) imageModalOpen = false; }}>
 				<div class="img-modal" onclick={(e) => e.stopPropagation()}>
 					<div class="img-modal-header">
-						<span>Set Vehicle Image</span>
+						<span>{t("pages.vehicles.setImage")}</span>
 						<button class="img-modal-close" onclick={() => imageModalOpen = false}>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 						</button>
 					</div>
 					<div class="img-modal-body">
-						<span class="img-modal-label">Image URL</span>
+						<span class="img-modal-label">{t("pages.vehicles.imageUrl")}</span>
 						<input
 							class="img-modal-input"
 							type="url"
@@ -1153,11 +1154,11 @@
 						/>
 						<span class="img-modal-hint">
 							<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-							Use <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> for permanent links.
+							{t("pages.vehicles.fiveManagePrefix")} <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> {t("pages.vehicles.fiveManageSuffix")}
 						</span>
 					</div>
 					<div class="img-modal-footer">
-						<button class="img-modal-cancel" onclick={() => imageModalOpen = false} disabled={imageSaving}>Cancel</button>
+						<button class="img-modal-cancel" onclick={() => imageModalOpen = false} disabled={imageSaving}>{t("common.actions.cancel")}</button>
 						<button class="img-modal-confirm" onclick={saveVehicleImage} disabled={imageSaving || !imageUrlInput.trim()}>
 							{imageSaving ? "Saving…" : "Set Image"}
 						</button>
@@ -1173,7 +1174,7 @@
 					<button class="lightbox-close-btn" onclick={() => vehicleLightboxOpen = false}>
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 					</button>
-					<img src={selectedVehicle?.image} alt="Vehicle" class="vehicle-lightbox-img" />
+					<img src={selectedVehicle?.image} alt={t("pages.vehicles.vehicle")} class="vehicle-lightbox-img" />
 				</div>
 			</div>
 		{/if}
@@ -1184,48 +1185,48 @@
 		<div class="topbar">
 			<div class="search-box">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-				<input type="text" bind:value={searchQuery} placeholder="Search vehicles by owner, plate, class..." />
+				<input type="text" bind:value={searchQuery} placeholder={t("pages.vehicles.searchPlaceholder")} />
 			</div>
 			<button class="refresh-btn" onclick={refreshVehicles} disabled={loading}>
-				{loading ? "Loading..." : "Refresh"}
+				{loading ? t("common.status.loading") : t("pages.vehicles.refresh")}
 			</button>
 		</div>
 
 		<div class="filter-tabs">
-			<button class="filter-tab" class:active={statusFilter === "all"} onclick={() => { statusFilter = "all"; vehiclePage = 1; }}>All</button>
-			<button class="filter-tab" class:active={statusFilter === "active"} onclick={() => { statusFilter = "active"; vehiclePage = 1; }}>Active</button>
-			<button class="filter-tab" class:active={statusFilter === "garaged"} onclick={() => { statusFilter = "garaged"; vehiclePage = 1; }}>Garaged</button>
-			<button class="filter-tab" class:active={statusFilter === "impounded"} onclick={() => { statusFilter = "impounded"; vehiclePage = 1; }}>Impounded</button>
-			<button class="filter-tab" class:active={statusFilter === "stolen"} onclick={() => { statusFilter = "stolen"; vehiclePage = 1; }}>Stolen</button>
-			<button class="lot-open-btn" onclick={openLotView} title="Every vehicle currently in an impound lot">
+			<button class="filter-tab" class:active={statusFilter === "all"} onclick={() => { statusFilter = "all"; vehiclePage = 1; }}>{t("pages.vehicles.all")}</button>
+			<button class="filter-tab" class:active={statusFilter === "active"} onclick={() => { statusFilter = "active"; vehiclePage = 1; }}>{t("pages.vehicles.active")}</button>
+			<button class="filter-tab" class:active={statusFilter === "garaged"} onclick={() => { statusFilter = "garaged"; vehiclePage = 1; }}>{t("pages.vehicles.garaged")}</button>
+			<button class="filter-tab" class:active={statusFilter === "impounded"} onclick={() => { statusFilter = "impounded"; vehiclePage = 1; }}>{t("pages.vehicles.impounded")}</button>
+			<button class="filter-tab" class:active={statusFilter === "stolen"} onclick={() => { statusFilter = "stolen"; vehiclePage = 1; }}>{t("pages.vehicles.stolen")}</button>
+			<button class="lot-open-btn" onclick={openLotView} title={t("pages.vehicles.impoundLotHint")}>
 				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>
-				Impound Lot
+				{t("pages.vehicles.impoundLot")}
 			</button>
 		</div>
 
 		<div class="list-panel">
 			<div class="list-header" style="grid-template-columns: {listGridColumns};">
 			    <span></span>
-				<span class="col-name">Vehicle</span>
-				<span class="col-plate">Plate</span>
-				<span class="col-owner">Owner</span>
-				<span class="col-class">Class</span>
+				<span class="col-name">{t("pages.vehicles.vehicle")}</span>
+				<span class="col-plate">{t("pages.vehicles.plate")}</span>
+				<span class="col-owner">{t("pages.vehicles.owner")}</span>
+				<span class="col-class">{t("pages.vehicles.class")}</span>
 				{#if features.points}
-					<span class="col-points">Points</span>
+					<span class="col-points">{t("pages.vehicles.points")}</span>
 				{/if}
 				{#if features.insurance}
-					<span class="col-status">Insurance</span>
+					<span class="col-status">{t("pages.vehicles.insurance")}</span>
 				{/if}
 				{#if features.registration}
-					<span class="col-status">Registration</span>
+					<span class="col-status">{t("pages.vehicles.registration")}</span>
 				{/if}
-				<span class="col-flags">Flags</span>
+				<span class="col-flags">{t("pages.vehicles.flags")}</span>
 			</div>
 			<div class="list-body">
 				{#if loading}
-					<div class="empty-state">Loading vehicles...</div>
+					<div class="empty-state">{t("pages.vehicles.loading")}</div>
 				{:else if filteredVehicles.length === 0}
-					<div class="empty-state">{searchQuery ? "No vehicles match your search." : "No vehicles found."}</div>
+					<div class="empty-state">{searchQuery ? t("pages.vehicles.noMatches") : t("pages.vehicles.noneFound")}</div>
 				{:else}
 					{#each filteredVehicles as vehicle}
 						<button class="vehicle-row" style="grid-template-columns: {listGridColumns};" onclick={() => viewVehicle(vehicle.plate)}>
@@ -1288,8 +1289,8 @@
 		<div class="modal-backdrop">
 			<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
 				<div class="modal-header">
-					<h3>Early release — {overridePlate}</h3>
-					<button class="close-btn" aria-label="Close" onclick={() => (overrideOpen = false)}>
+					<h3>{t("pages.vehicles.earlyReleasePlate", { plate: overridePlate })}</h3>
+					<button class="close-btn" aria-label={t("common.actions.close")} onclick={() => (overrideOpen = false)}>
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
 						</svg>
@@ -1298,26 +1299,26 @@
 
 				<div class="modal-body">
 					<p class="override-warn">
-						This vehicle is under a hold. Releasing it now overrides that decision and will be recorded against your name.
+						{t("pages.vehicles.overrideWarning")}
 					</p>
 					<div class="form-group">
-						<span class="field-label">Reason <span class="req">*</span></span>
+						<span class="field-label">{t("pages.vehicles.reason")} <span class="req">*</span></span>
 						<textarea class="form-input" rows="3" maxlength="300" bind:value={overrideReason}
-							placeholder="Why is this vehicle being released early?"></textarea>
+							placeholder={t("pages.vehicles.overridePlaceholder")}></textarea>
 					</div>
 				</div>
 
 				<div class="modal-footer">
-					<span class="modal-hint">Logged in the audit trail</span>
+					<span class="modal-hint">{t("pages.vehicles.auditTrailHint")}</span>
 					<div class="modal-footer-right">
-						<button class="cancel-btn" disabled={impoundBusy} onclick={() => (overrideOpen = false)}>Cancel</button>
+						<button class="cancel-btn" disabled={impoundBusy} onclick={() => (overrideOpen = false)}>{t("common.actions.cancel")}</button>
 						<button class="danger-btn"
 							disabled={impoundBusy || overrideReason.trim().length < 3}
 							onclick={async () => {
 								await releaseVehicle(overridePlate, { reason: overrideReason.trim() });
 								overrideOpen = false;
 							}}>
-							Release anyway
+							{t("pages.vehicles.releaseAnyway")}
 						</button>
 					</div>
 				</div>
@@ -1331,10 +1332,10 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="imp-lightbox" onclick={() => (photoLightbox = null)}>
 			<div class="imp-lightbox-card" onclick={(e) => e.stopPropagation()}>
-				<button class="imp-lightbox-close" aria-label="Close" onclick={() => (photoLightbox = null)}>
+				<button class="imp-lightbox-close" aria-label={t("common.actions.close")} onclick={() => (photoLightbox = null)}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
-				<img class="imp-lightbox-img" src={photoLightbox} alt="Vehicle condition at impound" />
+				<img class="imp-lightbox-img" src={photoLightbox} alt={t("pages.vehicles.impoundCondition")} />
 			</div>
 		</div>
 	{/if}
@@ -1346,8 +1347,8 @@
 		<div class="modal-backdrop" onclick={(e) => { if (e.target === e.currentTarget) showLotView = false; }}>
 			<div class="modal modal-wide" role="dialog" aria-modal="true" tabindex="-1">
 				<div class="modal-header">
-					<h3>Impound Lot</h3>
-					<button class="close-btn" aria-label="Close" onclick={() => (showLotView = false)}>
+					<h3>{t("pages.vehicles.impoundLot")}</h3>
+					<button class="close-btn" aria-label={t("common.actions.close")} onclick={() => (showLotView = false)}>
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<line x1="18" y1="6" x2="6" y2="18"/>
 							<line x1="6" y1="6" x2="18" y2="18"/>
@@ -1356,9 +1357,9 @@
 				</div>
 
 				<div class="lot-toolbar">
-					<input class="form-input lot-search" placeholder="Search plate, owner or reason…" bind:value={lotSearch} />
+					<input class="form-input lot-search" placeholder={t("pages.vehicles.lotSearchPlaceholder")} bind:value={lotSearch} />
 					<select class="form-input form-select" bind:value={lotFilter}>
-						<option value="all">All lots</option>
+						<option value="all">{t("pages.vehicles.allLots")}</option>
 						{#each impoundLots as l}
 							<option value={l.id}>{l.label}</option>
 						{/each}
@@ -1367,9 +1368,9 @@
 
 				<div class="modal-body lot-body">
 					{#if lotLoading}
-						<div class="lot-empty">Loading…</div>
+						<div class="lot-empty">{t("common.status.loading")}</div>
 					{:else if lotFiltered.length === 0}
-						<div class="lot-empty">No vehicles are impounded{lotSearch ? " matching that search" : ""}.</div>
+						<div class="lot-empty">{lotSearch ? t("pages.vehicles.noLotMatches") : t("pages.vehicles.noLotVehicles")}</div>
 					{:else}
 						{#each lotFiltered as v (v.id)}
 							<div class="lot-row">
@@ -1387,7 +1388,7 @@
 											<span class="lot-days">{v.days_held}d</span>
 										{/if}
 										{#if v.hold_type === 'indefinite'}
-											<span class="hold-pill hold-locked">Held</span>
+											<span class="hold-pill hold-locked">{t("pages.vehicles.held")}</span>
 										{:else if v.hold_type === 'timed' && !v.hold_releasable}
 											<span class="hold-pill hold-timed">{holdLeft(v.hold_seconds_left ?? 0)}</span>
 										{/if}
@@ -1395,7 +1396,7 @@
 									<div class="lot-line2">
 										<span class="lot-reason">{v.reason || "—"}</span>
 										<span class="lot-dot"></span>
-										<span>{v.owner_name || "Unknown owner"}</span>
+										<span>{v.owner_name || t("pages.vehicles.unknownOwner")}</span>
 										<span class="lot-dot"></span>
 										<span>{formatDate(v.time)}</span>
 									</div>
@@ -1404,14 +1405,14 @@
 								<div class="lot-side">
 									{#if canRelease}
 										{#if v.fee > 0 && !v.fee_paid}
-											<button class="primary-btn" disabled={impoundBusy} onclick={() => payFee(v.plate!)}>Collect</button>
+											<button class="primary-btn" disabled={impoundBusy} onclick={() => payFee(v.plate!)}>{t("pages.vehicles.collect")}</button>
 										{/if}
 										<button class="release-btn"
 											disabled={impoundBusy || v.hold_releasable === false}
 											title={v.hold_releasable === false ? (v.hold_reason ?? '') : ''}
-											onclick={() => releaseVehicle(v.plate!)}>Release</button>
+											onclick={() => releaseVehicle(v.plate!)}>{t("pages.vehicles.release")}</button>
 									{/if}
-									<button class="cancel-btn" onclick={() => { showLotView = false; viewVehicle(v.plate!); }}>Open</button>
+									<button class="cancel-btn" onclick={() => { showLotView = false; viewVehicle(v.plate!); }}>{t("pages.vehicles.open")}</button>
 								</div>
 							</div>
 						{/each}
@@ -1424,7 +1425,7 @@
 						{#if lotUnpaidTotal > 0}· <span class="lot-unpaid">{money(lotUnpaidTotal)} outstanding</span>{/if}
 					</span>
 					<div class="modal-footer-right">
-						<button class="cancel-btn" onclick={() => (showLotView = false)}>Close</button>
+						<button class="cancel-btn" onclick={() => (showLotView = false)}>{t("common.actions.close")}</button>
 					</div>
 				</div>
 			</div>

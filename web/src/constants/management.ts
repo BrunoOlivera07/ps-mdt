@@ -17,7 +17,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		label: "Citizens",
 		icon: "people",
 		permissions: [
-			{ key: "citizens_search", label: "Search Citizens", description: "Search and view citizen profiles" },
+			{ key: "citizens_search", label: "citizens_search", description: "" },
 			{ key: "citizens_edit_licenses", label: "Edit Licenses", description: "Issue, revoke, and manage citizen licenses" },
 		],
 	},
@@ -27,8 +27,8 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "description",
 		permissions: [
 			{ key: "reports_view", label: "View Reports", description: "View and search reports" },
-			{ key: "reports_create", label: "Create Reports", description: "Create and edit reports" },
-			{ key: "reports_delete", label: "Delete Reports", description: "Delete reports from the system" },
+			{ key: "reports_create", label: "reports_create", description: "" },
+			{ key: "reports_delete", label: "reports_delete", description: "" },
 		],
 	},
 	{
@@ -37,9 +37,9 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "folder",
 		permissions: [
 			{ key: "cases_view", label: "View Cases", description: "View and search cases" },
-			{ key: "cases_create", label: "Create Cases", description: "Create new cases" },
+			{ key: "cases_create", label: "cases_create", description: "" },
 			{ key: "cases_edit", label: "Edit Cases", description: "Edit case details and assignments" },
-			{ key: "cases_delete", label: "Delete Cases", description: "Delete cases from the system" },
+			{ key: "cases_delete", label: "cases_delete", description: "" },
 		],
 	},
 	{
@@ -48,7 +48,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "inventory_2",
 		permissions: [
 			{ key: "evidence_view", label: "View Evidence", description: "View and search evidence" },
-			{ key: "evidence_create", label: "Create Evidence", description: "Create new evidence entries" },
+			{ key: "evidence_create", label: "evidence_create", description: "" },
 			{ key: "evidence_transfer", label: "Transfer Custody", description: "Transfer evidence between officers" },
 			{ key: "evidence_upload", label: "Upload Images", description: "Upload images to evidence" },
 		],
@@ -59,7 +59,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "notification_important",
 		permissions: [
 			{ key: "bolos_view", label: "View BOLOs", description: "View active BOLOs and details" },
-			{ key: "bolos_create", label: "Create BOLOs", description: "Create new BOLOs" },
+			{ key: "bolos_create", label: "bolos_create", description: "" },
 		],
 	},
 	{
@@ -77,7 +77,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		label: "Vehicles",
 		icon: "directions_car",
 		permissions: [
-			{ key: "vehicles_search", label: "Search Vehicles", description: "Search and view vehicle records" },
+			{ key: "vehicles_search", label: "vehicles_search", description: "" },
 			{ key: "vehicles_edit_dmv", label: "Edit Vehicle Points", description: "Set license points on a vehicle record" },
 			{ key: "vehicle_impound", label: "Impound Vehicles", description: "Impound a vehicle: set the reason, fee and lot" },
 			{ key: "vehicle_impound_release", label: "Release Impounds & Collect Fees", description: "Release impounded vehicles and charge the impound fee" },
@@ -89,7 +89,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		label: "Weapons",
 		icon: "security",
 		permissions: [
-			{ key: "weapons_search", label: "Search Weapons", description: "Search and view weapon records" },
+			{ key: "weapons_search", label: "weapons_search", description: "" },
 			{ key: "weapons_add", label: "Add Weapons", description: "Register a new gun manually" },
 		],
 	},
@@ -117,7 +117,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "rate_review",
 		permissions: [
 			{ key: "ppr_view", label: "View PPR", description: "View performance planning and review entries for all officers" },
-			{ key: "ppr_manage", label: "Manage PPR", description: "Create, edit, and delete performance reviews" },
+			{ key: "ppr_manage", label: "Manage PPR", description: "" },
 		],
 	},
 	{
@@ -126,7 +126,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "school",
 		permissions: [
 			{ key: "fto_view", label: "View FTO", description: "View all field training assignments and daily observation reports" },
-			{ key: "fto_manage", label: "Manage FTO", description: "Create assignments, write DORs, and manage training phases" },
+			{ key: "fto_manage", label: "Manage FTO", description: "" },
 		],
 	},
 	{
@@ -146,12 +146,12 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		permissions: [
 			{ key: "map_patrols_view",   label: "View Patrols",   description: "View patrol assignments on the map" },
 			{ key: "map_patrols_manage", label: "Manage Patrols", description: "Assign or remove officers from patrols" },
-			{ key: "map_patrols_edit",   label: "Edit Patrols",   description: "Create, rename, delete and reorder patrols" },
+			{ key: "map_patrols_edit",   label: "Edit Patrols",   description: "" },
 			{ key: "dispatch_attach", label: "Attach to Calls", description: "Attach or detach from dispatch calls" },
 			{ key: "dispatch_route", label: "Route to Calls", description: "Set GPS route to dispatch calls" },
 			{ key: "dispatch_assign", label: "Assign Units to Calls", description: "Dispatcher: attach or detach other units and patrols to calls (sets their waypoint)" },
 			{ key: "dispatch_notes", label: "Manage Call Notes", description: "Dispatcher: add, edit and remove a note on a dispatch call (shown to assigned units)" },
-			{ key: "dispatch_create", label: "Create Calls", description: "Dispatcher: create custom dispatch calls from the map (code, title, note, location, units)" },
+			{ key: "dispatch_create", label: "dispatch_create", description: "" },
 		],
 	},
 	{
@@ -160,7 +160,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "shield",
 		permissions: [
 			{ key: "ia_view", label: "View IA Complaints", description: "View internal affairs complaints and investigations" },
-			{ key: "ia_manage", label: "Manage IA Complaints", description: "Update status, assign investigators, and add notes to complaints" },
+			{ key: "ia_manage", label: "Manage IA Complaints", description: "" },
 		],
 	},
 	{
@@ -169,16 +169,16 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "menu_book",
 		permissions: [
 			{ key: "sop_view", label: "View SOP", description: "View standard operating procedures" },
-			{ key: "sop_manage", label: "Manage SOP", description: "Create, edit, and publish standard operating procedures" },
+			{ key: "sop_manage", label: "Manage SOP", description: "" },
 		],
 	},
 	{
 		key: "bulletin_board",
-		label: "Bulletin Board ( Creator or Manage Posts can Delete )",
+		label: "bulletin_board",
 		icon: "forum",
 		permissions: [
 			{ key: "bulletin_view", label: "View BP", description: "View Bulletin Posts" },
-			{ key: "bulletin_post", label: "Manage Posts", description: "Create and Edit Bulletin Posts" },
+			{ key: "bulletin_post", label: "Manage Posts", description: "" },
 			{ key: "bulletin_pin", label: "Pin Posts", description: "Pin Bulletin Posts" },
 		],
 	},
@@ -188,13 +188,13 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "calendar_month",
 		permissions: [
 			{ key: "court_view", label: "View Court Events", description: "See court hearings on the calendar" },
-			{ key: "court_create", label: "Create Court Events", description: "Schedule court hearings" },
+			{ key: "court_create", label: "court_create", description: "Schedule court hearings" },
 			{ key: "court_edit", label: "Edit Court Events", description: "Edit court hearings, status, and attendees" },
-			{ key: "court_delete", label: "Delete Court Events", description: "Delete court hearings" },
+			{ key: "court_delete", label: "court_delete", description: "" },
 			{ key: "training_view", label: "View Training/Meetings", description: "See training, education, and meeting events" },
-			{ key: "training_create", label: "Create Training/Meetings", description: "Schedule trainings, weiterbildungen, and meetings" },
+			{ key: "training_create", label: "training_create", description: "Schedule trainings, weiterbildungen, and meetings" },
 			{ key: "training_edit", label: "Edit Training/Meetings", description: "Edit training/meeting events and attendees" },
-			{ key: "training_delete", label: "Delete Training/Meetings", description: "Delete training/meeting events" },
+			{ key: "training_delete", label: "training_delete", description: "" },
 		],
 	},
 	{
@@ -203,9 +203,9 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
 		icon: "admin_panel_settings",
 		permissions: [
 			{ key: "management_permissions", label: "Manage Permissions", description: "Edit role permissions" },
-			{ key: "management_bulletins", label: "Manage Bulletins", description: "Create and delete bulletins" },
+			{ key: "management_bulletins", label: "Manage Bulletins", description: "" },
 			{ key: "management_activity", label: "View Activity Log", description: "View audit activity log" },
-			{ key: "management_tags", label: "Manage Tags", description: "Create and delete profile tags" },
+			{ key: "management_tags", label: "Manage Tags", description: "" },
 			{ key: "management_tracking", label: "Manage Tracking", description: "Configure audit tracking settings" },
 			{ key: "management_settings", label: "Manage Settings", description: "Configure jail/fines, templates, awards, and licenses" },
 		],

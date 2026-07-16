@@ -1,3 +1,5 @@
+import { t } from "../lib/i18n";
+
 /** MDT tab definitions */
 export const MDT_TABS = [
 	{ name: "Dashboard", icon: "dashboard" },
@@ -137,9 +139,10 @@ export const TAB_LABEL_OVERRIDES: Partial<Record<MDTTab, string>> = {
 	Map: "Dispatch",
 };
 
-/** Human-facing label for a tab (falls back to the internal name). */
+/** Human-facing label for a tab while preserving the stable internal name. */
 export function getTabLabel(name: MDTTab): string {
-	return TAB_LABEL_OVERRIDES[name] ?? name;
+	const key = name.toLowerCase().replace(/\s+/g, "_");
+	return t(`navigation.tabs.${key}`);
 }
 
 /** Component identifiers for tab routing */
@@ -204,7 +207,7 @@ export const TAB_TO_COMPONENT_MAP: Record<MDTTab, ComponentId> = {
 } as const;
 
 export const DEFAULT_TIME = "04:20";
-export const DEFAULT_DATE = "Loading...";
+export const DEFAULT_DATE = "--/--/----";
 
 /** App version and branding per job type */
 export const APP_INFO = {

@@ -4,6 +4,7 @@ import { debugError } from "@/utils/debug";
 import { TIMING } from "@/constants/index";
 import { NUI_EVENTS } from "@/constants/nuiEvents";
 import type { AuthUpdateData, JobType } from "@/interfaces/IUser";
+import { t } from "@/lib/i18n";
 
 export interface PlayerInfo {
 	rank: string;
@@ -53,7 +54,7 @@ export function createAuthService() {
 	const playerInfo = $derived((): PlayerInfo => {
 		if (!playerData) {
 			return {
-				rank: "Loading...",
+				rank: t("common.status.loading"),
 				firstName: "",
 				lastName: "",
 				id: "",
@@ -62,7 +63,7 @@ export function createAuthService() {
 		}
 
 		return {
-			rank: playerData.job?.grade?.name || "Unknown",
+			rank: playerData.job?.grade?.name || t("common.unknown"),
 			firstName: playerData.charinfo?.firstname || "",
 			lastName: playerData.charinfo?.lastname || "",
 			id: playerData.metadata?.callsign || playerData.citizenid || "",
@@ -72,10 +73,10 @@ export function createAuthService() {
 
 	function getAuthErrorMessage(authorized: boolean, isLEO: boolean): string {
 		if (!authorized && isLEO) {
-			return "You must be on duty to access the MDT system.";
+			return t("login.mustBeOnDuty");
 		}
 		if (!isLEO) {
-			return "Access Denied: Authorized Personnel Only";
+			return `${t("login.accessDenied")}: ${t("login.restricted")}`;
 		}
 		return "";
 	}
@@ -83,7 +84,7 @@ export function createAuthService() {
 	function processAuthData(data: AuthUpdateData): void {
 		if (!data.playerData) {
 			isAuthorized = false;
-			authError = "Failed to load player data.";
+			authError = t("login.playerDataFailed");
 			return;
 		}
 
@@ -133,7 +134,7 @@ export function createAuthService() {
 			processAuthData(response);
 		} catch (error) {
 			debugError("Auth check failed:", error);
-			authError = "Failed to verify authorization.";
+			authError = t("login.authorizationFailed");
 			isAuthorized = false;
 		} finally {
 			isCheckingAuth = false;

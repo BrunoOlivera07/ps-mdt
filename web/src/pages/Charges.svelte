@@ -10,6 +10,7 @@
 	import ChargeType from "../components/ChargeType.svelte";
 
 	import type { Charge, GroupedCharges } from "./../interfaces/ICharges";
+	import { t } from "../lib/i18n";
 
 	let { authService }: { authService?: AuthService } = $props();
 
@@ -69,7 +70,7 @@
 
 		if (Array.isArray(filteredCharges)) {
 			for (const charge of filteredCharges) {
-				const category = charge.category || "Uncategorized";
+		const category = charge.category || t("pages.charges.uncategorized");
 				const type = charge.type as keyof GroupedCharges;
 
 				if (!grouped[type][category]) {
@@ -88,30 +89,30 @@
 			charges = [
 				{
 					code: "PC-001",
-					label: "Speeding",
-					description: "Driving over the speed limit",
+				label: t("pages.charges.samples.speeding"),
+				description: t("pages.charges.samples.speedingDesc"),
 					time: 0,
 					fine: 250,
 					type: "infraction",
-					category: "Offences against Public Safety",
+				category: t("pages.charges.samples.publicSafety"),
 				},
 				{
 					code: "PC-002",
-					label: "Simple Assault",
-					description: "When a person intentionally or knowingly causes physical contact with another (without a weapon)",
+				label: t("pages.charges.samples.simpleAssault"),
+				description: t("pages.charges.samples.simpleAssaultDesc"),
 					time: 7,
 					fine: 500,
 					type: "misdemeanor",
-					category: "Offenses against persons",
+				category: t("pages.charges.samples.againstPersons"),
 				},
 				{
 					code: "PC-003",
-					label: "Aggravated Assault",
-					description: "When a person unintentionally, and recklessly causes bodily injury to another as a result of a confrontation AND causes bodily injury",
+				label: t("pages.charges.samples.aggravatedAssault"),
+				description: t("pages.charges.samples.aggravatedAssaultDesc"),
 					time: 20,
 					fine: 1250,
 					type: "felony",
-					category: "Offenses against persons",
+				category: t("pages.charges.samples.againstPersons"),
 				},
 			];
 		} else {
@@ -158,7 +159,7 @@
 			charges = nextCharges;
 			hasLoadedCharges = true;
 		} catch (error) {
-			debugError("Failed to load charges:", error);
+		debugError(t("pages.charges.errors.loadFailed"), error);
 			charges = [];
 		} finally {
 			isLoading = false;
@@ -167,7 +168,7 @@
 
 	async function loadCategories() {
 		if (isEnvBrowser()) {
-			categories = ["Offenses against persons", "Offences against Public Safety"];
+		categories = [t("pages.charges.samples.againstPersons"), t("pages.charges.samples.publicSafety")];
 			return;
 		}
 		try {
@@ -218,7 +219,7 @@
 		const code = modalForm.code.trim();
 		const label = modalForm.label.trim();
 		if (!code || !label) {
-			modalError = "Code and name are required.";
+			modalError = t("pages.charges.errors.required");
 			return;
 		}
 		isSavingModal = true;
@@ -229,7 +230,7 @@
 					{ ...modalForm, code, label },
 				);
 				if (!res?.success) {
-					modalError = res?.message || "Failed to create charge.";
+					modalError = res?.message || t("pages.charges.errors.createFailed");
 					return;
 				}
 			} else {
@@ -248,7 +249,7 @@
 					},
 				);
 				if (!res?.success) {
-					modalError = res?.message || "Failed to update charge.";
+					modalError = res?.message || t("pages.charges.errors.updateFailed");
 					return;
 				}
 			}
@@ -256,8 +257,8 @@
 			await loadCharges();
 			await loadCategories();
 		} catch (error) {
-			debugError("Failed to save charge:", error);
-			modalError = "Unexpected error saving charge.";
+		debugError(t("pages.charges.errors.saveFailed"), error);
+			modalError = t("pages.charges.errors.saveUnexpected");
 		} finally {
 			isSavingModal = false;
 		}
@@ -278,15 +279,15 @@
 					modalError = res.message || "";
 					return;
 				}
-				modalError = res?.message || "Failed to delete charge.";
+				modalError = res?.message || t("pages.charges.errors.deleteFailed");
 				return;
 			}
 			showModal = false;
 			await loadCharges();
 			await loadCategories();
 		} catch (error) {
-			debugError("Failed to delete charge:", error);
-			modalError = "Unexpected error deleting charge.";
+		debugError(t("pages.charges.errors.deleteLogFailed"), error);
+			modalError = t("pages.charges.errors.deleteUnexpected");
 		} finally {
 			isSavingModal = false;
 		}
@@ -297,22 +298,22 @@
 	<div class="topbar">
 		<input
 			type="text"
-			placeholder="Search charges..."
+			placeholder={t("pages.charges.searchPlaceholder")}
 			bind:value={searchQuery}
 			class="search-input"
 		/>
 		<div class="topbar-right">
-			<span class="result-count">{filteredCharges.length} charge{filteredCharges.length !== 1 ? "s" : ""}</span>
+			<span class="result-count">{t(filteredCharges.length === 1 ? "pages.charges.countOne" : "pages.charges.countMany", { count: filteredCharges.length })}</span>
 			<button
 				class="btn-secondary"
 				onclick={loadCharges}
 				disabled={isLoading}
 			>
-				{isLoading ? "Loading..." : "Refresh"}
+				{isLoading ? t("common.status.loading") : t("pages.charges.refresh")}
 			</button>
 			{#if canEdit}
 				<button class="add-charge-btn" onclick={openCreate}>
-					<span class="material-icons" style="font-size: 12px;">add</span> New Charge
+				<span class="material-icons" style="font-size: 12px;">add</span> {t("pages.charges.newCharge")}
 				</button>
 			{/if}
 		</div>
@@ -322,15 +323,15 @@
 		{#if isLoading && charges.length === 0}
 			<div class="empty-state">
 				<div class="loading-spinner"></div>
-				<p>Loading charges...</p>
+				<p>{t("pages.charges.loading")}</p>
 			</div>
 		{:else if filteredCharges.length === 0}
 			<div class="empty-state">
-				<p class="empty-title">No Charges Found</p>
+				<p class="empty-title">{t("pages.charges.noneFound")}</p>
 				<p class="empty-sub">
 					{searchQuery
-						? "No charges match your search criteria."
-						: "No charges have been loaded yet."}
+						? t("pages.charges.noMatches")
+						: t("pages.charges.noneLoaded")}
 				</p>
 			</div>
 		{:else}
@@ -379,50 +380,50 @@
 	<div class="modal-backdrop" onclick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
 		<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
 			<div class="modal-header">
-				<h3>{modalMode === "create" ? "New Charge" : "Edit Charge"}</h3>
-				<button class="close-btn" aria-label="Close" onclick={closeModal}>
+				<h3>{modalMode === "create" ? t("pages.charges.newCharge") : t("pages.charges.editCharge")}</h3>
+				<button class="close-btn" aria-label={t("common.actions.close")} onclick={closeModal}>
 					<span class="material-icons" style="font-size: 14px;">close</span>
 				</button>
 			</div>
 			<div class="modal-body form-body">
 				<div class="form-group">
-					<span class="field-label">Code</span>
+					<span class="field-label">{t("pages.charges.fields.code")}</span>
 					<input class="form-input" bind:value={modalForm.code} placeholder="PC-001" />
 				</div>
 				<div class="form-group">
-					<span class="field-label">Class</span>
+					<span class="field-label">{t("pages.charges.fields.class")}</span>
 					<select class="form-input form-select" bind:value={modalForm.type}>
-						<option value="felony">Felony</option>
-						<option value="misdemeanor">Misdemeanor</option>
-						<option value="infraction">Infraction</option>
+						<option value="felony">{t("chargeType.types.felony")}</option>
+						<option value="misdemeanor">{t("chargeType.types.misdemeanor")}</option>
+						<option value="infraction">{t("chargeType.types.infraction")}</option>
 					</select>
 				</div>
 				<div class="form-group form-full">
-					<span class="field-label">Name</span>
-					<input class="form-input" bind:value={modalForm.label} placeholder="Charge name" />
+					<span class="field-label">{t("pages.charges.fields.name")}</span>
+					<input class="form-input" bind:value={modalForm.label} placeholder={t("pages.charges.namePlaceholder")} />
 				</div>
 				<div class="form-group form-full">
-					<span class="field-label">Category</span>
-					<input class="form-input" bind:value={modalForm.category} list="charge-category-list" placeholder="Type a new category or pick an existing one" />
+					<span class="field-label">{t("pages.charges.fields.category")}</span>
+					<input class="form-input" bind:value={modalForm.category} list="charge-category-list" placeholder={t("pages.charges.categoryPlaceholder")} />
 					<datalist id="charge-category-list">
 						{#each categories as cat}<option value={cat}></option>{/each}
 					</datalist>
 				</div>
 				<div class="form-group">
-					<span class="field-label">Fine ($)</span>
+					<span class="field-label">{t("pages.charges.fields.fine")}</span>
 					<input class="form-input" type="number" min="0" bind:value={modalForm.fine} />
 				</div>
 				<div class="form-group">
-					<span class="field-label">Jail (months)</span>
+					<span class="field-label">{t("pages.charges.fields.jail")}</span>
 					<input class="form-input" type="number" min="0" bind:value={modalForm.time} />
 				</div>
 				<div class="form-group form-full">
-					<span class="field-label">Color</span>
+					<span class="field-label">{t("pages.charges.fields.color")}</span>
 					<input class="form-input color-input" type="color" bind:value={modalForm.color} />
 				</div>
 				<div class="form-group form-full">
-					<span class="field-label">Description</span>
-					<textarea class="form-input" rows="3" bind:value={modalForm.description} placeholder="Description"></textarea>
+					<span class="field-label">{t("pages.charges.fields.description")}</span>
+					<textarea class="form-input" rows="3" bind:value={modalForm.description} placeholder={t("pages.charges.fields.description")}></textarea>
 				</div>
 				{#if modalError}
 					<div class="form-group form-full"><span class="modal-error">{modalError}</span></div>
@@ -432,16 +433,16 @@
 				<div class="modal-footer-left">
 					{#if modalMode === "edit"}
 						{#if confirmDelete}
-							<button class="danger-btn" disabled={isSavingModal} onclick={() => removeCharge(true)}>Confirm delete</button>
+							<button class="danger-btn" disabled={isSavingModal} onclick={() => removeCharge(true)}>{t("pages.charges.confirmDelete")}</button>
 						{:else}
-							<button class="danger-ghost-btn" disabled={isSavingModal} onclick={() => removeCharge(false)}>Delete</button>
+							<button class="danger-ghost-btn" disabled={isSavingModal} onclick={() => removeCharge(false)}>{t("common.actions.delete")}</button>
 						{/if}
 					{/if}
 				</div>
 				<div class="modal-footer-right">
-					<button class="cancel-btn" disabled={isSavingModal} onclick={closeModal}>Cancel</button>
+					<button class="cancel-btn" disabled={isSavingModal} onclick={closeModal}>{t("common.actions.cancel")}</button>
 					<button class="primary-btn" disabled={isSavingModal} onclick={saveModal}>
-						{isSavingModal ? "Saving..." : modalMode === "create" ? "Create" : "Save"}
+						{isSavingModal ? t("common.status.saving") : modalMode === "create" ? t("common.actions.create") : t("common.actions.save")}
 					</button>
 				</div>
 			</div>

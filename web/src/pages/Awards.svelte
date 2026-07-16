@@ -6,6 +6,7 @@
 	import { NUI_EVENTS } from "../constants/nuiEvents";
 	import type { createTabService } from "../services/tabService.svelte";
 	import type { JobType } from "../interfaces/IUser";
+	import { t } from "../lib/i18n";
 
 	interface Props {
 		tabService: ReturnType<typeof createTabService>;
@@ -114,20 +115,20 @@
 			bolos: 34, warrants: 18, totalFined: 285000, totalMonths: 342, citations: 67,
 		};
 		awards = [
-			{ id: 1, name: "First Report", description: "File your first incident report", icon: "description", category: "Reports", goalType: "reports", goalAmount: 1, progress: 1, earned: true, earnedDate: "2024-01-15" },
-			{ id: 2, name: "50 Reports Filed", description: "File 50 incident reports", icon: "description", category: "Reports", goalType: "reports", goalAmount: 50, progress: 50, earned: true, earnedDate: "2024-06-20" },
-			{ id: 3, name: "100 Reports Filed", description: "File 100 incident reports", icon: "description", category: "Reports", goalType: "reports", goalAmount: 100, progress: 100, earned: true, earnedDate: "2024-11-10" },
-			{ id: 4, name: "500 Reports Filed", description: "File 500 incident reports", icon: "description", category: "Reports", goalType: "reports", goalAmount: 500, progress: 147, earned: false },
-			{ id: 5, name: "First Arrest", description: "File your first arrest report", icon: "local_police", category: "Arrests", goalType: "arrests", goalAmount: 1, progress: 1, earned: true, earnedDate: "2024-01-20" },
-			{ id: 6, name: "50 Arrests", description: "File 50 arrest reports", icon: "local_police", category: "Arrests", goalType: "arrests", goalAmount: 50, progress: 50, earned: true, earnedDate: "2024-08-15" },
-			{ id: 7, name: "200 Arrests", description: "File 200 arrest reports", icon: "local_police", category: "Arrests", goalType: "arrests", goalAmount: 200, progress: 89, earned: false },
-			{ id: 8, name: "Case Worker", description: "Work on 25 cases", icon: "folder", category: "Cases", goalType: "cases", goalAmount: 25, progress: 23, earned: false },
-			{ id: 9, name: "50 Evidence Logged", description: "Log 50 pieces of evidence", icon: "inventory_2", category: "Evidence", goalType: "evidence", goalAmount: 50, progress: 50, earned: true, earnedDate: "2024-09-05" },
-			{ id: 10, name: "25 BOLOs Issued", description: "Issue 25 BOLOs", icon: "notification_important", category: "BOLOs", goalType: "bolos", goalAmount: 25, progress: 25, earned: true, earnedDate: "2024-07-01" },
-			{ id: 11, name: "10 Warrants Issued", description: "Issue 10 warrants", icon: "gavel", category: "Warrants", goalType: "warrants", goalAmount: 10, progress: 10, earned: true, earnedDate: "2024-10-12" },
-			{ id: 12, name: "$100K Fined", description: "Fine citizens a total of $100,000", icon: "payments", category: "Fines", goalType: "totalFined", goalAmount: 100000, progress: 100000, earned: true, earnedDate: "2024-05-22" },
-			{ id: 13, name: "$500K Fined", description: "Fine citizens a total of $500,000", icon: "payments", category: "Fines", goalType: "totalFined", goalAmount: 500000, progress: 285000, earned: false },
-			{ id: 14, name: "500 Months Sentenced", description: "Sentence a total of 500 months", icon: "schedule", category: "Sentencing", goalType: "totalMonths", goalAmount: 500, progress: 342, earned: false },
+			{ id: 1, name: t("pages.awards.samples.firstReport"), description: t("pages.awards.samples.firstReportDesc"), icon: "description", category: t("pages.awards.labels.reports"), goalType: "reports", goalAmount: 1, progress: 1, earned: true, earnedDate: "2024-01-15" },
+			{ id: 2, name: t("pages.awards.samples.reportsFiled", { count: 50 }), description: t("pages.awards.samples.fileReports", { count: 50 }), icon: "description", category: t("pages.awards.labels.reports"), goalType: "reports", goalAmount: 50, progress: 50, earned: true, earnedDate: "2024-06-20" },
+			{ id: 3, name: t("pages.awards.samples.reportsFiled", { count: 100 }), description: t("pages.awards.samples.fileReports", { count: 100 }), icon: "description", category: t("pages.awards.labels.reports"), goalType: "reports", goalAmount: 100, progress: 100, earned: true, earnedDate: "2024-11-10" },
+			{ id: 4, name: t("pages.awards.samples.reportsFiled", { count: 500 }), description: t("pages.awards.samples.fileReports", { count: 500 }), icon: "description", category: t("pages.awards.labels.reports"), goalType: "reports", goalAmount: 500, progress: 147, earned: false },
+			{ id: 5, name: t("pages.awards.samples.firstArrest"), description: t("pages.awards.samples.firstArrestDesc"), icon: "local_police", category: t("pages.awards.labels.arrests"), goalType: "arrests", goalAmount: 1, progress: 1, earned: true, earnedDate: "2024-01-20" },
+			{ id: 6, name: t("pages.awards.samples.arrests", { count: 50 }), description: t("pages.awards.samples.fileArrests", { count: 50 }), icon: "local_police", category: t("pages.awards.labels.arrests"), goalType: "arrests", goalAmount: 50, progress: 50, earned: true, earnedDate: "2024-08-15" },
+			{ id: 7, name: t("pages.awards.samples.arrests", { count: 200 }), description: t("pages.awards.samples.fileArrests", { count: 200 }), icon: "local_police", category: t("pages.awards.labels.arrests"), goalType: "arrests", goalAmount: 200, progress: 89, earned: false },
+			{ id: 8, name: t("pages.awards.samples.caseWorker"), description: t("pages.awards.samples.workCases", { count: 25 }), icon: "folder", category: t("pages.awards.labels.cases"), goalType: "cases", goalAmount: 25, progress: 23, earned: false },
+			{ id: 9, name: t("pages.awards.samples.evidenceLogged", { count: 50 }), description: t("pages.awards.samples.logEvidence", { count: 50 }), icon: "inventory_2", category: t("pages.awards.labels.evidence"), goalType: "evidence", goalAmount: 50, progress: 50, earned: true, earnedDate: "2024-09-05" },
+			{ id: 10, name: t("pages.awards.samples.bolosIssued", { count: 25 }), description: t("pages.awards.samples.issueBolos", { count: 25 }), icon: "notification_important", category: t("pages.awards.labels.bolos"), goalType: "bolos", goalAmount: 25, progress: 25, earned: true, earnedDate: "2024-07-01" },
+			{ id: 11, name: t("pages.awards.samples.warrantsIssued", { count: 10 }), description: t("pages.awards.samples.issueWarrants", { count: 10 }), icon: "gavel", category: t("pages.awards.labels.warrants"), goalType: "warrants", goalAmount: 10, progress: 10, earned: true, earnedDate: "2024-10-12" },
+			{ id: 12, name: t("pages.awards.samples.fined", { amount: "$100K" }), description: t("pages.awards.samples.fineTotal", { amount: "$100,000" }), icon: "payments", category: t("pages.awards.labels.fines"), goalType: "totalFined", goalAmount: 100000, progress: 100000, earned: true, earnedDate: "2024-05-22" },
+			{ id: 13, name: t("pages.awards.samples.fined", { amount: "$500K" }), description: t("pages.awards.samples.fineTotal", { amount: "$500,000" }), icon: "payments", category: t("pages.awards.labels.fines"), goalType: "totalFined", goalAmount: 500000, progress: 285000, earned: false },
+			{ id: 14, name: t("pages.awards.samples.monthsSentenced", { count: 500 }), description: t("pages.awards.samples.sentenceMonths", { count: 500 }), icon: "schedule", category: t("pages.awards.labels.sentencing"), goalType: "totalMonths", goalAmount: 500, progress: 342, earned: false },
 		];
 		leaderboard = [
 			{ rank: 1, name: "Mike Torres", callsign: "1-L-1", department: "LSPD", reports: 312, arrests: 198, cases: 45, warrants: 38, totalFined: 620000, totalMonths: 890, score: 2450, isCurrentUser: false },
@@ -148,10 +149,10 @@
 	<div class="awards-topbar">
 		<div class="tab-buttons">
 			<button class="tab-btn" class:active={view === "stats"} onclick={() => (view = "stats")}>
-				My Stats & Awards
+				{t("pages.awards.myStats")}
 			</button>
 			<button class="tab-btn" class:active={view === "leaderboard"} onclick={() => (view = "leaderboard")}>
-				Leaderboard
+				{t("pages.awards.leaderboard")}
 			</button>
 		</div>
 	</div>
@@ -159,7 +160,7 @@
 	{#if isLoading}
 		<div class="loading-state">
 			<div class="loading-spinner"></div>
-			<p>Loading...</p>
+			<p>{t("common.status.loading")}</p>
 		</div>
 	{:else if view === "stats"}
 		<div class="stats-view">
@@ -167,49 +168,49 @@
 				<div class="stat-card">
 					<span class="material-icons stat-icon si-blue">description</span>
 					<span class="stat-value">{myStats.reports}</span>
-					<span class="stat-label">Reports</span>
+					<span class="stat-label">{t("pages.awards.labels.reports")}</span>
 				</div>
 				<div class="stat-card">
 					<span class="material-icons stat-icon si-red">local_police</span>
 					<span class="stat-value">{myStats.arrests}</span>
-					<span class="stat-label">Arrests</span>
+					<span class="stat-label">{t("pages.awards.labels.arrests")}</span>
 				</div>
 				<div class="stat-card">
 					<span class="material-icons stat-icon si-purple">folder</span>
 					<span class="stat-value">{myStats.cases}</span>
-					<span class="stat-label">Cases</span>
+					<span class="stat-label">{t("pages.awards.labels.cases")}</span>
 				</div>
 				<div class="stat-card">
 					<span class="material-icons stat-icon si-cyan">inventory_2</span>
 					<span class="stat-value">{myStats.evidence}</span>
-					<span class="stat-label">Evidence</span>
+					<span class="stat-label">{t("pages.awards.labels.evidence")}</span>
 				</div>
 				<div class="stat-card">
 					<span class="material-icons stat-icon si-orange">notification_important</span>
 					<span class="stat-value">{myStats.bolos}</span>
-					<span class="stat-label">BOLOs</span>
+					<span class="stat-label">{t("pages.awards.labels.bolos")}</span>
 				</div>
 				<div class="stat-card">
 					<span class="material-icons stat-icon si-amber">gavel</span>
 					<span class="stat-value">{myStats.warrants}</span>
-					<span class="stat-label">Warrants</span>
+					<span class="stat-label">{t("pages.awards.labels.warrants")}</span>
 				</div>
 				<div class="stat-card">
 					<span class="material-icons stat-icon si-green">payments</span>
 					<span class="stat-value">{formatMoney(myStats.totalFined)}</span>
-					<span class="stat-label">Fined</span>
+					<span class="stat-label">{t("pages.awards.labels.fined")}</span>
 				</div>
 				<div class="stat-card">
 					<span class="material-icons stat-icon si-pink">schedule</span>
 					<span class="stat-value">{myStats.totalMonths.toLocaleString()}</span>
-					<span class="stat-label">Months Sentenced</span>
+					<span class="stat-label">{t("pages.awards.labels.monthsSentenced")}</span>
 				</div>
 			</div>
 
 			{#if earnedAwards.length > 0}
 				<div class="awards-section">
 					<div class="section-header">
-						<span class="section-title">Earned ({earnedAwards.length})</span>
+					<span class="section-title">{t("pages.awards.earned", { count: earnedAwards.length })}</span>
 					</div>
 					<div class="awards-list">
 						{#each earnedAwards as award (award.id)}
@@ -233,7 +234,7 @@
 			{#if inProgressAwards.length > 0}
 				<div class="awards-section">
 					<div class="section-header">
-						<span class="section-title">In Progress ({inProgressAwards.length})</span>
+					<span class="section-title">{t("pages.awards.inProgress", { count: inProgressAwards.length })}</span>
 					</div>
 					<div class="awards-list">
 						{#each inProgressAwards as award (award.id)}
@@ -257,36 +258,36 @@
 			{/if}
 
 			{#if awards.length === 0}
-				<div class="empty-state">No awards configured. Ask an admin to set some up in Settings.</div>
+				<div class="empty-state">{t("pages.awards.noneConfigured")}</div>
 			{/if}
 		</div>
 
 	{:else if view === "leaderboard"}
 		<div class="leaderboard-view">
 			<div class="leaderboard-controls">
-				<span class="sort-label">Sort by</span>
+				<span class="sort-label">{t("pages.awards.sortBy")}</span>
 				<select class="sort-select" bind:value={leaderboardSort}>
-					<option value="score">Overall</option>
-					<option value="reports">Reports</option>
-					<option value="arrests">Arrests</option>
-					<option value="warrants">Warrants</option>
-					<option value="totalFined">Fined</option>
-					<option value="totalMonths">Months</option>
+					<option value="score">{t("pages.awards.labels.overall")}</option>
+					<option value="reports">{t("pages.awards.labels.reports")}</option>
+					<option value="arrests">{t("pages.awards.labels.arrests")}</option>
+					<option value="warrants">{t("pages.awards.labels.warrants")}</option>
+					<option value="totalFined">{t("pages.awards.labels.fined")}</option>
+					<option value="totalMonths">{t("pages.awards.labels.months")}</option>
 				</select>
 			</div>
 
 			<div class="leaderboard-table">
 				<div class="table-header">
 					<span class="col-rank">#</span>
-					<span class="col-name">Officer</span>
-					<span class="col-dept">Dept</span>
-					<span class="col-stat">Reports</span>
-					<span class="col-stat">Arrests</span>
-					<span class="col-stat">Cases</span>
-					<span class="col-stat">Warrants</span>
-					<span class="col-stat">Fined</span>
-					<span class="col-stat">Months</span>
-					<span class="col-score">Score</span>
+					<span class="col-name">{t("pages.awards.labels.officer")}</span>
+					<span class="col-dept">{t("pages.awards.labels.department")}</span>
+					<span class="col-stat">{t("pages.awards.labels.reports")}</span>
+					<span class="col-stat">{t("pages.awards.labels.arrests")}</span>
+					<span class="col-stat">{t("pages.awards.labels.cases")}</span>
+					<span class="col-stat">{t("pages.awards.labels.warrants")}</span>
+					<span class="col-stat">{t("pages.awards.labels.fined")}</span>
+					<span class="col-stat">{t("pages.awards.labels.months")}</span>
+					<span class="col-score">{t("pages.awards.labels.score")}</span>
 				</div>
 				{#each sortedLeaderboard as entry, i (entry.name)}
 					<div class="table-row" class:current-user={entry.isCurrentUser}>
@@ -305,7 +306,7 @@
 						<span class="col-score">{entry.score.toLocaleString()}</span>
 					</div>
 				{:else}
-					<div class="empty-state">No leaderboard data.</div>
+				<div class="empty-state">{t("pages.awards.noLeaderboard")}</div>
 				{/each}
 			</div>
 		</div>

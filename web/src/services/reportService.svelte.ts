@@ -11,6 +11,7 @@ import type {
 	ReportVehicle,
 	SearchResult,
 } from "../interfaces/IReportEditor";
+import { t } from "../lib/i18n";
 
 export interface ReportServiceState {
 	reports: Map<string, Report>;
@@ -64,7 +65,7 @@ export function createReportService() {
 			return report;
 		} catch (error) {
 			console.error("Failed to load report:", error);
-			state.lastError = "Failed to load report";
+			state.lastError = t("pages.reportEditor.service.loadFailed");
 			return {
 				...createEmptyReport(),
 				reportId: id,
@@ -98,11 +99,11 @@ export function createReportService() {
 				}
 				state.reports.set(report.reportId, report);
 			} else {
-				const msg = response?.message || response?.error || "Save operation failed";
+				const msg = response?.message || response?.error || t("pages.reportEditor.service.saveOperationFailed");
 				throw new Error(msg);
 			}
 		} catch (error) {
-			state.lastError = error instanceof Error ? error.message : "Failed to save report";
+			state.lastError = error instanceof Error ? error.message : t("pages.reportEditor.messages.saveFailed");
 			throw error;
 		} finally {
 			state.isSaving = false;
@@ -149,7 +150,7 @@ export function createReportService() {
 				{ reportId, citizenid },
 			);
 			if (!result?.success) {
-				throw new Error(result?.error || "Failed to issue warrant");
+				throw new Error(result?.error || t("pages.reportEditor.service.warrantIssueFailed"));
 			}
 		} catch (error) {
 			console.error("Failed to issue warrant:", error);
@@ -164,7 +165,7 @@ export function createReportService() {
 				{ reportId, citizenid },
 			);
 			if (!result?.success) {
-				throw new Error(result?.error || "Failed to close warrant");
+				throw new Error(result?.error || t("pages.reportEditor.service.warrantCloseFailed"));
 			}
 		} catch (error) {
 			console.error("Failed to close warrant:", error);
@@ -176,7 +177,7 @@ export function createReportService() {
 		return fetchNui<{ success: boolean; message?: string }>(
 			NUI_EVENTS.SENTENCING.SEND_TO_JAIL,
 			{ citizenId, sentence },
-			{ success: true, message: `Sent to jail for ${sentence} months` },
+			{ success: true, message: t("pages.reportEditor.messages.sentToJail", { months: sentence }) },
 		);
 	}
 
@@ -184,7 +185,7 @@ export function createReportService() {
 		return fetchNui<{ success: boolean; message?: string }>(
 			NUI_EVENTS.SENTENCING.GIVE_CITATION,
 			{ citizenId, fine, reportId },
-			{ success: true, message: "Citation given" },
+			{ success: true, message: t("pages.reportEditor.service.citationGiven") },
 		);
 	}
 
@@ -276,7 +277,7 @@ export function createReportService() {
 				normalized.officers.push({
 					id: crypto.randomUUID(),
 					citizenid: entry?.citizenid || "",
-					fullName: entry?.name || entry?.fullname || "Unknown",
+					fullName: entry?.name || entry?.fullname || t("common.unknown"),
 					badgeId: entry?.badgeId || "",
 					type: entry?.type || "Officer",
 					notes: entry?.notes || "",
@@ -285,7 +286,7 @@ export function createReportService() {
 				normalized.victims.push({
 					id: entry?.citizenid || crypto.randomUUID(),
 					citizenid: entry?.citizenid || "",
-					fullName: entry?.name || entry?.fullname || "Unknown",
+					fullName: entry?.name || entry?.fullname || t("common.unknown"),
 					type: entry?.type || "victim",
 					notes: entry?.notes || "",
 				});
@@ -293,7 +294,7 @@ export function createReportService() {
 				normalized.suspects.push({
 					id: entry?.citizenid || crypto.randomUUID(),
 					citizenid: entry?.citizenid || "",
-					fullName: entry?.name || entry?.fullname || "Unknown",
+					fullName: entry?.name || entry?.fullname || t("common.unknown"),
 					notes: entry?.notes || "",
 					warrantActive: entry?.warrantActive || false,
 					profileImage: entry?.image || undefined,
@@ -314,7 +315,7 @@ export function createReportService() {
 				: [];
 		return list.map((entry, index) => ({
 			id: entry?.id || `${index}`,
-			title: entry?.title || entry?.type || "Evidence",
+			title: entry?.title || entry?.type || t("pages.evidence.title"),
 			type: entry?.type || "",
 			serial: entry?.serial || entry?.content || "",
 			notes: entry?.note || entry?.notes || "",

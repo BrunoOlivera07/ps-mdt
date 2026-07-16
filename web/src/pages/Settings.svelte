@@ -137,6 +137,18 @@
 	function changeLocale(value: string) {
 		if (value === locale) return;
 		locale = value;
+
+		// Changing the locale remounts the application. Persist it first so the
+		// settings page does not restore the previous value during that remount.
+		localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+		try {
+			const saved = localStorage.getItem(STORAGE_KEY);
+			const preferences = saved ? JSON.parse(saved) : {};
+			localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...preferences, locale }));
+		} catch {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify({ locale }));
+		}
+
 		setLocale(value);
 	}
 </script>

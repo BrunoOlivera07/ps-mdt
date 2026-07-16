@@ -7,6 +7,7 @@
 	import { globalNotifications } from "../../services/notificationService.svelte";
 	import type { createTabService } from "../../services/tabService.svelte";
 	import type { AuthService } from "../../services/authService.svelte";
+	import { t, tf } from "../../lib/i18n";
 
 	interface Props {
 		tabService: ReturnType<typeof createTabService>;
@@ -87,13 +88,13 @@
 				{ success: true },
 			);
 			if (res.success) {
-				globalNotifications.success("Hearing scheduled");
+				globalNotifications.success(t("pages.doj.warrantReview.messages.hearingScheduled"));
 				await loadWarrantHearing(selectedRequest.linked_report_id);
 			} else {
-				globalNotifications.error(res.error || "Failed to schedule hearing");
+				globalNotifications.error(res.error || t("pages.doj.warrantReview.messages.hearingScheduleFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to schedule hearing");
+			globalNotifications.error(t("pages.doj.warrantReview.messages.hearingScheduleFailed"));
 		}
 		hearingLoading = false;
 	}
@@ -108,13 +109,13 @@
 				{ success: true },
 			);
 			if (res.success) {
-				globalNotifications.success("Hearing removed");
+				globalNotifications.success(t("pages.doj.warrantReview.messages.hearingRemoved"));
 				existingHearing = null;
 			} else {
-				globalNotifications.error(res.error || "Failed to remove hearing");
+				globalNotifications.error(res.error || t("pages.doj.warrantReview.messages.hearingRemoveFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to remove hearing");
+			globalNotifications.error(t("pages.doj.warrantReview.messages.hearingRemoveFailed"));
 		}
 		hearingLoading = false;
 	}
@@ -141,12 +142,12 @@
 			if (result.success) {
 				showNewDocModal = false;
 				newDocData = { title: "", type: "brief", content: "" };
-				globalNotifications.success("Legal document created");
+				globalNotifications.success(t("pages.doj.warrantReview.messages.documentCreated"));
 			} else {
-				globalNotifications.error(result.error || "Failed to create document");
+				globalNotifications.error(result.error || t("pages.doj.warrantReview.messages.documentCreateFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to create document");
+			globalNotifications.error(t("pages.doj.warrantReview.messages.documentCreateFailed"));
 		}
 	}
 
@@ -163,7 +164,8 @@
 	}
 
 	function formatLabel(value: string): string {
-		return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		const fallback = value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		return tf(`pages.doj.warrantReview.labels.${value}`, fallback);
 	}
 
 	function formatDateValue(value: string | undefined): string {
@@ -239,7 +241,7 @@
 				charges: typeof r.charges === 'string' ? (() => { try { return JSON.parse(r.charges); } catch { return []; } })() : (r.charges || []),
 			}));
 		} catch {
-			globalNotifications.error("Failed to load warrant requests");
+			globalNotifications.error(t("pages.doj.warrantReview.messages.loadFailed"));
 		}
 		isLoading = false;
 		loadInFlight = false;
@@ -269,7 +271,7 @@
 
 	async function handleReview(action: "approved" | "denied") {
 		if (!selectedRequest || !reviewReason.trim()) {
-			globalNotifications.error("A reason is required for review");
+			globalNotifications.error(t("pages.doj.warrantReview.messages.reasonRequired"));
 			return;
 		}
 		isLoading = true;
@@ -289,10 +291,10 @@
 				reviewReason = "";
 				await loadRequests();
 			} else {
-				globalNotifications.error(result.error || "Failed to review warrant request");
+				globalNotifications.error(result.error || t("pages.doj.warrantReview.messages.reviewFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to review warrant request");
+			globalNotifications.error(t("pages.doj.warrantReview.messages.reviewFailed"));
 		}
 		isLoading = false;
 	}
@@ -307,15 +309,15 @@
 				{ success: true },
 			);
 			if (result.success) {
-				globalNotifications.success("Warrant closed");
+				globalNotifications.success(t("pages.doj.warrantReview.messages.closed"));
 				selectedRequest = null;
 				reviewReason = "";
 				await loadRequests();
 			} else {
-				globalNotifications.error(result.error || "Failed to close warrant");
+				globalNotifications.error(result.error || t("pages.doj.warrantReview.messages.closeFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to close warrant");
+			globalNotifications.error(t("pages.doj.warrantReview.messages.closeFailed"));
 		}
 		isLoading = false;
 	}
@@ -329,7 +331,7 @@
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
 				Back to Requests
 			</button>
-			<span class="topbar-case-number">Warrant Request #{selectedRequest.id}</span>
+			<span class="topbar-case-number">{t("pages.doj.warrantReview.requestNumber", { id: selectedRequest.id })}</span>
 			<span class="pill {getStatusPillClass(selectedRequest.status)}">{formatLabel(selectedRequest.status)}</span>
 		</div>
 
@@ -337,45 +339,45 @@
 			<div class="detail-layout">
 				<div class="detail-main">
 					<div class="section">
-						<div class="section-title">Request Information</div>
+					<div class="section-title">{t("pages.doj.warrantReview.requestInformation")}</div>
 						<div class="field-row">
 							<div class="field-group">
-								<span class="field-label">Citizen</span>
+							<span class="field-label">{t("pages.doj.warrantReview.citizen")}</span>
 								<span class="field-value">{selectedRequest.citizen_name}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Citizen ID</span>
+							<span class="field-label">{t("pages.doj.warrantReview.citizenId")}</span>
 								<span class="field-value mono">{selectedRequest.citizenid}</span>
 							</div>
 							<div class="field-group">
-								<span class="field-label">Submitted</span>
+							<span class="field-label">{t("pages.doj.warrantReview.submitted")}</span>
 								<span class="field-value">{formatDateTimeValue(selectedRequest.created_at)}</span>
 							</div>
 						</div>
 					</div>
 
 					<div class="section">
-						<div class="section-title">Charges</div>
+					<div class="section-title">{t("pages.doj.warrantReview.charges")}</div>
 						<div class="charges-list">
 							{#each selectedRequest.charges as charge}
 								<span class="charge-chip">{charge}</span>
 							{/each}
 							{#if selectedRequest.charges.length === 0}
-								<span class="muted-text">No charges listed</span>
+						<span class="muted-text">{t("pages.doj.warrantReview.noCharges")}</span>
 							{/if}
 						</div>
 					</div>
 
 					<div class="section">
-						<div class="section-title">Requesting Officer</div>
+					<div class="section-title">{t("pages.doj.warrantReview.requestingOfficer")}</div>
 						<div class="field-row">
 							<div class="field-group">
-								<span class="field-label">Officer</span>
+							<span class="field-label">{t("pages.doj.warrantReview.officer")}</span>
 								<span class="field-value">{selectedRequest.officer_name || selectedRequest.requesting_officer}{selectedRequest.requesting_officer_badge ? ` (#${selectedRequest.requesting_officer_badge})` : ""}</span>
 							</div>
 							{#if selectedRequest.linked_report_id}
 								<div class="field-group">
-									<span class="field-label">Linked Report</span>
+								<span class="field-label">{t("pages.doj.warrantReview.linkedReport")}</span>
 									<span class="field-value link">#{selectedRequest.linked_report_id}</span>
 								</div>
 							{/if}
@@ -383,21 +385,21 @@
 					</div>
 
 					<div class="section">
-						<div class="section-title">Reason / Justification</div>
-						<p class="summary-text">{selectedRequest.reason || "No reason provided."}</p>
+					<div class="section-title">{t("pages.doj.warrantReview.reasonJustification")}</div>
+					<p class="summary-text">{selectedRequest.reason || t("pages.doj.warrantReview.noReason")}</p>
 					</div>
 
 					{#if selectedRequest.review_reason}
 						<div class="section">
-							<div class="section-title">Review Decision</div>
+					<div class="section-title">{t("pages.doj.warrantReview.reviewDecision")}</div>
 							<p class="summary-text">{selectedRequest.review_reason}</p>
 							<div class="field-row">
 								<div class="field-group">
-									<span class="field-label">Reviewed By</span>
+							<span class="field-label">{t("pages.doj.warrantReview.reviewedBy")}</span>
 									<span class="field-value">{selectedRequest.reviewer_name || selectedRequest.reviewed_by || "-"}</span>
 								</div>
 								<div class="field-group">
-									<span class="field-label">Reviewed At</span>
+							<span class="field-label">{t("pages.doj.warrantReview.reviewedAt")}</span>
 									<span class="field-value">{formatDateTimeValue(selectedRequest.reviewed_at)}</span>
 								</div>
 							</div>
@@ -408,93 +410,93 @@
 				<div class="detail-side">
 					{#if canApprove && selectedRequest.status === "pending"}
 						<div class="section">
-							<div class="section-title">Judicial Review</div>
+							<div class="section-title">{t("pages.doj.warrantReview.judicialReview")}</div>
 							<div class="form-group">
-								<label class="form-label">Reason</label>
-								<textarea class="form-textarea" placeholder="Enter reason for approval or denial..." bind:value={reviewReason}></textarea>
+								<label class="form-label">{t("pages.doj.warrantReview.reason")}</label>
+								<textarea class="form-textarea" placeholder={t("pages.doj.warrantReview.reasonPlaceholder")} bind:value={reviewReason}></textarea>
 							</div>
 							<div class="review-actions">
 								<button class="approve-btn" disabled={!reviewReason.trim() || isLoading} onclick={() => handleReview("approved")}>
 									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-									Approve
+									{t("pages.doj.warrantReview.approve")}
 								</button>
 								<button class="deny-btn" disabled={!reviewReason.trim() || isLoading} onclick={() => handleReview("denied")}>
 									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-									Deny
+									{t("pages.doj.warrantReview.deny")}
 								</button>
 							</div>
 						</div>
 					{:else if !canApprove && selectedRequest.status === "pending"}
 						<div class="section">
 							<div class="center-state" style="padding: 20px;">
-								<p>Only judges with warrant approval permission can review this request.</p>
+								<p>{t("pages.doj.warrantReview.permissionRequired")}</p>
 							</div>
 						</div>
 					{/if}
 					{#if selectedRequest.status === "approved" && canClose}
 						<div class="section">
-							<div class="section-title">Active Warrant</div>
+							<div class="section-title">{t("pages.doj.warrantReview.activeWarrant")}</div>
 							<p class="muted-text">
 								{#if selectedRequest.linked_report_id}
-									This request issued an active warrant on report #{selectedRequest.linked_report_id}. It closes automatically when it expires, or you can close it now — this also marks the request as closed.
+									{t("pages.doj.warrantReview.activeLinked", { report: selectedRequest.linked_report_id })}
 								{:else}
-									Closing marks this request as closed.
+									{t("pages.doj.warrantReview.activeUnlinked")}
 								{/if}
 							</p>
 							<div class="review-actions">
 								<button class="close-warrant-btn" disabled={isLoading} onclick={handleCloseWarrant}>
 									<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-									Close Warrant
+									{t("pages.doj.warrantReview.closeWarrant")}
 								</button>
 							</div>
 						</div>
 					{/if}
 					{#if selectedRequest.status === "approved" && selectedRequest.linked_report_id && canApprove}
 						<div class="section">
-							<div class="section-title">Court Hearing</div>
+							<div class="section-title">{t("pages.doj.warrantReview.courtHearing")}</div>
 							{#if existingHearing}
 								<div class="field-row">
-									<span class="field-label">Scheduled</span>
+									<span class="field-label">{t("pages.doj.warrantReview.scheduled")}</span>
 									<span class="field-value">{formatDateTimeValue(existingHearing.scheduled_at)}</span>
 								</div>
 								<div class="field-row">
-									<span class="field-label">Type</span>
+									<span class="field-label">{t("pages.doj.warrantReview.type")}</span>
 									<span class="field-value">{formatLabel(existingHearing.hearing_type)}</span>
 								</div>
-								<p class="muted-text">This hearing is on the court calendar. Closing the warrant removes it automatically.</p>
+								<p class="muted-text">{t("pages.doj.warrantReview.existingHearingInfo")}</p>
 								<div class="review-actions">
 									<button class="deny-btn" disabled={hearingLoading} onclick={handleRemoveHearing}>
 										<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/></svg>
-										Remove hearing
+										{t("pages.doj.warrantReview.removeHearing")}
 									</button>
 								</div>
 							{:else}
-								<p class="muted-text">Schedule a hearing for this warrant. It appears on the court calendar and is removed automatically if the warrant is closed.</p>
+								<p class="muted-text">{t("pages.doj.warrantReview.scheduleHearingInfo")}</p>
 								<div class="hearing-fields">
 									<div class="hearing-field">
-										<label class="form-label" for="h-date">Date</label>
+										<label class="form-label" for="h-date">{t("pages.doj.warrantReview.date")}</label>
 										<input id="h-date" type="date" class="form-input" bind:value={hearingDate} />
 									</div>
 									<div class="hearing-field">
-										<label class="form-label" for="h-time">Time</label>
+										<label class="form-label" for="h-time">{t("pages.doj.warrantReview.time")}</label>
 										<input id="h-time" type="time" class="form-input" bind:value={hearingTime} />
 									</div>
 									<div class="hearing-field">
-										<label class="form-label" for="h-type">Type</label>
+										<label class="form-label" for="h-type">{t("pages.doj.warrantReview.type")}</label>
 										<select id="h-type" class="form-input" bind:value={hearingType}>
-											<option value="arraignment">Arraignment</option>
-											<option value="trial">Trial</option>
-											<option value="sentencing">Sentencing</option>
-											<option value="motion">Motion</option>
-											<option value="appeal">Appeal</option>
-											<option value="hearing">Hearing</option>
+											<option value="arraignment">{formatLabel("arraignment")}</option>
+											<option value="trial">{formatLabel("trial")}</option>
+											<option value="sentencing">{formatLabel("sentencing")}</option>
+											<option value="motion">{formatLabel("motion")}</option>
+											<option value="appeal">{formatLabel("appeal")}</option>
+											<option value="hearing">{formatLabel("hearing")}</option>
 										</select>
 									</div>
 								</div>
 								<div class="review-actions">
 									<button class="approve-btn" disabled={hearingLoading || !hearingDate || !hearingTime} onclick={handleScheduleHearing}>
 										<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
-										Schedule hearing
+										{t("pages.doj.warrantReview.scheduleHearing")}
 									</button>
 								</div>
 							{/if}
@@ -502,8 +504,8 @@
 					{/if}
 					<div class="section">
 						<div class="section-header-row">
-							<span class="section-title">Documents</span>
-							<button class="add-btn" onclick={() => { newDocData = { title: `Warrant Review - ${selectedRequest?.citizen_name || ''}`, type: "ruling", content: "" }; showNewDocModal = true; }}>+ Add</button>
+							<span class="section-title">{t("pages.doj.warrantReview.documents")}</span>
+							<button class="add-btn" onclick={() => { newDocData = { title: t("pages.doj.warrantReview.documentDefaultTitle", { name: selectedRequest?.citizen_name || "" }), type: "ruling", content: "" }; showNewDocModal = true; }}>+ {t("common.actions.add")}</button>
 						</div>
 					</div>
 				</div>
@@ -513,7 +515,7 @@
 		<!-- LIST VIEW -->
 		<div class="topbar">
 			<div class="search-box">
-				<input type="text" placeholder="Search requests..." bind:value={searchQuery} />
+				<input type="text" placeholder={t("pages.doj.warrantReview.searchPlaceholder")} bind:value={searchQuery} />
 			</div>
 			<div class="filter-pills">
 				{#each statusOptions as opt}
@@ -523,8 +525,8 @@
 				{/each}
 			</div>
 			<div class="topbar-actions">
-				<span class="result-count">{allFilteredRequests.length} request{allFilteredRequests.length !== 1 ? "s" : ""}</span>
-				<button class="action-btn" onclick={loadRequests} disabled={isLoading}>{isLoading ? "Loading..." : "Refresh"}</button>
+				<span class="result-count">{t(allFilteredRequests.length === 1 ? "pages.doj.warrantReview.countOne" : "pages.doj.warrantReview.countMany", { count: allFilteredRequests.length })}</span>
+				<button class="action-btn" onclick={loadRequests} disabled={isLoading}>{isLoading ? t("common.status.loading") : t("pages.doj.warrantReview.refresh")}</button>
 			</div>
 		</div>
 
@@ -532,21 +534,21 @@
 			{#if isLoading && requests.length === 0}
 				<div class="center-state">
 					<div class="loading-spinner"></div>
-					<p>Loading warrant requests...</p>
+					<p>{t("pages.doj.warrantReview.loading")}</p>
 				</div>
 			{:else if allFilteredRequests.length === 0}
 				<div class="center-state">
-					<h3>No Warrant Requests Found</h3>
-					<p>{searchQuery ? "No requests match your search criteria." : "No warrant requests available."}</p>
+					<h3>{t("pages.doj.warrantReview.noneFound")}</h3>
+					<p>{searchQuery ? t("pages.doj.warrantReview.noMatches") : t("pages.doj.warrantReview.noneAvailable")}</p>
 				</div>
 			{:else}
 				<div class="table-header">
-					<span>Citizen</span>
-					<span>Charges</span>
-					<span>Requesting Officer</span>
-					<span>Report</span>
-					<span>Status</span>
-					<span>Date</span>
+					<span>{t("pages.doj.warrantReview.citizen")}</span>
+					<span>{t("pages.doj.warrantReview.charges")}</span>
+					<span>{t("pages.doj.warrantReview.requestingOfficer")}</span>
+					<span>{t("pages.doj.warrantReview.report")}</span>
+					<span>{t("pages.doj.warrantReview.status")}</span>
+					<span>{t("pages.doj.warrantReview.date")}</span>
 				</div>
 				<div class="table-body">
 					{#each allFilteredRequests as item}
@@ -569,36 +571,36 @@
 <div class="modal-backdrop" onclick={() => (showNewDocModal = false)} role="presentation">
 	<div class="modal" onclick={(e) => e.stopPropagation()} role="dialog">
 		<div class="modal-header">
-			<span class="modal-title">New Legal Document</span>
+				<span class="modal-title">{t("pages.doj.warrantReview.newDocument")}</span>
 			<button class="modal-close" onclick={() => (showNewDocModal = false)}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 			</button>
 		</div>
 		<div class="modal-body">
 			<div class="form-group">
-				<label class="form-label">Title</label>
+					<label class="form-label">{t("pages.doj.warrantReview.title")}</label>
 				<input type="text" class="form-input" bind:value={newDocData.title} />
 			</div>
 			<div class="form-group">
-				<label class="form-label">Type</label>
+					<label class="form-label">{t("pages.doj.warrantReview.type")}</label>
 				<select class="form-select" bind:value={newDocData.type}>
-					<option value="brief">Brief</option>
-					<option value="motion">Motion</option>
-					<option value="ruling">Ruling</option>
-					<option value="opinion">Opinion</option>
-					<option value="plea_deal">Plea Deal</option>
-					<option value="sentencing">Sentencing</option>
-					<option value="other">Other</option>
+						<option value="brief">{formatLabel("brief")}</option>
+						<option value="motion">{formatLabel("motion")}</option>
+						<option value="ruling">{formatLabel("ruling")}</option>
+						<option value="opinion">{formatLabel("opinion")}</option>
+						<option value="plea_deal">{formatLabel("plea_deal")}</option>
+						<option value="sentencing">{formatLabel("sentencing")}</option>
+						<option value="other">{formatLabel("other")}</option>
 				</select>
 			</div>
 			<div class="form-group">
-				<label class="form-label">Content</label>
-				<textarea class="form-textarea" rows="6" placeholder="Document content..." bind:value={newDocData.content}></textarea>
+					<label class="form-label">{t("pages.doj.warrantReview.content")}</label>
+					<textarea class="form-textarea" rows="6" placeholder={t("pages.doj.warrantReview.contentPlaceholder")} bind:value={newDocData.content}></textarea>
 			</div>
 		</div>
 		<div class="modal-footer">
-			<button class="back-btn" onclick={() => (showNewDocModal = false)}>Cancel</button>
-			<button class="primary-btn" disabled={!newDocData.title.trim()} onclick={handleCreateDocument}>Create Document</button>
+				<button class="back-btn" onclick={() => (showNewDocModal = false)}>{t("common.actions.cancel")}</button>
+				<button class="primary-btn" disabled={!newDocData.title.trim()} onclick={handleCreateDocument}>{t("pages.doj.warrantReview.createDocument")}</button>
 		</div>
 	</div>
 </div>

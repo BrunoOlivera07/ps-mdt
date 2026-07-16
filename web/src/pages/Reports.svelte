@@ -18,6 +18,7 @@
 	import type { MDTTab } from "../constants";
 	import Pagination from "../components/Pagination.svelte";
 	import type { JobType } from "../interfaces/IUser";
+	import { t, tf } from "../lib/i18n";
 
 	interface Props {
 		instanceStateService: ReturnType<typeof createInstanceStateService>;
@@ -228,6 +229,10 @@
 			default: return "pill pill-grey";
 		}
 	}
+
+	function reportTypeLabel(type: string): string {
+		return tf(`pages.reports.types.${type.toLowerCase().replace(/\s+/g, "_")}`, type);
+	}
 </script>
 
 {#if showEditor}
@@ -248,7 +253,7 @@
 						type="text"
 						value={searchQuery}
 						oninput={handleSearchInput}
-						placeholder="Search by title, author, ID, type or tag..."
+						placeholder={t("pages.reports.searchPlaceholder")}
 					/>
 				</div>
 			</div>
@@ -257,32 +262,32 @@
 					type="date"
 					bind:value={filterStartDate}
 					class="filter-input"
-					aria-label="Filter start date"
+					aria-label={t("pages.reports.filterStartDate")}
 				/>
 				<input
 					type="date"
 					bind:value={filterEndDate}
 					class="filter-input"
-					aria-label="Filter end date"
+					aria-label={t("pages.reports.filterEndDate")}
 				/>
 				<select
 					class="filter-select"
 					bind:value={filterType}
-					aria-label="Filter report type"
+					aria-label={t("pages.reports.filterType")}
 				>
-					<option value="">All Types</option>
+					<option value="">{t("pages.reports.allTypes")}</option>
 					{#each REPORT_TYPES as type}
-						<option value={type}>{type}</option>
+						<option value={type}>{reportTypeLabel(type)}</option>
 					{/each}
 				</select>
 				<input
 					type="text"
-					placeholder="Author"
+					placeholder={t("pages.reports.author")}
 					bind:value={filterAuthor}
 					class="filter-input filter-author"
-					aria-label="Filter author"
+					aria-label={t("pages.reports.filterAuthor")}
 				/>
-				<button class="topbar-btn" onclick={refreshReports} disabled={isLoading}>Apply</button>
+				<button class="topbar-btn" onclick={refreshReports} disabled={isLoading}>{t("pages.reports.apply")}</button>
 				<button
 					class="topbar-btn"
 					onclick={() => {
@@ -293,8 +298,8 @@
 						refreshReports();
 					}}
 					disabled={isLoading || !hasActiveFilters()}
-				>Clear</button>
-				<button class="topbar-btn btn-primary" onclick={createNewReport}>New Report</button>
+					>{t("pages.reports.clear")}</button>
+				<button class="topbar-btn btn-primary" onclick={createNewReport}>{t("pages.reports.newReport")}</button>
 			</div>
 		</div>
 
@@ -302,51 +307,51 @@
 			<div class="stat-item">
 				<svg class="stat-icon stat-icon-blue" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
 				<span class="stat-value">{analytics.incidents}</span>
-				<span class="stat-label">Incidents</span>
+					<span class="stat-label">{t("pages.reports.incidents")}</span>
 			</div>
 			<div class="stat-divider"></div>
 			<div class="stat-item">
 				<svg class="stat-icon stat-icon-red" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
 				<span class="stat-value">{analytics.arrests}</span>
-				<span class="stat-label">Arrests</span>
+					<span class="stat-label">{t("pages.reports.arrests")}</span>
 			</div>
 			<div class="stat-divider"></div>
 			<div class="stat-item">
 				<svg class="stat-icon stat-icon-amber" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 				<span class="stat-value">{analytics.warrants}</span>
-				<span class="stat-label">Warrants</span>
+					<span class="stat-label">{t("pages.reports.warrants")}</span>
 			</div>
 		</div>
 
 		<div class="list-panel">
 			<div class="list-header">
-				<span>Title</span>
-				<span>Report ID</span>
-				<span>Author</span>
-				<span>Type</span>
-				<span>Created</span>
-				<span>Updated</span>
-				<span>Tag</span>
+					<span>{t("pages.reports.title")}</span>
+					<span>{t("pages.reports.reportId")}</span>
+					<span>{t("pages.reports.author")}</span>
+					<span>{t("pages.reports.type")}</span>
+					<span>{t("pages.reports.created")}</span>
+					<span>{t("pages.reports.updated")}</span>
+					<span>{t("pages.reports.tag")}</span>
 			</div>
 			<div class="list-body">
 				{#if isLoading && reports.length === 0}
 					<div class="empty-state">
 						<div class="loading-spinner"></div>
-						Loading reports...
+						{t("pages.reports.loading")}
 					</div>
 				{:else if reports.length === 0}
 					<div class="empty-state">
 						<div class="empty-content">
 							<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3; margin-bottom: 12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-							<span class="empty-title">No Reports Found</span>
+						<span class="empty-title">{t("pages.reports.noneFound")}</span>
 							<span class="empty-sub">
 								{searchQuery
-									? "No reports match your search criteria."
-									: "No reports have been created yet."}
+									? t("pages.reports.noMatches")
+									: t("pages.reports.noneCreated")}
 							</span>
 							{#if !searchQuery}
 								<button class="topbar-btn btn-primary" onclick={createNewReport} style="margin-top: 12px;">
-									Create First Report
+									{t("pages.reports.createFirst")}
 								</button>
 							{/if}
 						</div>
@@ -359,7 +364,7 @@
 							<span class="col-author">
 								{#if report.authorplaintext}
 									{#if report.authorplaintext.startsWith('NO CALLSIGN')}
-										<span class="author-badge no-callsign">NO CS</span>
+								<span class="author-badge no-callsign">{t("pages.reports.noCallsign")}</span>
 										<span>{report.authorplaintext.replace('NO CALLSIGN', '').trim()}</span>
 									{:else if report.authorplaintext.includes(' ')}
 										<span class="author-badge">{report.authorplaintext.split(' ')[0]}</span>
@@ -372,7 +377,7 @@
 								{/if}
 							</span>
 							<span class="col-type">
-								<span class={getTypePillClass(report.type)}>{report.type}</span>
+								<span class={getTypePillClass(report.type)}>{reportTypeLabel(report.type)}</span>
 							</span>
 							<span class="col-date">{formatDate(report.datecreated)}</span>
 							<span class="col-date">{formatDate(report.dateupdated)}</span>

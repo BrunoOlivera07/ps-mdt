@@ -8,6 +8,7 @@
 	 */
 	import { fetchNui } from "../utils/fetchNui";
 	import { NUI_EVENTS } from "../constants/nuiEvents";
+	import { t } from "../lib/i18n";
 
 	let { show = false, onClose = () => {} }: { show: boolean; onClose: () => void } = $props();
 
@@ -33,12 +34,12 @@
 	let lightboxUrl = $state<string | null>(null);
 
 	const categories = [
-		{ value: "misconduct", label: "Misconduct" },
-		{ value: "excessive_force", label: "Excessive Force" },
-		{ value: "corruption", label: "Corruption" },
-		{ value: "negligence", label: "Negligence" },
-		{ value: "discrimination", label: "Discrimination" },
-		{ value: "other", label: "Other" },
+		{ value: "misconduct", label: t("pages.complaintForm.categories.misconduct") },
+		{ value: "excessive_force", label: t("pages.complaintForm.categories.excessiveForce") },
+		{ value: "corruption", label: t("pages.complaintForm.categories.corruption") },
+		{ value: "negligence", label: t("pages.complaintForm.categories.negligence") },
+		{ value: "discrimination", label: t("pages.complaintForm.categories.discrimination") },
+		{ value: "other", label: t("common.other") },
 	];
 
 	const DESC_MAX = 2000;
@@ -115,14 +116,14 @@
 			);
 
 			if (res?.success === false) {
-				errorMessage = res.error || "Failed to submit complaint. Please try again.";
+				errorMessage = res.error || t("pages.complaintForm.submitFailed");
 				return;
 			}
 
 			complaintNumber = res?.complaintNumber || "IA-UNKNOWN";
 			submitted = true;
 		} catch {
-			errorMessage = "Failed to submit complaint. Please try again.";
+			errorMessage = t("pages.complaintForm.submitFailed");
 		} finally {
 			submitting = false;
 		}
@@ -142,8 +143,8 @@
 		<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
 			{#if submitted}
 				<div class="modal-header">
-					<h3>Complaint Filed</h3>
-					<button class="close-btn" aria-label="Close" onclick={handleCancel}>
+					<h3>{t("pages.complaintForm.complaintFiled")}</h3>
+					<button class="close-btn" aria-label={t("common.actions.close")} onclick={handleCancel}>
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
 						</svg>
@@ -156,26 +157,26 @@
 							<polyline points="20 6 9 17 4 12"/>
 						</svg>
 					</div>
-					<p class="success-lead">Your complaint has been filed with Internal Affairs.</p>
+					<p class="success-lead">{t("pages.complaintForm.successLead")}</p>
 
 					<div class="success-number">
-						<span class="field-label">Reference</span>
+						<span class="field-label">{t("pages.complaintForm.reference")}</span>
 						<span class="ref-value">{complaintNumber}</span>
 					</div>
 
-					<p class="success-note">Write this number down — you'll need it to follow up. You'll be contacted if further information is needed.</p>
+					<p class="success-note">{t("pages.complaintForm.successNote")}</p>
 				</div>
 
 				<div class="modal-footer">
-					<span class="modal-hint">Filed under your own name</span>
+					<span class="modal-hint">{t("pages.complaintForm.filedUnderName")}</span>
 					<div class="modal-footer-right">
-						<button class="primary-btn" onclick={handleCancel}>Done</button>
+						<button class="primary-btn" onclick={handleCancel}>{t("common.actions.done")}</button>
 					</div>
 				</div>
 			{:else}
 				<div class="modal-header">
-					<h3>Internal Affairs Complaint</h3>
-					<button class="close-btn" aria-label="Close" onclick={handleCancel}>
+					<h3>{t("pages.complaintForm.title")}</h3>
+					<button class="close-btn" aria-label={t("common.actions.close")} onclick={handleCancel}>
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
 						</svg>
@@ -188,17 +189,17 @@
 					{/if}
 
 					<div class="form-group">
-						<span class="field-label">Officer <span class="req">*</span></span>
-						<input class="form-input" bind:value={officerName} placeholder="Officer's name" />
+						<span class="field-label">{t("pages.complaintForm.officer")} <span class="req">*</span></span>
+						<input class="form-input" bind:value={officerName} placeholder={t("pages.complaintForm.officerPlaceholder")} />
 					</div>
 
 					<div class="form-group">
-						<span class="field-label">Badge Number</span>
-						<input class="form-input" bind:value={officerBadge} placeholder="If you know it" />
+						<span class="field-label">{t("pages.complaintForm.badgeNumber")}</span>
+						<input class="form-input" bind:value={officerBadge} placeholder={t("pages.complaintForm.badgePlaceholder")} />
 					</div>
 
 					<div class="form-group">
-						<span class="field-label">Category <span class="req">*</span></span>
+						<span class="field-label">{t("pages.complaintForm.category")} <span class="req">*</span></span>
 						<select class="form-input form-select" bind:value={category}>
 							{#each categories as cat}
 								<option value={cat.value}>{cat.label}</option>
@@ -207,42 +208,42 @@
 					</div>
 
 					<div class="form-group">
-						<span class="field-label">Incident Date</span>
+						<span class="field-label">{t("pages.complaintForm.incidentDate")}</span>
 						<input class="form-input" type="date" max={today} bind:value={incidentDate} />
 					</div>
 
 					<div class="form-group form-full">
-						<span class="field-label">Location</span>
-						<input class="form-input" bind:value={incidentLocation} placeholder="Where did this happen?" />
+						<span class="field-label">{t("pages.complaintForm.location")}</span>
+						<input class="form-input" bind:value={incidentLocation} placeholder={t("pages.complaintForm.locationPlaceholder")} />
 					</div>
 
 					<div class="form-group form-full">
 						<span class="field-label">
-							What happened? <span class="req">*</span>
+							{t("pages.complaintForm.whatHappened")} <span class="req">*</span>
 							<span class="counter" class:counter-low={description.trim().length > 0 && description.trim().length < 20}>
 								{description.length}/{DESC_MAX}
 							</span>
 						</span>
 						<textarea class="form-input" rows="6" maxlength={DESC_MAX} bind:value={description}
-							placeholder="Describe the incident in as much detail as you can — what happened, when, and who was involved."></textarea>
+							placeholder={t("pages.complaintForm.descriptionPlaceholder")}></textarea>
 						{#if description.trim().length > 0 && description.trim().length < 20}
-							<span class="hint-warn">Please give a bit more detail (at least 20 characters).</span>
+							<span class="hint-warn">{t("pages.complaintForm.descriptionHint")}</span>
 						{/if}
 					</div>
 
 					<div class="form-group form-full">
-						<span class="field-label">Witnesses</span>
+						<span class="field-label">{t("pages.complaintForm.witnesses")}</span>
 						<textarea class="form-input" rows="2" bind:value={witnesses}
-							placeholder="Anyone else who saw this"></textarea>
+							placeholder={t("pages.complaintForm.witnessesPlaceholder")}></textarea>
 					</div>
 
 					<div class="form-group form-full">
-						<span class="field-label">Evidence <span class="optional">(image links)</span></span>
+						<span class="field-label">{t("pages.complaintForm.evidence")} <span class="optional">{t("pages.complaintForm.imageLinks")}</span></span>
 						<div class="evidence-row">
 							<input class="form-input" bind:value={evidenceUrl}
-								placeholder="https://…  paste a screenshot link"
+							placeholder={t("pages.complaintForm.evidencePlaceholder")}
 								onkeydown={(e) => { if (e.key === "Enter") { e.preventDefault(); addEvidence(); } }} />
-							<button class="add-btn" type="button" disabled={!evidenceUrl.trim()} onclick={addEvidence}>Add</button>
+							<button class="add-btn" type="button" disabled={!evidenceUrl.trim()} onclick={addEvidence}>{t("common.actions.add")}</button>
 						</div>
 
 						{#if evidenceList.length > 0}
@@ -251,16 +252,16 @@
 									<div class="evidence-tile" class:is-broken={item.broken}>
 										{#if item.broken}
 											<div class="evidence-broken">
-												<span>Couldn't load</span>
+												<span>{t("pages.complaintForm.imageLoadFailed")}</span>
 												<span class="evidence-url">{item.url}</span>
 											</div>
 										{:else}
-											<button class="evidence-open" type="button" title="Click to enlarge"
+											<button class="evidence-open" type="button" title={t("pages.complaintForm.clickToEnlarge")}
 												onclick={() => (lightboxUrl = item.url)}>
-												<img src={item.url} alt="Evidence" onerror={() => markBroken(i)} />
+												<img src={item.url} alt={t("pages.complaintForm.evidence")} onerror={() => markBroken(i)} />
 											</button>
 										{/if}
-										<button class="evidence-remove" type="button" aria-label="Remove"
+										<button class="evidence-remove" type="button" aria-label={t("common.actions.remove")}
 											onclick={() => removeEvidence(i)}>
 											<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
 												<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -274,11 +275,11 @@
 				</div>
 
 				<div class="modal-footer">
-					<span class="modal-hint">This is filed under your own name</span>
+					<span class="modal-hint">{t("pages.complaintForm.thisFiledUnderName")}</span>
 					<div class="modal-footer-right">
-						<button class="cancel-btn" disabled={submitting} onclick={handleCancel}>Cancel</button>
+						<button class="cancel-btn" disabled={submitting} onclick={handleCancel}>{t("common.actions.cancel")}</button>
 						<button class="primary-btn" disabled={!isFormValid || submitting} onclick={handleSubmit}>
-							{submitting ? "Submitting…" : "File Complaint"}
+							{submitting ? t("pages.complaintForm.submitting") : t("pages.complaintForm.fileComplaint")}
 						</button>
 					</div>
 				</div>
@@ -291,12 +292,12 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="lightbox-overlay" onclick={() => (lightboxUrl = null)}>
 			<div class="lightbox-card" onclick={(e) => e.stopPropagation()}>
-				<button class="lightbox-close" aria-label="Close" onclick={() => (lightboxUrl = null)}>
+				<button class="lightbox-close" aria-label={t("common.actions.close")} onclick={() => (lightboxUrl = null)}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
 					</svg>
 				</button>
-				<img class="lightbox-img" src={lightboxUrl} alt="Evidence" />
+				<img class="lightbox-img" src={lightboxUrl} alt={t("pages.complaintForm.evidence")} />
 			</div>
 		</div>
 	{/if}

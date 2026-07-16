@@ -11,6 +11,7 @@
 	import PersonSearchModal from "../components/report-editor/PersonSearchModal.svelte";
 	import { createSearchService } from "../services/searchService.svelte";
 	import type { AuthService } from "../services/authService.svelte";
+	import { t } from "../lib/i18n";
 
 	interface WeaponFlag {
 		type: string;
@@ -123,6 +124,12 @@
 		}
 	}
 
+	function flagLabel(type: string): string {
+		if (type === "Stolen") return t("pages.weapons.flags.stolen");
+		if (type === "Wanted") return t("pages.weapons.flags.wanted");
+		return type;
+	}
+
 	async function handleWeaponOwnerSearch(query: string) {
 		if (!query.trim()) {
 			searchService.clearResults();
@@ -131,7 +138,7 @@
 		try {
 			await searchService.searchPlayers(query);
 		} catch {
-			globalNotifications.error("Search failed");
+			globalNotifications.error(t("pages.weapons.messages.searchFailed"));
 		}
 	}
 
@@ -161,7 +168,7 @@
 			);
 			weaponHistory = Array.isArray(response) ? response : [];
 		} catch (error) {
-			globalNotifications.error("Failed to load weapon history");
+			globalNotifications.error(t("pages.weapons.messages.historyLoadFailed"));
 			weaponHistory = [];
 		} finally {
 			historyLoading = false;
@@ -190,7 +197,7 @@
 			selectedWeapon = { ...selectedWeapon, flags: updated };
 			newFlag = { type: "", info: "" };
 		} else {
-			globalNotifications.error("Failed to save flag");
+			globalNotifications.error(t("pages.weapons.messages.flagSaveFailed"));
 		}
 	}
 
@@ -211,7 +218,7 @@
 		if (response?.success) {
 			selectedWeapon = { ...selectedWeapon, flags: updated };
 		} else {
-			globalNotifications.error("Failed to remove flag");
+			globalNotifications.error(t("pages.weapons.messages.flagRemoveFailed"));
 		}
 	}
 
@@ -241,7 +248,7 @@
 			weapons = Array.isArray(weaponsRes?.weapons) ? weaponsRes.weapons : [];
 			weaponOptions = configRes?.weapons ?? [];
 		} catch (error) {
-			globalNotifications.error("Failed to load weapons #1");
+			globalNotifications.error(t("pages.weapons.messages.loadFailed"));
 			weapons = [];
 		}
 		loading = false;
@@ -254,7 +261,7 @@
 			const response = await fetchNui(NUI_EVENTS.WEAPON.GET_WEAPONS);
 			weapons = Array.isArray(response?.weapons) ? response.weapons : [];
 		} catch (error) {
-			globalNotifications.error("Failed to load weapons #2");
+			globalNotifications.error(t("pages.weapons.messages.loadFailed"));
 			weapons = [];
 		}
 		loading = false;
@@ -280,19 +287,19 @@
 		);
 
 		if (response?.success) {
-			globalNotifications.success("Weapon saved successfully");
+			globalNotifications.success(t("pages.weapons.messages.saved"));
 			refreshWeapons()
 			addWeaponForm = { weaponModel: "", serial: "", owner: "", ownerName: "", notes: addWeaponForm.notes.trim() };
 			showAddWeaponModal = false;
 		} else {
-			globalNotifications.error(response?.message || "Failed to save weapon");
+			globalNotifications.error(response?.message || t("pages.weapons.messages.saveFailed"));
 		}
 	}
 </script>
 
 <PersonSearchModal
     show={showWeaponOwnerSearch}
-    title="Search Owner"
+    title={t("pages.weapons.searchOwner")}
     searchResults={searchService.state.results}
     onSearch={handleWeaponOwnerSearch}
     onSelect={selectWeaponOwner}
@@ -305,8 +312,8 @@
     <div class="modal-backdrop" onclick={(e) => { if (e.target === e.currentTarget) showAddWeaponModal = false; }}>
         <div class="modal" role="dialog" aria-modal="true" tabindex="-1">
             <div class="modal-header">
-                <h3>Add Weapon</h3>
-                <button class="close-btn" aria-label="Close" onclick={() => (showAddWeaponModal = false)}>
+                <h3>{t("pages.weapons.addWeapon")}</h3>
+                <button class="close-btn" aria-label={t("common.actions.close")} onclick={() => (showAddWeaponModal = false)}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/>
                         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -315,23 +322,23 @@
             </div>
             <div class="modal-body form-body">
                 <div class="form-group">
-                    <span class="field-label">Weapon Name</span>
+                    <span class="field-label">{t("pages.weapons.weaponName")}</span>
 					<select class="form-input form-select" bind:value={addWeaponForm.weaponModel}>
-						<option value="">-- Select --</option>
+						<option value="">{t("common.actions.select")}</option>
 						{#each weaponOptions as w}
 							<option value={w.model}>{w.label}</option>
 						{/each}
 					</select>
                 </div>
 				<div class="form-group form-full">
-					<span class="field-label">Serial Number</span>
+					<span class="field-label">{t("pages.weapons.serialNumber")}</span>
 					<input class="form-input" bind:value={addWeaponForm.serial} placeholder="e.g. AB-123456" />
 					<span class="add-weapon-description" class:visible={addWeaponForm.serial.trim().length > 0}>
-						If this serial number already exists in the database, the existing record will be updated with the new information.
+						{t("pages.weapons.existingSerialHint")}
 					</span>
 				</div>
 				<div class="form-group">
-					<span class="field-label">Owner</span>
+					<span class="field-label">{t("pages.weapons.owner")}</span>
 					<button
 						class="form-input"
 						style="text-align: left; cursor: pointer;"
@@ -339,17 +346,17 @@
 					>
 						{addWeaponForm.ownerName
 							? `${addWeaponForm.ownerName} (${addWeaponForm.owner})`
-							: "Search citizen..."}
+							: t("pages.weapons.searchCitizen")}
 					</button>
 				</div>
                 <div class="form-group form-full">
-                    <span class="field-label">Notes</span>
+                    <span class="field-label">{t("pages.weapons.notes")}</span>
                     <textarea class="form-input" rows="4" bind:value={addWeaponForm.notes}></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="cancel-btn" onclick={() => (showAddWeaponModal = false)}>Cancel</button>
-                <button class="primary-btn" onclick={addWeapon}>Add Weapon</button>
+                <button class="cancel-btn" onclick={() => (showAddWeaponModal = false)}>{t("common.actions.cancel")}</button>
+                <button class="primary-btn" onclick={addWeapon}>{t("pages.weapons.addWeapon")}</button>
             </div>
         </div>
     </div>
@@ -361,7 +368,7 @@
 		<div class="topbar">
 			<button class="back-btn" onclick={closeWeapon}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-				Back
+				{t("common.actions.back")}
 			</button>
 			<div class="topbar-info">
 				<span class="topbar-name">{selectedWeapon.name}</span>
@@ -369,10 +376,10 @@
 			</div>
 			<div class="topbar-flags">
 				{#if selectedWeapon.scratched}
-					<span class="pill pill-red">Scratched</span>
+					<span class="pill pill-red">{t("pages.weapons.scratched")}</span>
 				{/if}
 				{#each selectedWeapon.flags as flag}
-					<span class={getFlagClass(flag)}>{flag.type}</span>
+					<span class={getFlagClass(flag)}>{flagLabel(flag.type)}</span>
 				{/each}
 			</div>
 		</div>
@@ -383,45 +390,45 @@
 				<div class="info-card">
 					<div class="info-card-icon">
 						{#if selectedWeapon.image}
-							<img src={selectedWeapon.image} alt="Weapon" class="info-card-img" />
+							<img src={selectedWeapon.image} alt={t("pages.weapons.weapon")} class="info-card-img" />
 						{:else}
 							<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
 						{/if}
 					</div>
 					<div class="info-card-body">
-						<span class="info-card-label">Owner</span>
+						<span class="info-card-label">{t("pages.weapons.owner")}</span>
 						<span class="info-card-value">{selectedWeapon.owner}</span>
 					</div>
 				</div>
-				<div class="info-item"><span class="info-label">Serial</span><span class="info-value mono">{selectedWeapon.serial}</span></div>
-				<div class="info-item"><span class="info-label">Name</span><span class="info-value">{selectedWeapon.name}</span></div>
-				<div class="info-item"><span class="info-label">Class</span><span class="info-value">{selectedWeapon.weaponClass}</span></div>
-				<div class="info-item"><span class="info-label">Type</span><span class="info-value">{selectedWeapon.type}</span></div>
-				<div class="info-item"><span class="info-label">Tint</span><span class="info-value">{selectedWeapon.tint || 'Default'}</span></div>
-				<div class="info-item"><span class="info-label">Reports</span><span class="info-value">{selectedWeapon.seenIn}</span></div>
-				<div class="info-item"><span class="info-label">Scratched</span><span class="info-value" class:accent-red={selectedWeapon.scratched}>{selectedWeapon.scratched ? 'Yes' : 'No'}</span></div>
-				<div class="info-item"><span class="info-label">Model</span><span class="info-value mono">{selectedWeapon.weaponModel}</span></div>
+				<div class="info-item"><span class="info-label">{t("pages.weapons.serial")}</span><span class="info-value mono">{selectedWeapon.serial}</span></div>
+				<div class="info-item"><span class="info-label">{t("pages.weapons.name")}</span><span class="info-value">{selectedWeapon.name}</span></div>
+				<div class="info-item"><span class="info-label">{t("pages.weapons.class")}</span><span class="info-value">{selectedWeapon.weaponClass}</span></div>
+				<div class="info-item"><span class="info-label">{t("pages.weapons.type")}</span><span class="info-value">{selectedWeapon.type}</span></div>
+				<div class="info-item"><span class="info-label">{t("pages.weapons.tint")}</span><span class="info-value">{selectedWeapon.tint || t("pages.weapons.default")}</span></div>
+				<div class="info-item"><span class="info-label">{t("pages.weapons.reports")}</span><span class="info-value">{selectedWeapon.seenIn}</span></div>
+				<div class="info-item"><span class="info-label">{t("pages.weapons.scratched")}</span><span class="info-value" class:accent-red={selectedWeapon.scratched}>{selectedWeapon.scratched ? t("common.yes") : t("common.no")}</span></div>
+				<div class="info-item"><span class="info-label">{t("pages.weapons.model")}</span><span class="info-value mono">{selectedWeapon.weaponModel}</span></div>
 			</div>
 
 			{#if selectedWeapon.information}
 				<div class="section">
-					<div class="section-title">Information</div>
+					<div class="section-title">{t("pages.weapons.information")}</div>
 					<p class="section-text">{selectedWeapon.information}</p>
 				</div>
 			{/if}
 
 			<div class="section">
-				<div class="section-title">Flags</div>
+				<div class="section-title">{t("pages.weapons.flagsLabel")}</div>
 
 				{#if selectedWeapon.flags?.length}
 					<div class="flags-row" style="margin-bottom: 8px;">
 						{#each selectedWeapon.flags as flag}
 							<span class={getFlagClass(flag)} style="display:inline-flex;align-items:center;gap:6px;">
-								<span>{flag.type}</span>
+								<span>{flagLabel(flag.type)}</span>
 								{#if flag.info}
 									<span style="opacity:0.6;font-weight:400;">— {flag.info}</span>
 								{/if}
-								<button class="tag-remove" onclick={() => removeFlag(flag.type)} aria-label="Remove flag">
+							<button class="tag-remove" onclick={() => removeFlag(flag.type)} aria-label={t("pages.weapons.removeFlag")}>
 									<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 								</button>
 							</span>
@@ -431,48 +438,48 @@
 
 				<div class="flag-add-row">
 					<select class="form-select" bind:value={newFlag.type} onchange={onFlagTypeChange}>
-						<option value="">-- Select --</option>
+						<option value="">{t("common.actions.select")}</option>
 						{#each PRESET_FLAGS as preset}
 							<option value={preset} disabled={selectedWeapon.flags?.some(f => f.type === preset)}>
-								{preset}
+								{flagLabel(preset)}
 							</option>
 						{/each}
 					</select>
 					<input
 						class="form-input"
 						bind:value={newFlag.info}
-						placeholder="Additional info..."
+						placeholder={t("pages.weapons.additionalInfo")}
 						onkeydown={(e) => { if (e.key === 'Enter') addFlag(); }}
 					/>
 					<button class="add-tag-btn" onclick={addFlag} disabled={!newFlag.type.trim()}>
-						+ Add
+						+ {t("common.actions.add")}
 					</button>
 				</div>
 			</div>
 
 			<div class="section">
-				<div class="section-title">Ownership History</div>
+				<div class="section-title">{t("pages.weapons.ownershipHistory")}</div>
 				{#if historyLoading}
-					<div class="section-empty">Loading history...</div>
+					<div class="section-empty">{t("pages.weapons.loadingHistory")}</div>
 				{:else if weaponHistory.length === 0}
-					<div class="section-empty">No ownership history found.</div>
+					<div class="section-empty">{t("pages.weapons.noHistory")}</div>
 				{:else}
 					<div class="history-list">
 						{#each weaponHistory as entry}
 							<div class="history-item">
 								<div class="history-item-main">
 									<span class="history-owner">
-										{entry.owner_name ?? entry.owner ?? 'Unknown'}
+										{entry.owner_name ?? entry.owner ?? t("common.unknown")}
 										{#if entry.owner_name && entry.owner}
 											<span class="history-meta">({entry.owner})</span>
 										{/if}
 									</span>
 									<span class="history-meta">
-										- Model: {entry.weapon_model || ''}
+										- {t("pages.weapons.model")}: {entry.weapon_model || ''}
 										{entry.weapon_class ? ` · ${entry.weapon_class}` : ''}
 									</span>
 									{#if entry.information}
-										<span class="history-meta">- Notes: {entry.information}</span>
+									<span class="history-meta">- {t("pages.weapons.notes")}: {entry.information}</span>
 									{/if}
 								</div>
 								<div class="history-item-side">
@@ -481,7 +488,7 @@
 										<span class="history-reason">{entry.reason}</span>
 									{/if}
 									{#if entry.changed_by_name ?? entry.changed_by}
-										<span class="history-meta">logged by {entry.changed_by_name ?? entry.changed_by}</span>
+										<span class="history-meta">{t("pages.weapons.loggedBy", { name: entry.changed_by_name ?? entry.changed_by })}</span>
 									{/if}
 								</div>
 							</div>
@@ -497,14 +504,14 @@
 		<div class="topbar">
 			<div class="search-box">
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-				<input type="text" bind:value={searchQuery} placeholder="Search by name, serial, owner, class, tint or type..." />
+				<input type="text" bind:value={searchQuery} placeholder={t("pages.weapons.searchPlaceholder")} />
 			</div>
 			<button class="refresh-btn" onclick={refreshWeapons} disabled={loading}>
-				{loading ? "Loading..." : "Refresh"}
+				{loading ? t("common.status.loading") : t("pages.weapons.refresh")}
 			</button>
 			{#if canAddWeapon}
 				<button class="add-weapon-btn" onclick={() => (showAddWeaponModal = true)}>
-					<span class="material-icons" style="font-size: 12px;">add</span> Add Weapon
+					<span class="material-icons" style="font-size: 12px;">add</span> {t("pages.weapons.addWeapon")}
 				</button>
 			{/if}
 		</div>
@@ -512,19 +519,19 @@
 		<div class="list-panel">
 			<div class="list-header">
 				<span></span>
-				<span>Weapon</span>
-				<span>Serial</span>
-				<span>Owner</span>
-				<span>Class</span>
-				<span>Type</span>
-				<span>Tint</span>
-				<span>Flags</span>
+				<span>{t("pages.weapons.weapon")}</span>
+				<span>{t("pages.weapons.serial")}</span>
+				<span>{t("pages.weapons.owner")}</span>
+				<span>{t("pages.weapons.class")}</span>
+				<span>{t("pages.weapons.type")}</span>
+				<span>{t("pages.weapons.tint")}</span>
+				<span>{t("pages.weapons.flagsLabel")}</span>
 			</div>
 			<div class="list-body">
 				{#if loading}
-					<div class="empty-state">Loading weapons...</div>
+					<div class="empty-state">{t("pages.weapons.loading")}</div>
 				{:else if filteredWeapons.length === 0}
-					<div class="empty-state">{searchQuery ? "No weapons match your search." : "No weapons found."}</div>
+					<div class="empty-state">{searchQuery ? t("pages.weapons.noMatches") : t("pages.weapons.noneFound")}</div>
 				{:else}
 					{#each filteredWeapons as weapon}
 						<button class="weapon-row" onclick={() => viewWeapon(weapon.id)}>
@@ -533,16 +540,16 @@
 							</div>
 							<span class="col-name">
 								{weapon.name}
-								{#if weapon.scratched}<span class="scratched-badge">Scratched</span>{/if}
+								{#if weapon.scratched}<span class="scratched-badge">{t("pages.weapons.scratched")}</span>{/if}
 							</span>
 							<span class="col-serial mono">{weapon.serial}</span>
 							<span class="col-owner">{weapon.owner}</span>
 							<span class="col-class">{weapon.weaponClass}</span>
 							<span class="col-type">{weapon.type}</span>
-							<span class="col-tint">{weapon.tint || 'Default'}</span>
+							<span class="col-tint">{weapon.tint || t("pages.weapons.default")}</span>
 							<span class="col-flags">
 								{#each weapon.flags || [] as flag}
-									<span class={getFlagClass(flag)}>{flag.type}</span>
+									<span class={getFlagClass(flag)}>{flagLabel(flag.type)}</span>
 								{/each}
 							</span>
 						</button>

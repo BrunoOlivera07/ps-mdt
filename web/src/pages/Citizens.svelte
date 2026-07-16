@@ -10,6 +10,7 @@
 	import { globalNotifications } from "../services/notificationService.svelte";
 	import { openBoloDetail } from "../stores/navigationStore";
 	import Pagination from "../components/Pagination.svelte";
+	import { t } from "../lib/i18n";
 
 	interface Citizen {
 		id: number;
@@ -150,12 +151,12 @@
 				];
 				galleryAddUrl = "";
 				galleryAddOpen = false;
-				globalNotifications.success("Image added");
+				globalNotifications.success(t("pages.citizens.messages.imageAdded"));
 			} else {
-				globalNotifications.error("Failed to add image");
+				globalNotifications.error(t("pages.citizens.messages.imageAddFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to add image");
+			globalNotifications.error(t("pages.citizens.messages.imageAddFailed"));
 		}
 		galleryAdding = false;
 	}
@@ -174,12 +175,12 @@
 					gallery: (selectedProfile.gallery ?? []).filter(g => g.image !== url)
 				};
 				galleryImages = galleryImages.filter(img => img !== url);
-				globalNotifications.success("Image removed");
+				globalNotifications.success(t("pages.citizens.messages.imageRemoved"));
 			} else {
-				globalNotifications.error("Failed to remove image");
+				globalNotifications.error(t("pages.citizens.messages.imageRemoveFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to remove image");
+			globalNotifications.error(t("pages.citizens.messages.imageRemoveFailed"));
 		}
 	}
 
@@ -225,13 +226,13 @@
 				citizens = citizens.map((c) =>
 					c.cid === selectedProfile!.citizenid ? { ...c, image: newUrl } : c,
 				);
-				globalNotifications.success(result.message || "Photo updated");
+				globalNotifications.success(result.message || t("pages.citizens.messages.photoUpdated"));
 				closePhotoModal();
 			} else {
-				globalNotifications.error(result.message || "Failed to update photo");
+				globalNotifications.error(result.message || t("pages.citizens.messages.photoUpdateFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to update photo");
+			globalNotifications.error(t("pages.citizens.messages.photoUpdateFailed"));
 		}
 		photoSaving = false;
 	}
@@ -278,12 +279,12 @@
 			if (result?.success) {
 				selectedProfile = { ...selectedProfile, notes: notesValue };
 				editingNotes = false;
-				globalNotifications.success("Notes saved");
+				globalNotifications.success(t("pages.citizens.messages.notesSaved"));
 			} else {
-				globalNotifications.error("Failed to save notes");
+				globalNotifications.error(t("pages.citizens.messages.notesSaveFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to save notes");
+			globalNotifications.error(t("pages.citizens.messages.notesSaveFailed"));
 		}
 		notesSaving = false;
 	}
@@ -300,7 +301,7 @@
 			const result = await fetchNui(NUI_EVENTS.CITIZEN.GET_CITIZENS);
 			citizens = Array.isArray(result) ? result : [];
 		} catch (error) {
-			globalNotifications.error("Failed to fetch citizens");
+			globalNotifications.error(t("pages.citizens.messages.fetchFailed"));
 			citizens = [];
 		}
 		loading = false;
@@ -347,11 +348,11 @@
 
 	function formatOccupations(list: string[] = []) {
 		const cleaned = list.filter((item) => item && item.trim());
-		return cleaned.length ? cleaned.join(", ") : "None";
+		return cleaned.length ? cleaned.join(", ") : t("common.none");
 	}
 
 	function formatExpiryDate(raw: string | number): string {
-		return formatDate(raw, "Unknown");
+		return formatDate(raw, t("common.unknown"));
 	}
 
 	let hasActiveWarrants = $derived((selectedProfile?.activeWarrants?.length ?? 0) > 0);
@@ -423,7 +424,7 @@
 			const response = await fetchNui(NUI_EVENTS.CITIZEN.GET_CITIZEN, { citizenid: citizenId });
 			if (response?.profile) {
 				selectedProfile = response.profile;
-				globalNotifications.success("Profile loaded");
+				globalNotifications.success(t("pages.citizens.messages.profileLoaded"));
 				citizens = citizens.map((citizen) =>
 					citizen.cid === response.profile.citizenid
 						? { ...citizen, firstName: response.profile.firstName, lastName: response.profile.lastName, gender: response.profile.gender, dob: response.profile.dob, phone: response.profile.phone, image: response.profile.image, occupations: response.profile.occupations || citizen.occupations, properties: response.profile.properties, vehicles: response.profile.vehicles, arrests: response.profile.arrests, flags: response.profile.flags || citizen.flags }
@@ -431,7 +432,7 @@
 				);
 			}
 		} catch (error) {
-			globalNotifications.error("Failed to fetch citizen profile");
+			globalNotifications.error(t("pages.citizens.messages.profileFetchFailed"));
 		}
 	}
 
@@ -510,10 +511,10 @@
 			if (result?.success) {
 				selectedProfile.tags = [...(selectedProfile.tags ?? []), name];
 				} else {
-				globalNotifications.error(result?.message || "Failed to add tag");
+			globalNotifications.error(result?.message || t("pages.citizens.messages.tagAddFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to add tag");
+		globalNotifications.error(t("pages.citizens.messages.tagAddFailed"));
 		} finally {
 			tagBusy = false;
 		}
@@ -535,10 +536,10 @@
 			if (result?.success) {
 				selectedProfile.tags = (selectedProfile.tags ?? []).filter((t) => t !== tag);
 			} else {
-				globalNotifications.error(result?.message || "Failed to remove tag");
+			globalNotifications.error(result?.message || t("pages.citizens.messages.tagRemoveFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to remove tag");
+		globalNotifications.error(t("pages.citizens.messages.tagRemoveFailed"));
 		} finally {
 			tagBusy = false;
 		}
@@ -603,7 +604,7 @@
 			chargesLoadedFor = citizenid;
 		} catch {
 			if (selectedProfile?.citizenid === citizenid && !append) citizenCharges = [];
-			globalNotifications.error("Failed to load charges");
+		globalNotifications.error(t("pages.citizens.messages.chargesLoadFailed"));
 		} finally {
 			if (selectedProfile?.citizenid === citizenid) chargesLoading = false;
 		}
@@ -685,7 +686,7 @@
 		if (!file || !selectedProfile) return;
 
 		uploading = true;
-		globalNotifications.info("Uploading photo...");
+		globalNotifications.info(t("pages.citizens.messages.uploadingPhoto"));
 
 		try {
 			const base64 = await compressImage(file);
@@ -702,12 +703,12 @@
 				citizens = citizens.map((c) =>
 					c.cid === selectedProfile!.citizenid ? { ...c, image: result.imageUrl || base64 } : c,
 				);
-				globalNotifications.success(result.message || "Photo uploaded");
+			globalNotifications.success(result.message || t("pages.citizens.messages.photoUploaded"));
 			} else {
-				globalNotifications.error(result.message || "Failed to upload photo");
+			globalNotifications.error(result.message || t("pages.citizens.messages.photoUploadFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to upload photo");
+		globalNotifications.error(t("pages.citizens.messages.photoUploadFailed"));
 		}
 		uploading = false;
 		input.value = "";
@@ -729,12 +730,12 @@
 						c.cid === selectedProfile!.citizenid ? { ...c, image: result.imageUrl! } : c,
 					);
 				}
-				globalNotifications.success(result.message || "Mugshot captured");
+			globalNotifications.success(result.message || t("pages.citizens.messages.mugshotCaptured"));
 			} else {
-				globalNotifications.error(result.message || "Failed to capture mugshot");
+			globalNotifications.error(result.message || t("pages.citizens.messages.mugshotCaptureFailed"));
 			}
 		} catch {
-			globalNotifications.error("Failed to capture mugshot");
+		globalNotifications.error(t("pages.citizens.messages.mugshotCaptureFailed"));
 		}
 	}
 
@@ -865,7 +866,7 @@
 	}
 
 	function formatCoords(coords: { x: number; y: number; z: number } | null | undefined): string {
-		if (!coords) return 'Unknown';
+		if (!coords) return t("common.unknown");
 		return `${coords.x.toFixed(1)}, ${coords.y.toFixed(1)}, ${coords.z.toFixed(1)}`;
 	}
 
@@ -909,8 +910,8 @@
 	let activeLicenses = $derived.by((): LicenseEntry[] => {
 		if (!selectedProfile) return [];
 		const result: LicenseEntry[] = [];
-		if (selectedProfile.licenses?.driver) result.push({ key: "driver", name: "Driver's License", type: "state", active: true });
-		if (selectedProfile.licenses?.weapon) result.push({ key: "weapon", name: "Weapon License", type: "state", active: true });
+		if (selectedProfile.licenses?.driver) result.push({ key: "driver", name: t("pages.citizens.driverLicense"), type: "state", active: true });
+		if (selectedProfile.licenses?.weapon) result.push({ key: "weapon", name: t("pages.citizens.weaponLicense"), type: "state", active: true });
 		for (const cl of selectedProfile.customLicenses || []) {
 			if (cl.active) result.push({ key: `custom-${cl.id}`, name: cl.name, type: "custom", active: true, customId: cl.id });
 		}
@@ -931,8 +932,8 @@
 	let issuableLicenses = $derived.by((): IssuableLicense[] => {
 		if (!selectedProfile) return [];
 		const result: IssuableLicense[] = [];
-		result.push({ key: "driver", name: "Driver's License", type: "state", description: "State-issued license for operating motor vehicles", active: selectedProfile.licenses?.driver || false });
-		result.push({ key: "weapon", name: "Weapon License", type: "state", description: "State-issued license for carrying firearms", active: selectedProfile.licenses?.weapon || false });
+		result.push({ key: "driver", name: t("pages.citizens.driverLicense"), type: "state", description: t("pages.citizens.driverLicenseDescription"), active: selectedProfile.licenses?.driver || false });
+		result.push({ key: "weapon", name: t("pages.citizens.weaponLicense"), type: "state", description: t("pages.citizens.weaponLicenseDescription"), active: selectedProfile.licenses?.weapon || false });
 		for (const cl of selectedProfile.customLicenses || []) {
 			result.push({ key: `custom-${cl.id}`, name: cl.name, type: "custom", active: cl.active, customId: cl.id, description: cl.description });
 		}
@@ -995,18 +996,18 @@
 	<div class="modal-overlay" onclick={(e) => { if (e.target === e.currentTarget) closePhotoModal(); }}>
 		<div class="modal-card photo-modal" role="dialog" aria-modal="true" onclick={(e) => e.stopPropagation()}>
 			<div class="modal-header">
-				<h3>Set Profile Photo</h3>
+				<h3>{t("pages.citizens.setProfilePhoto")}</h3>
 				<button class="modal-close" onclick={closePhotoModal}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
 			</div>
 			<div class="modal-body photo-modal-body">
 				<div class="photo-form-group">
-					<span class="photo-label">Image URL</span>
+					<span class="photo-label">{t("pages.citizens.imageUrl")}</span>
 					<input
 						class="photo-input"
 						type="url"
-						placeholder="https://example.com/photo.jpg"
+						placeholder={t("pages.citizens.photoUrlPlaceholder")}
 						bind:value={photoUrlInput}
 						onkeydown={(e) => { if (e.key === 'Enter') confirmPhotoUrl(); if (e.key === 'Escape') closePhotoModal(); }}
 					/>
@@ -1015,12 +1016,12 @@
 						<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
 						</svg>
-						Use <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> to make sure your links persist forever.
+						{t("pages.citizens.fiveManagePrefix")} <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> {t("pages.citizens.fiveManageSuffix")}
 					</span>
 				</div>
 			</div>
 			<div class="modal-footer-row">
-				<button class="photo-cancel-btn" onclick={closePhotoModal} disabled={photoSaving}>Cancel</button>
+				<button class="photo-cancel-btn" onclick={closePhotoModal} disabled={photoSaving}>{t("common.actions.cancel")}</button>
 				<button class="photo-confirm-btn" onclick={confirmPhotoUrl} disabled={photoSaving || !photoUrlInput.trim()}>
 					{photoSaving ? "Saving…" : "Set Photo"}
 				</button>
@@ -1036,7 +1037,7 @@
 			<div class="profile-topbar">
 				<button class="back-btn" onclick={closeProfile}>
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-					Back
+					{t("common.actions.back")}
 				</button>
 				<div class="profile-identity">
 					<span class="profile-name">{selectedProfile.firstName} {selectedProfile.lastName}</span>
@@ -1053,15 +1054,15 @@
 					</div>
 				{/if}
 				{#if copyNotice}
-					<div class="copy-toast">{copyNotice} copied</div>
+					<div class="copy-toast">{t("pages.citizens.copied", { value: copyNotice })}</div>
 				{/if}
 			</div>
 
 			<div class="pstats-row">
-				<div class="pstat"><span class="pstat-val">{selectedProfile.properties}</span><span class="pstat-lbl">Properties</span></div>
-				<div class="pstat"><span class="pstat-val">{selectedProfile.vehicles}</span><span class="pstat-lbl">Vehicles</span></div>
-				<div class="pstat"><span class="pstat-val accent-red">{selectedProfile.arrests}</span><span class="pstat-lbl">Arrests</span></div>
-				<div class="pstat"><span class="pstat-val">{selectedProfile.occupations.length}</span><span class="pstat-lbl">Jobs</span></div>
+				<div class="pstat"><span class="pstat-val">{selectedProfile.properties}</span><span class="pstat-lbl">{t("pages.citizens.properties")}</span></div>
+				<div class="pstat"><span class="pstat-val">{selectedProfile.vehicles}</span><span class="pstat-lbl">{t("pages.citizens.vehicles")}</span></div>
+				<div class="pstat"><span class="pstat-val accent-red">{selectedProfile.arrests}</span><span class="pstat-lbl">{t("pages.citizens.arrests")}</span></div>
+				<div class="pstat"><span class="pstat-val">{selectedProfile.occupations.length}</span><span class="pstat-lbl">{t("pages.citizens.jobs")}</span></div>
 			</div>
 
 			<div class="profile-body">
@@ -1074,7 +1075,7 @@
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
 								<img 
 									src={selectedProfile.image} 
-									alt="Profile" 
+									alt={t("pages.citizens.profile")}
 									onerror={handleImageError}
 									onclick={() => openLightbox(selectedProfile!.image!)}
 									style="cursor: zoom-in;"
@@ -1082,19 +1083,19 @@
 							{:else}
 								<div class="no-photo-placeholder">
 									<svg width="40" height="40" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-									<span>No Photo</span>
+									<span>{t("pages.citizens.noPhoto")}</span>
 								</div>
 							{/if}
 						</div>
 						{#if !isEMS}
 							<div class="profile-photo-actions">
-								<button class="photo-action-btn" onclick={openPhotoModal} title="Set photo URL">
+								<button class="photo-action-btn" onclick={openPhotoModal} title={t("pages.citizens.setPhotoUrl")}>
 									<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-									Set URL
+									{t("pages.citizens.setUrl")}
 								</button>
-								<button class="photo-action-btn" onclick={openGallery} title="View all photos">
+								<button class="photo-action-btn" onclick={openGallery} title={t("pages.citizens.viewAllPhotos")}>
 									<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-									Gallery
+									{t("pages.citizens.gallery")}
 								</button>
 							</div>
 						{/if}
@@ -1102,17 +1103,17 @@
 
 					<!-- Personal Details -->
 					<div class="panel detail-panel">
-						<div class="detail-row"><span class="dlabel">Gender</span><span class="dvalue">{selectedProfile.gender}</span></div>
-						<div class="detail-row"><span class="dlabel">DOB</span><span class="dvalue">{selectedProfile.dob}</span></div>
+						<div class="detail-row"><span class="dlabel">{t("pages.citizens.gender")}</span><span class="dvalue">{selectedProfile.gender}</span></div>
+						<div class="detail-row"><span class="dlabel">{t("pages.citizens.dob")}</span><span class="dvalue">{selectedProfile.dob}</span></div>
 						<div class="detail-row">
-							<span class="dlabel">Phone</span>
+							<span class="dlabel">{t("pages.citizens.phone")}</span>
 							<span class="dvalue clickable" onclick={() => copyToClipboard(selectedProfile?.phone || '', 'Phone')}>
 								<span class="material-icons copy-icon">content_copy</span>
 								{selectedProfile.phone}
 							</span>
 						</div>
 						<div class="detail-row">
-							<span class="dlabel">Fingerprint</span>
+							<span class="dlabel">{t("pages.citizens.fingerprint")}</span>
 							{#if editingFingerprint}
 								<input class="dna-input" type="text" bind:value={fingerprintValue}
 									onkeydown={(e) => { if (e.key === 'Enter') saveFingerprint(); if (e.key === 'Escape') { editingFingerprint = false; } }}
@@ -1126,7 +1127,7 @@
 							{/if}
 						</div>
 						<div class="detail-row">
-							<span class="dlabel">DNA</span>
+							<span class="dlabel">{t("pages.citizens.dna")}</span>
 							{#if editingDNA}
 								<input class="dna-input" type="text" bind:value={dnaValue}
 									onkeydown={(e) => { if (e.key === 'Enter') saveDNA(); if (e.key === 'Escape') { editingDNA = false; } }}
@@ -1139,11 +1140,11 @@
 								</span>
 							{/if}
 						</div>
-						<div class="detail-row"><span class="dlabel">Occupations</span><span class="dvalue">{formatOccupations(selectedProfile.occupations)}</span></div>
+						<div class="detail-row"><span class="dlabel">{t("pages.citizens.occupations")}</span><span class="dvalue">{formatOccupations(selectedProfile.occupations)}</span></div>
 						<div class="detail-row">
-							<span class="dlabel">Tags</span>
+							<span class="dlabel">{t("pages.citizens.tags")}</span>
 							<button class="issue-license-btn" onclick={() => (showTagModal = true)}>
-								<span class="material-icons" style="font-size: 12px;">add</span> Manage Tags
+								<span class="material-icons" style="font-size: 12px;">add</span> {t("pages.citizens.manageTags")}
 							</button>
 						</div>
 						<div class="ptags-fullrow">
@@ -1151,12 +1152,12 @@
 								<span class="flag tag-pill" style={tagPillStyle(citizenTagColor(tag))}>
 									{tag}
 									{#if canManageTag(tag)}
-										<button class="ctag-remove" title="Remove tag" disabled={tagBusy} onclick={() => removeCitizenTag(tag)}>×</button>
+										<button class="ctag-remove" title={t("pages.citizens.removeTag")} disabled={tagBusy} onclick={() => removeCitizenTag(tag)}>×</button>
 									{/if}
 								</span>
 							{/each}
 							{#if (selectedProfile.tags ?? []).length === 0}
-								<span class="ptags-empty">No tags</span>
+								<span class="ptags-empty">{t("pages.citizens.noTags")}</span>
 							{/if}
 						</div>
 					</div>
@@ -1167,10 +1168,10 @@
 					{#if selectedProfile.notes !== undefined}
 						<div class="panel">
 							<div class="panel-title">
-								Notes
+								{t("pages.citizens.notes")}
 								{#if !editingNotes && !isEMS}
 									<button class="issue-license-btn" onclick={startEditNotes}>
-										<span class="material-icons" style="font-size: 12px;">edit</span> Edit
+										<span class="material-icons" style="font-size: 12px;">edit</span> {t("common.actions.edit")}
 									</button>
 								{/if}
 							</div>
@@ -1179,14 +1180,14 @@
 									class="dna-input"
 									style="width:100%;min-height:80px;resize:vertical;font-family:inherit;"
 									bind:value={notesValue}
-									placeholder="Enter notes..."
+									placeholder={t("pages.citizens.notesPlaceholder")}
 									maxlength={250}
 									onkeydown={(e) => { if (e.key === 'Enter' && e.ctrlKey) saveNotes(); }}
 								></textarea>
 								<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
 									<div style="display:flex;gap:6px;">
-										<button class="notes-save-btn" onclick={saveNotes} disabled={notesSaving}>{notesSaving ? 'Saving...' : 'Save'}</button>
-										<button class="view-btn" onclick={() => { editingNotes = false; notesValue = selectedProfile?.notes || ''; }}>Cancel</button>
+										<button class="notes-save-btn" onclick={saveNotes} disabled={notesSaving}>{notesSaving ? t("common.status.saving") : t("common.actions.save")}</button>
+										<button class="view-btn" onclick={() => { editingNotes = false; notesValue = selectedProfile?.notes || ''; }}>{t("common.actions.cancel")}</button>
 									</div>
 									<span style="font-size:10px;color:{notesValue.length > 225 ? '#f87171' : 'rgba(255,255,255,0.2)'};">{notesValue.length}/250</span>
 								</div>
@@ -1194,7 +1195,7 @@
 								{#if selectedProfile.notes?.trim()}
 									<div class="notes-text">{selectedProfile.notes}</div>
 								{:else}
-									<div class="empty-msg">No notes on file.</div>
+									<div class="empty-msg">{t("pages.citizens.noNotes")}</div>
 								{/if}
 							{/if}
 						</div>
@@ -1203,56 +1204,56 @@
 					<div class="sections-grid">
 						<!-- Active Warrants -->
 						<div class="panel" class:panel-danger={hasActiveWarrants}>
-							<div class="panel-title">Active Warrants <span class="cnt" class:cnt-danger={hasActiveWarrants}>{selectedProfile.activeWarrants?.length || 0}</span></div>
-							{#if hasActiveWarrants}<div class="panel-caution caution-danger">PROCEED WITH CAUTION</div>{/if}
+							<div class="panel-title">{t("pages.citizens.activeWarrants")} <span class="cnt" class:cnt-danger={hasActiveWarrants}>{selectedProfile.activeWarrants?.length || 0}</span></div>
+							{#if hasActiveWarrants}<div class="panel-caution caution-danger">{t("pages.citizens.proceedWithCaution")}</div>{/if}
 							<div class="section-list">
 								{#if selectedProfile.activeWarrants && selectedProfile.activeWarrants.length > 0}
 									{#each selectedProfile.activeWarrants.slice(0, 3) as w}
 										<div class="sitem sitem-danger">
 											<div class="sitem-info"><span class="sitem-primary">Report #{w.reportid}</span><span class="sitem-secondary">Expires: {formatExpiryDate(w.expirydate)}</span></div>
-											<button class="sitem-arrow" title="View Report" onclick={() => goToWarrantReport(w.reportid)}>
+									<button class="sitem-arrow" title={t("pages.citizens.viewReport")} onclick={() => goToWarrantReport(w.reportid)}>
 												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 											</button>
 										</div>
 									{/each}
 									{#if selectedProfile.activeWarrants.length > 3}<div class="sitem-overflow">+{selectedProfile.activeWarrants.length - 3} more warrants</div>{/if}
-								{:else}<div class="empty-msg">No active warrants</div>{/if}
+							{:else}<div class="empty-msg">{t("pages.citizens.noActiveWarrants")}</div>{/if}
 							</div>
 						</div>
 
 						<!-- Active BOLOs -->
 						<div class="panel" class:panel-warning={hasActiveBolos}>
-							<div class="panel-title">Active BOLOs <span class="cnt" class:cnt-warning={hasActiveBolos}>{selectedProfile.activeBolos?.length || 0}</span></div>
-							{#if hasActiveBolos}<div class="panel-caution caution-warning">PROCEED WITH CAUTION</div>{/if}
+							<div class="panel-title">{t("pages.citizens.activeBolos")} <span class="cnt" class:cnt-warning={hasActiveBolos}>{selectedProfile.activeBolos?.length || 0}</span></div>
+							{#if hasActiveBolos}<div class="panel-caution caution-warning">{t("pages.citizens.proceedWithCaution")}</div>{/if}
 							<div class="section-list">
 								{#if selectedProfile.activeBolos && selectedProfile.activeBolos.length > 0}
 									{#each selectedProfile.activeBolos.slice(0, 3) as b}
 										<div class="sitem sitem-warning">
 											<div class="sitem-info"><span class="sitem-primary">{b.type} BOLO</span>{#if b.notes}<span class="sitem-secondary">{b.notes}</span>{/if}</div>
-											<button class="sitem-arrow" title="View BOLO" onclick={() => goToBolo(b.id)}>
+									<button class="sitem-arrow" title={t("pages.citizens.viewBolo")} onclick={() => goToBolo(b.id)}>
 												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 											</button>
 										</div>
 									{/each}
 									{#if selectedProfile.activeBolos.length > 3}<div class="sitem-overflow">+{selectedProfile.activeBolos.length - 3} more BOLOs</div>{/if}
-								{:else}<div class="empty-msg">No active BOLOs</div>{/if}
+							{:else}<div class="empty-msg">{t("pages.citizens.noActiveBolos")}</div>{/if}
 							</div>
 						</div>
 
 						<!-- Vehicles -->
 						<div class="panel">
-							<div class="panel-title">Vehicles <span class="cnt">{selectedProfile.ownedVehicles?.length || 0}</span></div>
+							<div class="panel-title">{t("pages.citizens.vehicles")} <span class="cnt">{selectedProfile.ownedVehicles?.length || 0}</span></div>
 							<div class="section-list">
 								{#if selectedProfile.ownedVehicles && selectedProfile.ownedVehicles.length > 0}
 									{#each sectionSlice(selectedProfile.ownedVehicles, vehiclesPage) as v}
 										<div class="sitem">
 											<div class="sitem-info"><span class="sitem-primary">{v.vehicle}</span><span class="sitem-secondary">{v.plate}</span></div>
-											<button class="sitem-arrow" title="View Vehicle" onclick={() => openVehicleFromProfile(v.plate)}>
+									<button class="sitem-arrow" title={t("pages.citizens.viewVehicle")} onclick={() => openVehicleFromProfile(v.plate)}>
 												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 											</button>
 										</div>
 									{/each}
-								{:else}<div class="empty-msg">No vehicles</div>{/if}
+							{:else}<div class="empty-msg">{t("pages.citizens.noVehicles")}</div>{/if}
 							</div>
 							{#if sectionTotalPages(selectedProfile.ownedVehicles) > 1}
 								<div class="section-pager">
@@ -1269,7 +1270,7 @@
 								Licenses <span class="cnt">{activeLicenses.length}</span>
 								{#if canManageLicenses}
 									<button class="issue-license-btn" onclick={() => (showIssueLicenseModal = true)}>
-										<span class="material-icons" style="font-size: 12px;">add</span> Issue License
+									<span class="material-icons" style="font-size: 12px;">add</span> {t("pages.citizens.issueLicense")}
 									</button>
 								{/if}
 							</div>
@@ -1278,10 +1279,10 @@
 									{#each sectionSlice(activeLicenses, licensesPage) as license (license.key)}
 										<div class="sitem">
 											<div class="sitem-info"><span class="sitem-primary">{license.name}</span><span class="sitem-secondary">{license.type === 'state' ? 'State License' : 'Custom License'}</span></div>
-											<span class="license-status license-active">Active</span>
+										<span class="license-status license-active">{t("common.status.active")}</span>
 										</div>
 									{/each}
-								{:else}<div class="empty-msg">No licenses</div>{/if}
+							{:else}<div class="empty-msg">{t("pages.citizens.noLicenses")}</div>{/if}
 							</div>
 							{#if sectionTotalPages(activeLicenses) > 1}
 								<div class="section-pager">
@@ -1294,18 +1295,18 @@
 
 						<!-- Properties -->
 						<div class="panel">
-							<div class="panel-title">Properties <span class="cnt">{selectedProfile.propertiesList?.length || 0}</span></div>
+							<div class="panel-title">{t("pages.citizens.properties")} <span class="cnt">{selectedProfile.propertiesList?.length || 0}</span></div>
 							<div class="section-list">
 								{#if selectedProfile.propertiesList && selectedProfile.propertiesList.length > 0}
 									{#each sectionSlice(selectedProfile.propertiesList, propertiesPage) as p}
 										<div class="sitem">
 											<div class="sitem-info"><span class="sitem-primary">{p.property_name}</span></div>
-											<button class="sitem-arrow" title="View Property" onclick={() => openPropertyFromProfile(p.id, p.property_name)}>
+									<button class="sitem-arrow" title={t("pages.citizens.viewProperty")} onclick={() => openPropertyFromProfile(p.id, p.property_name)}>
 												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
 											</button>
 										</div>
 									{/each}
-								{:else}<div class="empty-msg">No properties</div>{/if}
+							{:else}<div class="empty-msg">{t("pages.citizens.noProperties")}</div>{/if}
 							</div>
 							{#if sectionTotalPages(selectedProfile.propertiesList) > 1}
 								<div class="section-pager">
@@ -1318,7 +1319,7 @@
 
 						<!-- Weapons -->
 						<div class="panel">
-							<div class="panel-title">Weapons <span class="cnt">{selectedProfile.weapons?.length || 0}</span></div>
+							<div class="panel-title">{t("pages.citizens.weapons")} <span class="cnt">{selectedProfile.weapons?.length || 0}</span></div>
 							<div class="section-list">
 								{#if selectedProfile.weapons && selectedProfile.weapons.length > 0}
 									{#each sectionSlice(selectedProfile.weapons, weaponsPage) as w}
@@ -1329,9 +1330,9 @@
 											</div>
 											<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
 												{#if w.scratched}
-													<span class="badge badge-red">Scratched</span>
+											<span class="badge badge-red">{t("pages.citizens.scratched")}</span>
 												{:else}
-													<span class="badge badge-green">Intact</span>
+											<span class="badge badge-green">{t("pages.citizens.intact")}</span>
 												{/if}
 												{#each w.flags ?? [] as flag}
 													<span class="badge {flag.type === 'Stolen' || flag.type === 'Wanted' ? 'badge-red' : ''}">{flag.type}</span>
@@ -1339,7 +1340,7 @@
 											</div>
 										</div>
 									{/each}
-								{:else}<div class="empty-msg">No weapons</div>{/if}
+							{:else}<div class="empty-msg">{t("pages.citizens.noWeapons")}</div>{/if}
 							</div>
 							{#if sectionTotalPages(selectedProfile.weapons) > 1}
 								<div class="section-pager">
@@ -1352,7 +1353,7 @@
 
 						<!-- Evidence -->
 						<div class="panel">
-							<div class="panel-title">Evidence <span class="cnt">{selectedProfile.evidence?.length || 0}</span></div>
+							<div class="panel-title">{t("pages.citizens.evidence")} <span class="cnt">{selectedProfile.evidence?.length || 0}</span></div>
 							<div class="section-list">
 								{#if selectedProfile.evidence && selectedProfile.evidence.length > 0}
 									{#each sectionSlice(selectedProfile.evidence, evidencePage) as e}
@@ -1360,7 +1361,7 @@
 											<div class="sitem-info"><span class="sitem-primary">{e.title}</span><span class="sitem-secondary">{e.type}{#if e.notes} - {e.notes}{/if}</span></div>
 										</div>
 									{/each}
-								{:else}<div class="empty-msg">No evidence</div>{/if}
+							{:else}<div class="empty-msg">{t("pages.citizens.noEvidence")}</div>{/if}
 							</div>
 							{#if sectionTotalPages(selectedProfile.evidence) > 1}
 								<div class="section-pager">
@@ -1373,16 +1374,16 @@
 
 						<!-- Linked Reports -->
 						<div class="panel">
-							<div class="panel-title">Linked Reports <span class="cnt">{selectedProfile.linkedReports?.length || 0}</span></div>
+							<div class="panel-title">{t("pages.citizens.linkedReports")} <span class="cnt">{selectedProfile.linkedReports?.length || 0}</span></div>
 							<div class="section-list">
 								{#if selectedProfile.linkedReports && selectedProfile.linkedReports.length > 0}
 									{#each sectionSlice(selectedProfile.linkedReports, reportsPage) as r}
 										<div class="sitem">
 											<div class="sitem-info"><span class="sitem-primary">{r.title}</span><span class="sitem-secondary">{r.type}</span></div>
-											{#if !isEMS}<button class="view-btn" onclick={() => goToWarrantReport(r.id)}>View</button>{/if}
+									{#if !isEMS}<button class="view-btn" onclick={() => goToWarrantReport(r.id)}>{t("common.actions.view")}</button>{/if}
 										</div>
 									{/each}
-								{:else}<div class="empty-msg">No reports</div>{/if}
+							{:else}<div class="empty-msg">{t("pages.citizens.noReports")}</div>{/if}
 							</div>
 							{#if sectionTotalPages(selectedProfile.linkedReports) > 1}
 								<div class="section-pager">
@@ -1398,10 +1399,10 @@
 						     type with a combined count across all of the citizen's reports.
 						     See loadCitizenCharges() / getCitizenCharges (server). -->
 						<div class="panel">
-							<div class="panel-title">Charges <span class="cnt">{citizenCharges.length}{chargesHasMore ? "+" : ""}</span></div>
+						<div class="panel-title">{t("pages.citizens.charges")} <span class="cnt">{citizenCharges.length}{chargesHasMore ? "+" : ""}</span></div>
 							<div class="section-list">
 								{#if chargesLoading && citizenCharges.length === 0}
-									<div class="empty-msg">Loading charges…</div>
+							<div class="empty-msg">{t("pages.citizens.loadingCharges")}</div>
 								{:else if citizenCharges.length > 0}
 									{#each citizenCharges as c (c.charge)}
 										<div class="sitem" class:sitem-danger={c.charge_class === "felony"} class:sitem-warning={c.charge_class === "misdemeanor"}>
@@ -1426,7 +1427,7 @@
 										</div>
 									{/each}
 								{:else}
-									<div class="empty-msg">No charges</div>
+							<div class="empty-msg">{t("pages.citizens.noCharges")}</div>
 								{/if}
 							</div>
 							{#if chargesHasMore}
@@ -1462,30 +1463,30 @@
 					<div class="gallery-body">
 						<!-- Profilbild separat -->
 						{#if selectedProfile?.image && !citizenImageBroken}
-							<div class="gallery-section-label">Profile Photo</div>
+				<div class="gallery-section-label">{t("pages.citizens.profilePhoto")}</div>
 							<div class="gallery-grid" style="margin-bottom: 12px;">
 								<div class="gallery-item">
 									<!-- svelte-ignore a11y_click_events_have_key_events -->
 									<!-- svelte-ignore a11y_no_static_element_interactions -->
-									<img src={selectedProfile.image} alt="Profile" class="gallery-thumb" onclick={() => { galleryOpen = false; openLightbox(selectedProfile!.image!); }} />
+									<img src={selectedProfile.image} alt={t("pages.citizens.profile")} class="gallery-thumb" onclick={() => { galleryOpen = false; openLightbox(selectedProfile!.image!); }} />
 								</div>
 							</div>
-							<div class="gallery-section-label">Gallery</div>
+				<div class="gallery-section-label">{t("pages.citizens.gallery")}</div>
 						{/if}
 
 						{#if galleryImages.length === 0}
-							<div class="empty-msg" style="padding: 16px 0;">No gallery images</div>
+					<div class="empty-msg" style="padding: 16px 0;">{t("pages.citizens.noGalleryImages")}</div>
 						{:else}
 							<div class="gallery-grid">
 								{#each galleryImages as img}
 									<div class="gallery-item">
 										<!-- svelte-ignore a11y_click_events_have_key_events -->
 										<!-- svelte-ignore a11y_no_static_element_interactions -->
-										<img src={img} alt="Gallery photo" class="gallery-thumb" onclick={() => { galleryOpen = false; openLightbox(img); }} />
+										<img src={img} alt={t("pages.citizens.galleryPhoto")} class="gallery-thumb" onclick={() => { galleryOpen = false; openLightbox(img); }} />
 										<button
 											class="gallery-delete-btn"
 											onclick={(e) => { e.stopPropagation(); removeGalleryImage(img); }}
-											aria-label="Remove image"
+							aria-label={t("pages.citizens.removeImage")}
 										>
 											<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
 										</button>
@@ -1505,29 +1506,29 @@
 			<div class="modal-overlay" onclick={(e) => { if (e.target === e.currentTarget) galleryAddOpen = false; }}>
 				<div class="modal-card photo-modal" onclick={(e) => e.stopPropagation()}>
 					<div class="modal-header">
-						<h3>Add Gallery Image</h3>
+				<h3>{t("pages.citizens.addGalleryImage")}</h3>
 						<button class="modal-close" onclick={() => galleryAddOpen = false}>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 						</button>
 					</div>
 					<div class="modal-body photo-modal-body">
 						<div class="photo-form-group">
-							<span class="photo-label">Image URL</span>
+					<span class="photo-label">{t("pages.citizens.imageUrl")}</span>
 							<input
 								class="photo-input"
 								type="url"
-								placeholder="https://example.com/photo.jpg"
+						placeholder={t("pages.citizens.photoUrlPlaceholder")}
 								bind:value={galleryAddUrl}
 								onkeydown={(e) => { if (e.key === 'Enter') addGalleryImage(); if (e.key === 'Escape') galleryAddOpen = false; }}
 							/>
 							<span class="url-hint">
 								<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-								Use <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> to make sure your links persist forever.
+						{t("pages.citizens.fiveManagePrefix")} <a href="https://fivemanage.com" target="_blank" rel="noopener noreferrer">FiveManage</a> {t("pages.citizens.fiveManageSuffix")}
 							</span>
 						</div>
 					</div>
 					<div class="modal-footer-row">
-						<button class="photo-cancel-btn" onclick={() => galleryAddOpen = false} disabled={galleryAdding}>Cancel</button>
+				<button class="photo-cancel-btn" onclick={() => galleryAddOpen = false} disabled={galleryAdding}>{t("common.actions.cancel")}</button>
 						<button class="photo-confirm-btn" onclick={addGalleryImage} disabled={galleryAdding || !galleryAddUrl.trim()}>
 							{galleryAdding ? "Adding…" : "Add Image"}
 						</button>
@@ -1547,7 +1548,7 @@
 					</button>
 					<img
 						src={lightboxUrl}
-						alt="Full size"
+						alt={t("pages.citizens.fullSizeImage")}
 						class="lightbox-img"
 					/>
 				</div>
@@ -1560,25 +1561,25 @@
 			<div class="modal-overlay" onclick={closeVehicleDetail}>
 				<div class="modal-card" onclick={(e) => e.stopPropagation()}>
 					{#if vehicleDetailLoading}
-						<div class="center-msg"><div class="spinner"></div><span>Loading vehicle...</span></div>
+					<div class="center-msg"><div class="spinner"></div><span>{t("pages.citizens.loadingVehicle")}</span></div>
 					{:else if vehicleDetail}
 						<div class="modal-header">
-							<h3>Vehicle Details</h3>
+					<h3>{t("pages.citizens.vehicleDetails")}</h3>
 							<button class="modal-close" onclick={closeVehicleDetail}>
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 							</button>
 						</div>
 						<div class="modal-body">
-							<div class="vd-row"><span class="vd-label">Plate</span><span class="vd-value mono">{vehicleDetail.plate}</span></div>
-							<div class="vd-row"><span class="vd-label">Vehicle</span><span class="vd-value">{vehicleDetail.label || vehicleDetail.vehicle || vehicleDetail.model || 'Unknown'}</span></div>
-							{#if vehicleDetail.owner}<div class="vd-row"><span class="vd-label">Owner</span><span class="vd-value">{vehicleDetail.owner}</span></div>{/if}
-							{#if vehicleDetail.class}<div class="vd-row"><span class="vd-label">Class</span><span class="vd-value">{vehicleDetail.class}</span></div>{/if}
-							{#if vehicleDetailFeatures.insurance}<div class="vd-row"><span class="vd-label">Insurance</span><span class="vd-value" style="color: {(vehicleDetail.status || 'valid').toLowerCase() === 'uninsured' ? '#f87171' : '#34d399'};">{(vehicleDetail.status || 'valid').toLowerCase() === 'uninsured' ? 'Uninsured' : 'Insured'}</span></div>{/if}
-							{#if vehicleDetailFeatures.registration}<div class="vd-row"><span class="vd-label">Registration</span><span class="vd-value" style="color: {vehicleDetail.registered === false ? '#f87171' : '#34d399'};">{vehicleDetail.registered === false ? 'Unregistered' : 'Registered'}</span></div>{/if}
-							{#if vehicleDetailFeatures.points && vehicleDetail.points !== undefined}<div class="vd-row"><span class="vd-label">Points</span><span class="vd-value" class:accent-red={vehicleDetail.points > 0}>{vehicleDetail.points}</span></div>{/if}
-							{#if vehicleDetail.stolen}<div class="vd-row"><span class="vd-label">Stolen</span><span class="vd-value accent-red">Yes</span></div>{/if}
-							{#if vehicleDetail.boloactive}<div class="vd-row"><span class="vd-label">BOLO</span><span class="vd-value" style="color: #fbbf24;">Active</span></div>{/if}
-							{#if vehicleDetail.information}<div class="vd-row vd-notes"><span class="vd-label">Notes</span><span class="vd-value">{vehicleDetail.information}</span></div>{/if}
+					<div class="vd-row"><span class="vd-label">{t("pages.citizens.plate")}</span><span class="vd-value mono">{vehicleDetail.plate}</span></div>
+					<div class="vd-row"><span class="vd-label">{t("pages.citizens.vehicle")}</span><span class="vd-value">{vehicleDetail.label || vehicleDetail.vehicle || vehicleDetail.model || t("common.unknown")}</span></div>
+					{#if vehicleDetail.owner}<div class="vd-row"><span class="vd-label">{t("pages.citizens.owner")}</span><span class="vd-value">{vehicleDetail.owner}</span></div>{/if}
+					{#if vehicleDetail.class}<div class="vd-row"><span class="vd-label">{t("pages.citizens.class")}</span><span class="vd-value">{vehicleDetail.class}</span></div>{/if}
+					{#if vehicleDetailFeatures.insurance}<div class="vd-row"><span class="vd-label">{t("pages.citizens.insurance")}</span><span class="vd-value" style="color: {(vehicleDetail.status || 'valid').toLowerCase() === 'uninsured' ? '#f87171' : '#34d399'};">{(vehicleDetail.status || 'valid').toLowerCase() === 'uninsured' ? t("pages.citizens.uninsured") : t("pages.citizens.insured")}</span></div>{/if}
+					{#if vehicleDetailFeatures.registration}<div class="vd-row"><span class="vd-label">{t("pages.citizens.registration")}</span><span class="vd-value" style="color: {vehicleDetail.registered === false ? '#f87171' : '#34d399'};">{vehicleDetail.registered === false ? t("pages.citizens.unregistered") : t("pages.citizens.registered")}</span></div>{/if}
+					{#if vehicleDetailFeatures.points && vehicleDetail.points !== undefined}<div class="vd-row"><span class="vd-label">{t("pages.citizens.points")}</span><span class="vd-value" class:accent-red={vehicleDetail.points > 0}>{vehicleDetail.points}</span></div>{/if}
+					{#if vehicleDetail.stolen}<div class="vd-row"><span class="vd-label">{t("pages.citizens.stolen")}</span><span class="vd-value accent-red">{t("common.yes")}</span></div>{/if}
+					{#if vehicleDetail.boloactive}<div class="vd-row"><span class="vd-label">BOLO</span><span class="vd-value" style="color: #fbbf24;">{t("common.status.active")}</span></div>{/if}
+					{#if vehicleDetail.information}<div class="vd-row vd-notes"><span class="vd-label">{t("pages.citizens.notes")}</span><span class="vd-value">{vehicleDetail.information}</span></div>{/if}
 						</div>
 					{/if}
 				</div>
@@ -1590,7 +1591,7 @@
 			<div class="modal-overlay" onclick={closePropertyDetail}>
 				<div class="modal-card modal-card-property" onclick={(e) => e.stopPropagation()}>
 					{#if propertyDetailLoading}
-						<div class="center-msg"><div class="spinner"></div><span>Loading property...</span></div>
+					<div class="center-msg"><div class="spinner"></div><span>{t("pages.citizens.loadingProperty")}</span></div>
 					{:else if propertyDetail}
 						<div class="modal-header">
 							<div class="prop-modal-title-group">
@@ -1608,12 +1609,12 @@
 								class="prop-location-banner"
 								class:waypoint-active={waypointSet}
 								onclick={setPropertyWaypoint}
-								title="Set GPS waypoint"
+								title={t("pages.citizens.setGpsWaypoint")}
 							>
 								<div class="prop-location-left">
 									<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
 									<div class="prop-location-text">
-										<span class="prop-location-label">Location</span>
+									<span class="prop-location-label">{t("pages.citizens.location")}</span>
 										<span class="prop-location-coords">
 											{propertyDetail.streetName || propertyDetail.property_name}
 										</span>
@@ -1633,7 +1634,7 @@
 
 						<div class="modal-body">
 							<!-- Owner row -->
-							<div class="prop-section-label">Owner</div>
+						<div class="prop-section-label">{t("pages.citizens.owner")}</div>
 							{#if propertyDetail.ownerName || propertyDetail.owner}
 								<div class="prop-person-row prop-owner-row">
 									<div class="prop-person-avatar prop-owner-avatar">
@@ -1645,10 +1646,10 @@
 											<span class="prop-person-cid">{propertyDetail.owner}</span>
 										{/if}
 									</div>
-									<span class="prop-role-badge prop-role-owner">Owner</span>
+								<span class="prop-role-badge prop-role-owner">{t("pages.citizens.owner")}</span>
 								</div>
 							{:else}
-								<div class="prop-empty-row">No owner on record</div>
+							<div class="prop-empty-row">{t("pages.citizens.noOwner")}</div>
 							{/if}
 
 							<!-- Keyholders -->
@@ -1667,12 +1668,12 @@
 												<span class="prop-person-name">{kh.name || 'Unknown'}</span>
 												<span class="prop-person-cid">{kh.citizenid}</span>
 											</div>
-											<span class="prop-role-badge prop-role-key">Key Access</span>
+								<span class="prop-role-badge prop-role-key">{t("pages.citizens.keyAccess")}</span>
 										</button>
 									{/each}
 								</div>
 							{:else}
-								<div class="prop-empty-row">No keyholders</div>
+							<div class="prop-empty-row">{t("pages.citizens.noKeyholders")}</div>
 							{/if}
 						</div>
 					{/if}
@@ -1685,7 +1686,7 @@
 			<div class="modal-overlay" onclick={() => (showIssueLicenseModal = false)}>
 				<div class="modal-card" onclick={(e) => e.stopPropagation()}>
 					<div class="modal-header">
-						<h3>Manage Licenses</h3>
+				<h3>{t("pages.citizens.manageLicenses")}</h3>
 						<button class="modal-close" onclick={() => (showIssueLicenseModal = false)}>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 						</button>
@@ -1717,14 +1718,14 @@
 			<div class="modal-overlay" onclick={() => (showTagModal = false)}>
 				<div class="modal-card" onclick={(e) => e.stopPropagation()}>
 					<div class="modal-header">
-						<h3>Manage Tags</h3>
+				<h3>{t("pages.citizens.manageTags")}</h3>
 						<button class="modal-close" onclick={() => (showTagModal = false)}>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 						</button>
 					</div>
 					<div class="modal-body license-modal-body">
 						{#if manageableTags.length === 0}
-							<div class="ptags-empty" style="padding: 8px;">No tags available</div>
+					<div class="ptags-empty" style="padding: 8px;">{t("pages.citizens.noTagsAvailable")}</div>
 						{:else}
 							{#each manageableTags as t (t.name)}
 								{@const active = (selectedProfile?.tags ?? []).includes(t.name)}
@@ -1750,17 +1751,17 @@
 			<div class="list-topbar">
 				<div class="search-box">
 					<svg width="14" height="14" fill="rgba(255,255,255,0.35)" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-					<input bind:value={searchQuery} type="text" placeholder="Search by name, ID, phone, fingerprint or DNA..." />
+		<input bind:value={searchQuery} type="text" placeholder={t("pages.citizens.searchPlaceholder")} />
 				</div>
 			</div>
 
 			{#if loading}
-				<div class="center-msg"><div class="spinner"></div><span>Loading citizens...</span></div>
+		<div class="center-msg"><div class="spinner"></div><span>{t("pages.citizens.loadingCitizens")}</span></div>
 			{:else if citizens.length === 0}
-				<div class="center-msg"><span>No citizen records available.</span></div>
+		<div class="center-msg"><span>{t("pages.citizens.noRecords")}</span></div>
 			{:else}
 				<div class="citizens-header">
-					<span></span><span>Name</span><span>Citizen ID</span><span>Phone</span><span>Gender</span><span>DOB</span><span>Stats</span><span>Tags</span><span>Flags</span>
+			<span></span><span>{t("pages.citizens.name")}</span><span>{t("pages.citizens.citizenId")}</span><span>{t("pages.citizens.phone")}</span><span>{t("pages.citizens.gender")}</span><span>{t("pages.citizens.dob")}</span><span>{t("pages.citizens.stats")}</span><span>{t("pages.citizens.tags")}</span><span>{t("pages.citizens.flags")}</span>
 				</div>
 				<div class="citizens-table">
 					{#each filteredCitizens as citizen (citizen.id)}
@@ -1802,7 +1803,7 @@
 					{/each}
 				</div>
 				{#if filteredCitizens.length === 0 && searchQuery}
-					<div class="center-msg"><span>No citizens match your search.</span></div>
+				<div class="center-msg"><span>{t("pages.citizens.noMatches")}</span></div>
 				{/if}
 				<Pagination
 					currentPage={citizenPage}

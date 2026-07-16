@@ -58,9 +58,40 @@
 - Página `web/src/pages/ImpoundForm.svelte` revisada manualmente e migrada
 - Página `web/src/pages/Warrants.svelte` migrada e removida da auditoria
 - Página `web/src/pages/doj/CourtCalendar.svelte` migrada e removida da auditoria
+- Página `web/src/pages/doj/CourtCases.svelte` migrada e removida da auditoria
+- Página `web/src/pages/doj/CourtOrders.svelte` migrada e removida da auditoria
+- Página `web/src/pages/doj/LegalDocuments.svelte` migrada e removida da auditoria
+- Página `web/src/pages/doj/WarrantReview.svelte` migrada; pasta `web/src/pages/doj` concluída e removida da auditoria
+- Página `web/src/pages/Awards.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Bolos.svelte` migrada e removida da auditoria
+- Página `web/src/pages/BulletInBoard.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Cases.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Charges.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Citizens.svelte` migrada e removida da auditoria
+- Página `web/src/pages/CivilianView.svelte` migrada e removida da auditoria
+- Página `web/src/pages/ComplaintForm.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Dashboard.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Evidence.svelte` migrada e removida da auditoria
+- Página `web/src/pages/FTO.svelte` migrada e removida da auditoria
+- Página `web/src/pages/IA.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Map.svelte` migrada e removida da auditoria
+- Página `web/src/pages/PPR.svelte` migrada e removida da auditoria
+- Página `web/src/pages/ReportEditor.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Reports.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Roster.svelte` migrada e removida da auditoria
+- Página `web/src/pages/SOP.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Vehicles.svelte` migrada e removida da auditoria
+- Página `web/src/pages/Weapons.svelte` migrada e removida da auditoria
+- `web/src/constants/index.ts` migrado e removido da auditoria; nomes internos de abas e valores de payload preservados
+- `web/src/constants/management.ts` removido da auditoria; catálogo bilíngue permanece em locales e todas as chaves de permissão foram preservadas
+- `web/src/services/authService.svelte.ts` migrado e removido da auditoria; fluxo de autenticação e permissões preservado
+- `web/src/services/dashboardService.svelte.ts` migrado e removido da auditoria; carregamento e carrossel preservados
+- `web/src/services/reportService.svelte.ts` migrado e removido da auditoria; tipos e payloads internos preservados
+- Auditoria atual: `missing: []`, `extra: []`, `hardcoded: []`
 
 ## Chaves pendentes
-- Auditoria ainda aponta muitos arquivos do `web/src` com textos hardcoded.
+- Nenhuma pendência detectada pela auditoria automatizada.
+- Auditoria ampliada de markup e atributos concluída; literais técnicos, IDs, siglas e conteúdo vindo do backend foram preservados.
 
 ## Testes executados
 - `npm.cmd run build`
@@ -68,18 +99,16 @@
 - `npm.cmd run check:locales`
 
 ## Resultado da compilação
-- Build do frontend concluído com sucesso.
+- `npm.cmd run check:locales`: concluído com `missing: []`, `extra: []` e `hardcoded: []`.
+- `npm.cmd run build`: concluído com sucesso; 458 módulos transformados e `web/dist` atualizado localmente.
+- `npm.cmd run check`: mantém 56 erros e 173 avisos preexistentes em 44 arquivos, fora do escopo da tradução; o build de produção não é bloqueado por eles.
 
 ## Limitações encontradas
-- O recurso não possui camada de i18n pronta.
-- Há textos hardcoded espalhados em componentes Svelte.
+- `web/dist` é usado pelo `fxmanifest.lua`, mas está ignorado pelo Git; deve ser regenerado com `npm.cmd run build` após checkout ou atualização.
+- Textos administrativos salvos no banco de dados, nomes próprios, siglas e conteúdo recebido do backend não são traduzidos automaticamente.
 
 ## Último ponto concluído
-- `ManagementSOP` e a primeira leva do editor de ocorrências migrados.
-- Próximo alvo: `web/src/pages/ComplaintForm.svelte`.
-- Catálogo de permissões concluído: 19 categorias e 63 permissões traduzidas sem alterar os identificadores enviados ao backend; textos upstream são mantidos como fallback para novas atualizações.
-- Primeira leva do catálogo de permissões concluída: cidadãos, ocorrências, casos, evidências e alertas de busca. Categorias ainda não migradas usam o texto upstream como fallback.
-- Segunda leva do catálogo concluída: mandados, veículos, armas, acusações e efetivo.
-- Terceira leva do catálogo concluída: avaliações de desempenho, treinamento de campo, câmeras, despacho e corregedoria.
-- Leva final do catálogo concluída: procedimentos operacionais, mural, calendário e gerenciamento.
-- `npm.cmd run build` concluído com sucesso; `svelte-check` mantém erros preexistentes fora do escopo de tradução.
+- Migração completa do frontend concluída com `pt-BR` padrão e `en-US` como fallback.
+- Seletor de idioma funcional em desenvolvimento e produção, com preferência persistida localmente.
+- Catálogo de permissões concluído: 19 categorias e 63 permissões traduzidas sem alterar identificadores enviados ao backend.
+- Auditoria automatizada e ampliada limpas; build final concluído em 16/07/2026.
