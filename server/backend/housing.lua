@@ -40,6 +40,10 @@ local function validIdent(name)
     return type(name) == 'string' and name ~= '' and name:match('^[%w_]+$') ~= nil
 end
 
+local function validResource(name)
+    return type(name) == 'string' and name ~= '' and name:match('^[%w_%-]+$') ~= nil
+end
+
 -- Quote a (pre-validated) identifier.
 local function qq(name)
     return '`' .. name .. '`'
@@ -62,9 +66,26 @@ local function getSchema()
     if type(cfg) ~= 'table' then return nil end   -- not configured -> silently off
     if cfg.enabled == false then return nil end   -- explicitly disabled -> silently off
 
-    local preset = cfg.Presets and cfg.Presets[cfg.system]
+    local system = cfg.system
+    if system == 'auto' then
+        local priority = cfg.AutoPriority or {}
+        for _, presetName in ipairs(priority) do
+            local candidate = cfg.Presets and cfg.Presets[presetName]
+            if type(candidate) == 'table' and validResource(candidate.resource)
+                and GetResourceState(candidate.resource) == 'started' then
+                system = presetName
+                break
+            end
+        end
+
+        if system == 'auto' then
+            return disable('No supported housing resource is currently running')
+        end
+    end
+
+    local preset = cfg.Presets and cfg.Presets[system]
     if type(preset) ~= 'table' then
-        return disable(('Unknown housing system "%s"'):format(tostring(cfg.system)))
+        return disable(('Unknown housing system "%s"'):format(tostring(system)))
     end
 
     if not validIdent(preset.table) then
@@ -95,6 +116,7 @@ local function getSchema()
     end
 
     resolvedSchema = { table = preset.table, columns = cols, join = join }
+    print(('[ps-mdt] [housing] Using "%s" preset (%s).'):format(system, tostring(preset.resource or preset.table)))
     return resolvedSchema
 end
 

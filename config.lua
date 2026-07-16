@@ -1,28 +1,28 @@
 Config = {}
 ps = exports.ps_lib:init()
 
--- Basic Settings
-Config.Debug = false -- Enable/disable debug mode (boolean)
-Config.OnlyShowOnDuty = true -- Only allow the MDT to be opened when on duty (boolean)
+--Configurações básicas
+Config.Debug = false --Ativa/desativa o modo de depuração (booleano)
+Config.OnlyShowOnDuty = true --Permitir que o MDT seja aberto somente quando estiver em serviço (booleano)
 
--- Civilian Access Settings
+-Configurações de acesso civil
 Config.CivilianAccess = {
-    enabled = true,   -- Allow civilians to open the MDT (profile + legislation view only)
-    command = true,   -- Allow /mdt command for civilians
-    showWarrants = true, -- Show active warrants on civilian profile
-    showBolos = true,    -- Show active BOLOs on civilian profile
+    enabled = true,   --Permitir que civis abram o MDT (somente visualização de perfil + legislação)
+    command = true,   --Permitir comando /mdt para civis
+    showWarrants = false, --Mostrar mandados ativos no perfil civil
+    showBolos = false,    --Mostrar BOLOs ativos no perfil civil
 }
 
--- Time and Date Settings
+-Configurações de hora e data
 Config.DateTime = {
-    TimeFormat = '24', -- Format for displaying time ('24' or '12')
-    DateFormat = "DD-MM-YYYY" -- Format for displaying date (string: "MM-DD-YYYY", "DD-MM-YYYY", or "YYYY-MM-DD")
+    TimeFormat = '24', --Formato para exibição da hora ('24' ou '12')
+    DateFormat = "DD-MM-YYYY" --Formato para exibição da data (string: "MM-DD-AAAA", "DD-MM-AAAA" ou "AAAA-MM-DD")
 }
 
--- Department data sharing
+-Compartilhamento de dados do departamento
 Config.Sharing = {
-    -- Mutual Sharing (Bidirectional)
-    -- All departments in this group can see each other's data
+    -Compartilhamento mútuo (bidirecional)
+    --Todos os departamentos deste grupo podem ver os dados uns dos outros
     Mutual = {
         types = {
             'reports',
@@ -38,10 +38,10 @@ Config.Sharing = {
         }
     },
 
-    -- One-Way Sharing (Unidirectional)
-    -- Viewers can see target department data, but not vice versa
+    -Compartilhamento unidirecional (unidirecional)
+    --Os visualizadores podem ver os dados do departamento alvo, mas não vice-versa
     OneWay = {
-        { -- Example: FIB and GOV 
+        { --Exemplo: FIB e GOV
             viewers = {
                 'fib',
                 'gov'
@@ -62,38 +62,38 @@ Config.Sharing = {
     },
 }
 
--- Keybinds
+-Atalhos de teclado
 Config.Keys = {
-    -- https://docs.fivem.net/docs/game-references/controls/ | Default QWERTY
+    --https://docs.fivem.net/docs/game-references/controls/| QWERTY padrão
     OpenMDT = {
-        enabled = true, -- Enable/disable keybind (boolean)
-        key = 'F11', -- Key to open MDT (string)
+        enabled = true, --Ativar/desativar atalho de teclado (booleano)
+        key = 'F11', --Chave para abrir o MDT (string)
     },
 }
 
--- Commands
+--Comandos
 Config.Commands = {
     Open = {
-        enabled = true, -- Enable/disable command (boolean)
-        command = 'mdt', -- Command to open MDT (string)
+        enabled = true, --Comando ativar/desativar (booleano)
+        command = 'mdt', --Comando para abrir o MDT (string)
     },
     MessageOfTheDay = {
-        enabled = true, -- Enable/disable command (boolean)
-        command = 'motd', -- Command to set message of the day (string)
+        enabled = true, --Comando ativar/desativar (booleano)
+        command = 'motd', --Comando para definir a mensagem do dia (string)
     },
 }
 
--- Dispatch Settings
+--Configurações de envio
 Config.Dispatch = {
-    -- Which dispatch resource feeds the MDT. Supported providers:
-    --   'ps' → ps-dispatch   'qs' → qs-dispatch   'cd' → cd_dispatch
-    -- 'auto' picks whichever of those three is currently running.
+    --Qual recurso de despacho alimenta o MDT. Provedores suportados:
+    --'ps' → despacho ps 'qs' → despacho qs 'cd' → cd_dispatch
+    --'auto' escolhe qualquer um dos três que esteja em execução no momento.
     Provider = 'auto',
     FilterByJob = true,
 }
 
--- 10-codes offered in the "Create Call" modal. `code` shows in the dropdown,
--- `label` is the human name (also used as the call title if none is typed).
+-10 códigos oferecidos no modal "Criar Chamada". `code` aparece no menu suspenso,
+--`label` é o nome humano (também usado como título da chamada se nenhum for digitado).
 Config.DispatchCodes = {
     { code = '10-13', label = 'Officer Needs Assistance' },
     { code = '10-71', label = 'Shooting' },
@@ -108,78 +108,85 @@ Config.DispatchCodes = {
     { code = '911',   label = 'General 911 Call' },
 }
 
--- Wolfknight Plate Reader Settings
-Config.UseWolfknightRadar = true -- Enable/disable Wolfknight radar integration
-Config.WolfknightNotifyTime = 5000 -- Duration (ms) for plate reader notifications
-Config.PlateScanForDriversLicense = true -- Check driver's license on plate scan
+-Configurações do leitor de placas Wolfknight
+Config.UseWolfknightRadar = true --Ativar/desativar a integração do radar Wolfknight
+Config.WolfknightNotifyTime = 5000 --Duração (ms) para notificações do leitor de placas
+Config.PlateScanForDriversLicense = true -Verifique a carteira de motorista na digitalização da placa
 
--- Fingerprint Settings
-Config.FingerprintAutoFilled = false -- Auto-populate fingerprints on citizen profiles (if false, officers must manually add fingerprints)
+-Configurações de impressão digital
+Config.FingerprintAutoFilled = false -Preencher automaticamente as impressões digitais nos perfis dos cidadãos (se forem falsas, os policiais deverão adicionar manualmente as impressões digitais)
 
--- Fingerprint Scan Integration
+-Integração de digitalização de impressão digital
 Config.FingerprintScan = {
-    enabled = true,                                         -- Enable fingerprint scan trigger from MDT
-    officerEvent = 'police:client:showFingerprint',          -- Client event triggered on the officer
-    suspectEvent = 'police:client:showFingerprint',          -- Client event triggered on the suspect
+    enabled = true,                                         --Habilite o gatilho de leitura de impressão digital do MDT
+    officerEvent = 'police:client:showFingerprint',          -Evento do cliente acionado no oficial
+    suspectEvent = 'police:client:showFingerprint',          -Evento do cliente acionado no suspeito
 }
 
--- Fuel Resource Name
-Config.Fuel = 'LegacyFuel' -- Fuel resource name for vehicle fuel management
+--Nome do recurso de combustível
+Config.Fuel = 'LegacyFuel' --Nome do recurso de combustível para gerenciamento de combustível de veículos
 
--- Phone integration (single source of truth) ---------------------------------
--- One place for everything phone-related: resolving a citizen's number for the
--- MDT profile AND sending court reminder SMS / invite e-mails. Point this at your
--- phone resource once and both features use it, so they can never drift apart.
--- Leave Resource = '' to use charinfo.phone for display and disable court SMS/mail.
+--Integração telefônica (fonte única de verdade) ---------------------------------
+--Um lugar para tudo relacionado ao telefone: resolver o número de cidadão para o
+-Perfil MDT E envio de SMS de lembrete judicial /e-mails de convite. Aponte isso para o seu
+-recurso de telefone uma vez e ambos os recursos o utilizam, para que nunca possam se separar.
+--Deixe Resource = '' para usar charinfo.phone para exibição e desabilitar SMS/mail judicial.
 Config.Phone = {
-    Resource     = 'lb-phone',                    -- phone script resource name ('' = charinfo.phone only, no SMS/mail)
-    NumberExport = 'GetEquippedPhoneNumber',      -- export returning a citizen's number for a citizenid
-    UseCharinfoFallback = true,                   -- if the export returns nothing, fall back to charinfo.phone
+    Resource     = 'lb-phone',                    --nome do recurso do script de telefone ('' = apenas charinfo.phone, sem SMS/mail)
+    NumberExport = 'GetEquippedPhoneNumber',      --export retornando um número de cidadão para um Citizenid
+    UseCharinfoFallback = true,                   --se a exportação não retornar nada, volte para charinfo.phone
 
-    -- Court messaging (uses the same Resource above)
-    SmsSenderNumber = 'SA-COURT',                 -- "from" number shown on reminder SMS (any string lb-phone accepts)
-    MailSender      = 'San Andreas Judicial System', -- sender shown in the recipient's inbox
+    -Mensagens judiciais (usa o mesmo recurso acima)
+    SmsSenderNumber = 'SA-COURT',                 --número "de" mostrado no SMS de lembrete (qualquer string que o lb-phone aceita)
+    MailSender      = 'San Andreas Judicial System', --remetente mostrado na caixa de entrada do destinatário
 }
 
 
--- Internal Affairs
+-Assuntos Internos
 Config.IA = {
-    -- Anti-spam: how long a citizen must wait between filing complaints.
-    CooldownMs = 300000, -- 5 minutes
+    --Anti-spam: quanto tempo um cidadão deve esperar entre a apresentação de reclamações.
+    CooldownMs = 300000, -5 minutos
 
-    -- E-mail the complainant when their complaint changes status. Uses the phone
-    -- resource from Config.Phone; silently skipped if none is running.
+    --Envie um e-mail ao reclamante quando a reclamação mudar de status. Usa o telefone
+    --recurso do Config.Phone; ignorado silenciosamente se nenhum estiver em execução.
     NotifyComplainant = true,
     MailSender = 'Internal Affairs',
 }
 
 
--- Housing / Properties Integration
--- The MDT shows the properties a citizen owns on their profile. Every housing
--- resource stores this in a different table with different column names, so
--- pick the system you run below — or define a fully custom mapping.
+--Integração Habitação /Propriedades
+--O MDT mostra as propriedades que um cidadão possui em seu perfil. Cada habitação
+--o recurso armazena isso em uma tabela diferente com nomes de coluna diferentes, então
+– escolha o sistema que você executa abaixo – ou defina um mapeamento totalmente personalizado.
 --
--- To switch systems you normally ONLY change `Config.Housing.system`.
+--Para trocar de sistema você normalmente altera SOMENTE `Config.Housing.system`.
 Config.Housing = {
-    enabled = true,             -- false = hide the properties feature entirely (no housing DB queries are run)
-    system  = 'qbx_properties', -- which preset below to use, or 'custom'
+    enabled = true,             --false = oculta totalmente o recurso de propriedades (nenhuma consulta de banco de dados de alojamento é executada)
+    system  = 'auto',           --detecta automaticamente um recurso em execução, escolha uma predefinição ou use 'personalizado'
+    AutoPriority = {
+        'brutal_housing',
+        'ps_housing',
+        'qbx_properties',
+        'qb_houses',
+    },
 
-    -- Presets: ready-made schema mappings for popular housing resources.
-    -- `columns` maps the MDT's internal fields to your table's real columns:
-    --   owner      = column holding the owner's citizenid          (required)
-    --   id         = column holding the property's unique id       (needed to open a single property)
-    --   name       = column shown as the property name/label
-    --   coords     = column holding coords as JSON (used for the "set waypoint" button; optional)
-    --   keyholders = column holding keyholders as JSON array/object (optional)
-    -- Set a column to nil if your system doesn't have it.
+    --Predefinições: mapeamentos de esquemas prontos para recursos habitacionais populares.
+    --`columns` mapeia os campos internos do MDT para as colunas reais da sua tabela:
+    --proprietário = coluna contendo o CitizenID do proprietário (obrigatório)
+    --id = coluna contendo o id exclusivo da propriedade (necessário para abrir uma única propriedade)
+    --name = coluna mostrada como o nome/rótulo da propriedade
+    --coords = coluna contendo coordenadas como JSON (usado para o botão "definir waypoint"; opcional)
+--keyholders = coluna contendo keyholders como matriz/objeto JSON (opcional)
+    --Defina uma coluna como nula se o seu sistema não a tiver.
     --
-    -- For TWO-TABLE systems (e.g. qb-houses), where the property definition and
-    -- the ownership live in separate tables, add a `join` (see the qb_houses
-    -- preset below for a complete example).
+    --Para sistemas de DUAS TABELA (por exemplo, qb-houses), onde a definição de propriedade e
+    --a propriedade fica em tabelas separadas, adicione um `join` (veja o arquivo qb_houses
+    --predefinido abaixo para um exemplo completo).
     Presets = {
-        -- Qbox properties (default). This matches the table the MDT used before
-        -- this option existed, so leaving it selected keeps the old behaviour.
+        --Propriedades do Qbox (padrão). Isso corresponde à tabela que o MDT usou antes
+        --esta opção existia, então deixá-la selecionada mantém o comportamento antigo.
         qbx_properties = {
+            resource = 'qbx_properties',
             table = 'properties',
             columns = {
                 owner      = 'owner',
@@ -190,10 +197,11 @@ Config.Housing = {
             },
         },
 
-        -- Project Sloth Housing (ps-housing).
-        -- ps-housing has no single coords column (it uses door_data), and the
-        -- display name comes from `street`.
+        --Projeto Habitação Preguiça (ps-habitação).
+        --ps-housing não tem uma única coluna de coordenadas (ele usa door_data), e o
+        --o nome de exibição vem de `street`.
         ps_housing = {
+            resource = 'ps-housing',
             table = 'properties',
             columns = {
                 owner      = 'owner_citizenid',
@@ -204,30 +212,45 @@ Config.Housing = {
             },
         },
 
-        -- qb-houses (legacy QBCore). Two-table system: ownership lives in
-        -- `player_houses`, the property definition (label + coords) lives in
-        -- `houselocations`, linked by player_houses.house = houselocations.name.
+        -Habitação de Scripts Brutais. Propriedade e detalhes da propriedade são armazenados
+        --juntos; o acesso à chave é gerenciado internamente pelo recurso.
+        brutal_housing = {
+            resource = 'brutal_housing',
+            table = 'brutal_housing',
+            columns = {
+                owner      = 'owner',
+                id         = 'id',
+                name       = 'label',
+                coords     = 'coords',
+                keyholders = nil,
+            },
+        },
+
+        --qb-houses (QBCore legado). Sistema de duas mesas: a propriedade reside em
+        --`player_houses`, a definição da propriedade (label + coords) reside em
+        --`houselocations`, vinculado por player_houses.house = houselocations.name.
         qb_houses = {
-            table = 'player_houses',   -- ownership table
+            resource = 'qb-houses',
+            table = 'player_houses',   --tabela de propriedade
             columns = {
                 owner      = 'citizenid',
                 id         = 'id',
-                name       = nil,      -- taken from the joined table (label)
-                coords     = nil,      -- taken from the joined table (coords)
+                name       = nil,      --retirado da tabela unida (rótulo)
+                coords     = nil,      --retirado da tabela unida (coords)
                 keyholders = 'keyholders',
             },
             join = {
-                table = 'houselocations',                 -- definitions table
-                on    = { left = 'house', right = 'name' }, -- player_houses.house = houselocations.name
-                columns = {                                -- pull these fields from the joined table instead
+                table = 'houselocations',                 --tabela de definições
+                on    = { left = 'house', right = 'name' }, --player_houses.house=houselocations.name
+                columns = {                                --extraia esses campos da tabela unida
                     name   = 'label',
                     coords = 'coords',
                 },
             },
         },
 
-        -- Fully custom mapping. Set Config.Housing.system = 'custom' and edit
-        -- the values below to match your housing resource's database.
+        -Mapeamento totalmente personalizado. Defina Config.Housing.system = 'custom' e edite
+        -os valores abaixo para corresponder ao banco de dados do seu recurso habitacional.
         custom = {
             table = 'properties',
             columns = {
@@ -237,128 +260,128 @@ Config.Housing = {
                 coords     = 'coords',
                 keyholders = 'keyholders',
             },
-            -- Uncomment and adjust for a two-table system:
-            -- join = {
-            --     table   = 'other_table',
-            --     on      = { left = 'local_col', right = 'other_col' },
-            --     columns = { name = 'label', coords = 'coords' },
-            -- },
+            --Remova o comentário e ajuste para um sistema de duas tabelas:
+            --juntar = {
+            --tabela = 'outra_tabela',
+            --on = { left = 'local_col', right = 'other_col' },
+            --colunas = { nome = 'rótulo', coordenadas = 'coords' },
+            --},
         },
     },
 }
 
--- ─────────────────────────────────────────────────────────────────────────────
---  Vehicle MDT — License Points
--- ─────────────────────────────────────────────────────────────────────────────
--- "License points" are shown on a vehicle's MDT profile and (optionally) in the
--- vehicle list. Officers add them one at a time, or via quick presets, on the
--- vehicle detail view (requires the `vehicles_edit_dmv` permission).
+--────────────────────────────────────── ─────────────────── ────────────────────
+-Veículo MDT -Pontos de Licença
+--────────────────────────────────────── ─────────────────── ────────────────────
+--Os "pontos de licença" são mostrados no perfil MDT de um veículo e (opcionalmente) no
+-lista de veículos. Os oficiais os adicionam um de cada vez, ou por meio de predefinições rápidas, no
+--visualização detalhada do veículo (requer a permissão `vehicles_edit_dmv`).
 Config.VehiclePoints = {
-    enabled   = false, -- false = hide points everywhere (list column, profile, editor) and reject point writes
-    visualMax = 12,   -- how many pips the points bar draws before showing a "+N" overflow badge
+    enabled   = false, --false = ocultar pontos em todos os lugares (coluna da lista, perfil, editor) e rejeitar gravações de pontos
+    visualMax = 12,   --quantos pips a barra de pontos desenha antes de mostrar um emblema de estouro "+N"
 }
 
--- ─────────────────────────────────────────────────────────────────────────────
---  Vehicle MDT — Insurance Integration
--- ─────────────────────────────────────────────────────────────────────────────
--- When enabled, a vehicle's STATUS (the pill shown top-right on the profile and
--- in the vehicle list) is driven LIVE by your insurance resource instead of being
--- set by hand — officers can no longer edit status/reason manually.
+--────────────────────────────────────── ─────────────────── ────────────────────
+--Veículo MDT — Integração de Seguros
+--────────────────────────────────────── ─────────────────── ────────────────────
+-Quando ativado, o STATUS do veículo (a pílula mostrada no canto superior direito do perfil e
+-na lista de veículos) é conduzido AO VIVO pelo seu recurso de seguro em vez de ser
+--definido manualmente — os policiais não podem mais editar o status/motivo manualmente.
 --
--- When DISABLED, the status simply defaults to "Valid" everywhere and NO insurance
--- lookups are performed.
+-Quando DESATIVADO, o status simplesmente é padronizado como "Válido" em todos os lugares e SEM seguro
+--pesquisas são executadas.
 --
--- The lookup is fully configurable so you can point it at whatever insurance script
--- you run. Example (m-Insurance), which uses a callback-style export:
---     exports['m-Insurance']:HasCarInsurance('ABC123', function(hasInsurance) ... end)
+--A pesquisa é totalmente configurável para que você possa apontá-la para qualquer script de seguro
+-você corre. Exemplo (m-Insurance), que usa uma exportação estilo retorno de chamada:
+--exportações['m-Insurance']:HasCarInsurance('ABC123', function(hasInsurance) ... fim)
 --
--- NOTE: lookups always FAIL OPEN — a missing resource/export, an error, or a
--- timeout is treated as "insured", so a broken insurance script can never wrongly
--- flag every vehicle as uninsured.
+--NOTA: as pesquisas sempre FALHA ABERTA — um recurso/exportação ausente, um erro ou um
+--o tempo limite é tratado como "segurado", portanto, um script de seguro quebrado nunca pode ser erroneamente
+-sinalizar todos os veículos como não segurados.
 Config.VehicleInsurance = {
     enabled  = false,
-    resource = 'm-Insurance',     -- resource that exposes the export
-    export   = 'HasCarInsurance', -- export name to call
+    resource = 'm-Insurance',     --recurso que expõe a exportação
+    export   = 'HasCarInsurance', --exporta o nome para ligar
 
-    -- How the export delivers its answer:
-    --   callback = true  -> exports[resource]:export(plate, function(hasInsurance) end)
-    --   callback = false -> local hasInsurance = exports[resource]:export(plate)
+    --Como a exportação fornece sua resposta:
+    --callback = true -> exportações[recurso]:export(placa, função(hasInsurance) fim)
+    --callback = false -> local hasInsurance = exports[resource]:export(plate)
     callback = true,
 
-    timeout  = 2000, -- ms to wait for a callback answer before failing open (treated as insured)
+    timeout  = 2000, --ms para aguardar uma resposta de retorno de chamada antes de falhar na abertura (tratado como segurado)
 
-    -- Resolve insurance for EVERY row in the vehicle list? On large servers this is
-    -- one lookup per vehicle. Set false to only resolve it on the detail view (the
-    -- list then shows "Valid" until a vehicle is opened).
+    -Resolver o seguro para CADA linha da lista de veículos? Em servidores grandes isso é
+    -uma pesquisa por veículo. Defina false para resolvê-lo apenas na visualização detalhada (o
+    --a lista mostra então "Válido" até que um veículo seja aberto).
     resolveInList = true,
 
-    -- How the insured/uninsured result maps onto the existing status/reason pill:
-    insuredStatus   = 'valid',                -- status when the vehicle IS insured
-    uninsuredStatus = 'uninsured',            -- status when it is NOT insured
-    uninsuredReason = 'No active insurance',  -- reason text shown next to the pill
+    --Como o resultado segurado/não segurado é mapeado na pílula de status/motivo existente:
+    insuredStatus   = 'valid',                -status quando o veículo ESTÁ segurado
+    uninsuredStatus = 'uninsured',            -status quando NÃO está segurado
+    uninsuredReason = 'No active insurance',  --texto do motivo mostrado ao lado da pílula
 }
 
--- ─────────────────────────────────────────────────────────────────────────────
---  Vehicle MDT — Registration Integration
--- ─────────────────────────────────────────────────────────────────────────────
--- A sibling of Config.VehicleInsurance. When enabled, a vehicle's REGISTRATION
--- (shown as its own Registered/Unregistered field on the profile + in the vehicle
--- list, and as a pill in the profile detail view) is resolved LIVE from a
--- configurable resource. When disabled, every vehicle simply reads "Registered"
--- and NO registration lookups are performed.
+--────────────────────────────────────── ─────────────────── ────────────────────
+--Veículo MDT — Integração de Registro
+--────────────────────────────────────── ─────────────────── ────────────────────
+--Um irmão de Config.VehicleInsurance. Quando ativado, o REGISTRO de um veículo
+--(mostrado como seu próprio campo Registrado/Não registrado no perfil + no veículo
+--list, e como um comprimido na visualização de detalhes do perfil) é resolvido AO VIVO a partir de um
+--recurso configurável. Quando desativado, cada veículo simplesmente lê “Registrado”
+--e NÃO são realizadas pesquisas de registro.
 --
--- The lookup is fully configurable. Example (m-Insurance), which uses a
--- callback-style export:
---     exports['m-Insurance']:HasCarRegistration('ABC123', function(hasReg) ... end)
+--A pesquisa é totalmente configurável. Exemplo (m-Insurance), que utiliza um
+--exportação estilo retorno de chamada:
+--exportações['m-Insurance']:HasCarRegistration('ABC123', function(hasReg) ... end)
 --
--- NOTE: lookups always FAIL OPEN — a missing resource/export, an error, or a
--- timeout is treated as "registered", so a broken script can never wrongly flag
--- every vehicle as unregistered.
+--NOTA: as pesquisas sempre FALHA ABERTA — um recurso/exportação ausente, um erro ou um
+--o tempo limite é tratado como "registrado", portanto, um script quebrado nunca pode sinalizar erroneamente
+-todos os veículos como não registrados.
 Config.VehicleRegistration = {
     enabled  = false,
-    resource = 'm-Insurance',        -- resource that exposes the export
-    export   = 'HasCarRegistration', -- export name to call
+    resource = 'm-Insurance',        --recurso que expõe a exportação
+    export   = 'HasCarRegistration', --exporta o nome para ligar
 
-    -- How the export delivers its answer:
-    --   callback = true  -> exports[resource]:export(plate, function(hasReg) end)
-    --   callback = false -> local hasReg = exports[resource]:export(plate)
+    --Como a exportação fornece sua resposta:
+    --callback = true -> exportações[recurso]:export(placa, função(hasReg) fim)
+    --callback = false -> local hasReg = exports[resource]:export(plate)
     callback = true,
 
-    timeout  = 2000, -- ms to wait for a callback answer before failing open (treated as registered)
+    timeout  = 2000, --ms para aguardar uma resposta de retorno de chamada antes de falhar na abertura (tratado como registrado)
 
-    -- Resolve registration for EVERY row in the vehicle list? On large servers this
-    -- is one lookup per vehicle. Set false to only resolve it on the detail view
-    -- (the list then shows "Registered" until a vehicle is opened).
+    --Resolver registro para CADA linha da lista de veículos? Em servidores grandes isso
+    --é uma pesquisa por veículo. Defina false para resolvê-lo apenas na visualização detalhada
+    --(a lista mostra então "Registrado" até que um veículo seja aberto).
     resolveInList = true,
 
-    -- Reason text shown next to the pill when a vehicle is NOT registered:
+    --Texto do motivo mostrado ao lado da pílula quando um veículo NÃO está registrado:
     unregisteredReason = 'No active registration',
 }
 
--- Weapon Registration
-Config.RegisterWeaponsAutomatically = false -- Auto-register weapons on purchase (ox_inventory and qb-inventory/qb-weapons)
-Config.RegisterCreatedWeapons = false -- Also auto-register weapons on item creation (ox_inventory only)
+-Registro de armas
+Config.RegisterWeaponsAutomatically = false -Registro automático de armas na compra (ox_inventory e qb-inventory/qb-weapons)
+Config.RegisterCreatedWeapons = false --Também registra automaticamente armas na criação de itens (somente ox_inventory)
 
--- Weapon Image Path 
+--Caminho da imagem da arma
 Config.WeaponImagePath = 'nui://ox_inventory/web/images/'
--- ─────────────────────────────────────────────────────────────────────────────
--- Impound
--- ─────────────────────────────────────────────────────────────────────────────
--- Releasing a vehicle puts it straight back into the owner's garage — they
--- retrieve it there like any other car. Lots are purely a record of WHERE the
--- vehicle is being held while impounded.
+--────────────────────────────────────── ─────────────────── ────────────────────
+-Apreender
+--────────────────────────────────────── ─────────────────── ────────────────────
+-Liberar um veículo o coloca de volta na garagem do proprietário -eles
+-recupere-o lá como qualquer outro carro. Os lotes são puramente um registro de ONDE o
+-o veículo está detido enquanto está apreendido.
 Config.Impound = {
     Lots = {
         { id = 'lspd',   label = 'LSPD Impound' },
         { id = 'paleto', label = 'Paleto Impound' },
     },
 
-    -- Impound reasons offered in the MDT, each with a default fee (the officer
-    -- can still edit the fee when impounding).
-    -- `hold` is the duration id (see Durations below) that gets pre-selected when an
-    -- officer picks this reason. It's a recommendation, not a rule: the officer can
-    -- always change it before filing. Omit it and the reason falls back to
-    -- DefaultDuration.
+    --Motivos de confisco oferecidos no MDT, cada um com uma taxa padrão (o oficial
+    -ainda pode editar a taxa durante a apreensão).
+    --`hold` é o ID de duração (veja Durações abaixo) que é pré-selecionado quando um
+    -o oficial escolhe esse motivo. É uma recomendação, não uma regra: o policial pode
+    -sempre altere-o antes de arquivar. Omita-o e a razão voltará a
+    --Duração padrão.
     Reasons = {
         { label = 'Evidence / Investigation', fee = 0,    hold = 'hold' },
         { label = 'Reckless Driving',         fee = 750,  hold = '1d' },
@@ -372,16 +395,16 @@ Config.Impound = {
 
     DefaultFee = 500,
     MaxFee     = 50000,
-    -- Account the release fee is taken from ('bank' or 'cash').
+    --Conta da qual é cobrada a taxa de liberação ('banco' ou 'dinheiro').
     FeeAccount = 'bank',
-    -- Require the fee to be paid before a vehicle can be released.
+    -Exigir que a taxa seja paga antes que um veículo possa ser liberado.
     RequireFeePaid = true,
 
-    -- How long the vehicle is held before it may be released at all.
-    --   days = 0    → releasable straight away
-    --   days = n    → held for n days
-    --   days = nil  → held until an officer decides otherwise
-    -- The fee still has to be paid on top; the hold is about time, not money.
+    --Quanto tempo o veículo é retido antes de poder ser liberado.
+    --dias = 0 → liberável imediatamente
+    --dias = n → mantido por n dias
+    --dias = nil → mantido até que um oficial decida o contrário
+    -A taxa ainda precisa ser paga em cima; a espera é uma questão de tempo, não de dinheiro.
     Durations = {
         { id = 'immediate', label = 'Releasable immediately', days = 0 },
         { id = '1d',        label = '1 day',                  days = 1 },
@@ -391,53 +414,53 @@ Config.Impound = {
     },
     DefaultDuration = 'hold',
 
-    -- E-mail the owner when their vehicle is impounded, charged, or released.
-    -- The owner is usually nowhere near the vehicle when it happens, so an on-screen
-    -- notification they never see is worse than useless. Uses Config.Phone.
+    -Envie um e-mail ao proprietário quando seu veículo for apreendido, cobrado ou liberado.
+    --O proprietário geralmente não está perto do veículo quando isso acontece, então uma mensagem na tela
+    -a notificação que eles nunca veem é pior que inútil. Usa Config.Phone.
     NotifyOwner = true,
     MailSender  = 'Vehicle Impound Unit',
 
-    -- Storage fee: grows for every day the vehicle sits in the lot, capped so it
-    -- can never run away. Computed from the impound date, never accumulated by a
-    -- timer, so it survives restarts and can't drift.
+    --Taxa de armazenamento: aumenta a cada dia que o veículo fica no estacionamento, limitado para que
+    -nunca pode fugir. Calculado a partir da data de apreensão, nunca acumulado por um
+    -temporizador, para que ele sobreviva às reinicializações e não possa desviar.
     Storage = {
         PerDay  = 500,
-        MaxDays = 7,    -- after this many days the storage fee stops growing
+        MaxDays = 7,    --depois de tantos dias, a taxa de armazenamento para de crescer
     },
 
-    -- On-site impound: /impound takes the vehicle the officer is in, or the
-    -- nearest one. Vehicles that nobody owns (NPC traffic) are simply removed and
-    -- the officer gets a small payout for keeping the streets clear.
+    -Apreensão no local: /apreensão leva o veículo em que o policial está, ou o
+    -o mais próximo. Veículos que ninguém possui (tráfego de NPCs) são simplesmente removidos e
+    -o policial recebe um pequeno pagamento por manter as ruas limpas.
     OnSite = {
         Command   = 'mdtimpound',
-        -- How far the officer may stand from the vehicle.
+        -A que distância o policial pode ficar do veículo.
         MaxDistance = 6.0,
 
-        -- The officer documents the vehicle, then radios it in. Both steps are
-        -- cancellable: walking away aborts the impound and nothing is written.
+        --O policial documenta o veículo e depois o transmite por rádio. Ambas as etapas são
+        -cancelável: ir embora aborta a apreensão e nada é escrito.
         Sequence = {
-            NotepadMs = 4500,   -- writing it up on the clipboard
-            RadioMs   = 6000,   -- calling the tow truck in
+            NotepadMs = 4500,   -escrevendo na área de transferência
+            RadioMs   = 6000,   -chamando o caminhão de reboque
         },
 
-        -- Once the paperwork is done the vehicle fades out and is removed.
+        -Uma vez concluída a papelada, o veículo desaparece e é removido.
         FadeMs = 1500,
 
         Cleanup = {
-            -- Payout for removing an unowned vehicle, randomised in this range.
+            --Pagamento pela remoção de um veículo sem dono, randomizado nesta faixa.
             RewardMin   = 100,
             RewardMax   = 200,
             Account     = 'cash',
-            -- Anti-abuse: seconds between payouts, and how many an officer can
-            -- earn per shift (resets when they go off duty / the server restarts).
-            -- everything is logged
+            -Antiabuso: segundos entre pagamentos e quantos um policial pode
+            --ganho por turno (reinicia quando eles saem de serviço /o servidor reinicia).
+            -tudo está registrado
             Cooldown    = 120,
             MaxPerShift = 20,
         },
     },
 }
 
--- Job Settings
+-Configurações de trabalho
 Config.PoliceJobType = "leo"
 Config.PoliceJobs = {
     'lspd',
@@ -445,6 +468,17 @@ Config.PoliceJobs = {
     'sahp',
     'fib',
     'gov'
+}
+
+-Integração na prisão. O modo automático prefere p_policejob, depois pickle_prisons e
+-usa o evento de prisão QBCore existente como substituto final.
+Config.Sentencing = {
+    system = 'auto', --auto/pickle_prisons/p_policejob/qb_policejob
+    pickleResource = 'pickle_prisons',
+    picklePrison = 'default',
+    pPoliceResource = 'p_policejob',
+    pPoliceCommand = 'prender',
+    pPoliceType = 'prisao',
 }
 
 Config.DojJobType = "doj"
@@ -459,8 +493,8 @@ Config.MedicalJobs = {
 }
 
 Config.Uploads = {
-    MaxBytes = 5242880, -- 5 MB
-    RateLimitPerMinute = 10, -- Max uploads per player per minute (0 = unlimited)
+    MaxBytes = 5242880, -5 MB
+    RateLimitPerMinute = 10, --Máximo de uploads por jogador por minuto (0 = ilimitado)
     AllowedAttachmentTypes = {
         'image/jpeg',
         'image/png',
@@ -474,79 +508,79 @@ Config.Uploads = {
     }
 }
 
--- Pagination Limits
+--Limites de paginação
 Config.Pagination = {
-    Citizens = 20, -- Citizens per page
-    CitizenSearch = 20, -- Max citizen search results
-    Cases = 20, -- Cases per page
-    CitizenCharges = 5, -- Charges per page in the Citizen profile's Charges section
+    Citizens = 20, -Cidadãos por página
+    CitizenSearch = 20, -Máximo de resultados de pesquisa de cidadãos
+    Cases = 20, --Casos por página
+    CitizenCharges = 5, --Cobranças por página na seção Cobranças do perfil Cidadão
 }
 
--- Fine Processing
+--Processamento fino
 Config.Fines = {
-    MaxAmount = 100000,   -- Maximum fine amount ($) to prevent economy exploits
-    CooldownMs = 30000,   -- Anti-spam cooldown between fines (milliseconds)
+    MaxAmount = 100000,   -Valor máximo da multa ($) para evitar explorações econômicas
+    CooldownMs = 30000,   --Tempo de espera anti-spam entre multas (milissegundos)
 }
 
--- Warrant Defaults
+-Padrões de garantia
 Config.Warrants = {
-    DefaultExpiryDays = 7, -- Default warrant expiry when no date is provided
+    DefaultExpiryDays = 7, -Expiração do mandado padrão quando nenhuma data é fornecida
 }
 
--- ---------------------------------------------------------------------------
--- Personnel data cleanup (Phase 1 core)
--- ---------------------------------------------------------------------------
--- When an officer is terminated, the boss panel can optionally wipe that
--- person's PERSONAL MDT footprint. The guiding rule: remove only data that
--- belongs to the individual (their own file/footprint) and that cannot harm
--- ongoing investigations or other officers' records.
+-----------------------------------------------------------------------------
+--Limpeza de dados pessoais (núcleo da Fase 1)
+-----------------------------------------------------------------------------
+-Quando um oficial é demitido, o painel do chefe pode, opcionalmente, limpar isso
+--pegada MDT PESSOAL da pessoa. A regra orientadora: remova apenas os dados que
+--pertence ao indivíduo (seu próprio arquivo/pegada) e não pode prejudicar
+-investigações em andamento ou registros de outros oficiais.
 --
--- DELETED (their own data): profile tags, sessions, identifiers, clock records,
---   gallery, officer status, SOP acknowledgements, their FTO trainee file,
---   PPRs written ABOUT them, messages they sent, patrol membership, and audit
---   log entries about them.
+--EXCLUÍDOS (seus próprios dados): tags de perfil, sessões, identificadores, registros de relógio,
+-galeria, status de oficial, reconhecimentos de SOP, arquivo de estagiário FTO,
+-PPRs escritos SOBRE eles, mensagens que enviaram, adesão à patrulha e auditoria
+--registra entradas sobre eles.
 --
--- ALWAYS KEPT (investigative / shared / other officers): reports, charges,
---   evidence, BOLOs, cases, warrants, arrests, weapons, court records,
---   licenses, the core mdt_profiles identity row (kept so FK-cascaded
---   investigative rows like warrants are never removed), award/penal/SOP
---   definitions, and any record the person authored in SOMEONE ELSE'S file
---   (e.g. DORs they wrote as a trainer, PPRs they authored about others).
+--SEMPRE MANTIDOS (investigativos/compartilhados/outros oficiais): relatórios, cobranças,
+-evidências, BOLOs, casos, mandados, prisões, armas, registros judiciais,
+--licenses, a linha de identidade principal mdt_profiles (mantida em cascata com FK
+--linhas investigativas como mandados nunca são removidos), sentença/penal/SOP
+--definições e qualquer registro de autoria da pessoa no arquivo de OUTRA PESSOA
+-(por exemplo, DORs que eles escreveram como treinadores, PPRs que eles criaram sobre outros).
 --
--- The cleanup engine schema-checks every table/column at runtime, so missing
--- or renamed tables are skipped instead of erroring. Toggle the optional parts:
+--O esquema do mecanismo de limpeza verifica cada tabela/coluna em tempo de execução, portanto falta
+--ou tabelas renomeadas são ignoradas em vez de apresentarem erros. Alterne as partes opcionais:
 Config.PersonnelCleanup = {
-    -- Master switch: even if the boss ticks the box, cleanup only runs when this
-    -- is true. Lets server owners disable the destructive path entirely.
+    --Chave mestre: mesmo que o chefe marque a caixa, a limpeza só é executada quando isso
+    -é verdade. Permite que os proprietários de servidores desabilitem totalmente o caminho destrutivo.
     Enabled = true,
 
-    -- Remove audit-log rows whose subject (entity_id) is the fired person.
-    -- Their actions-as-actor logs are left intact for accountability unless you
-    -- also enable DeleteActorAuditLogs below.
+    --Remova as linhas do log de auditoria cujo assunto (entity_id) é a pessoa demitida.
+    --Seus registros de ações como atores são deixados intactos para prestação de contas, a menos que você
+    -habilite também DeleteActorAuditLogs abaixo.
     DeleteSubjectAuditLogs = true,
 
-    -- Also remove audit-log rows where the fired person was the ACTOR. Off by
-    -- default because it erases "who did what" history other staff may rely on.
+    --Remova também as linhas do log de auditoria onde a pessoa demitida era o ATOR. Desativado por
+    --padrão porque apaga o histórico de "quem fez o quê" em que outros funcionários podem confiar.
     DeleteActorAuditLogs = false,
 
-    -- Remove messages the fired person sent.
+    --Remova as mensagens enviadas pela pessoa demitida.
     DeleteSentMessages = true,
 }
 
--- Dashboard Cache TTLs (seconds)
+--TTLs do cache do painel (segundos)
 Config.CacheTTL = {
     ReportStats = 30,
     ActiveUnits = 10,
     UsageMetrics = 60,
 }
 
--- Tablet Animation
+-Animação de tablet
 Config.Animation = {
     Dict = 'amb@code_human_in_bus_passenger_idles@female@tablet@idle_a',
     Name = 'idle_a',
 }
 
--- Mugshot Camera
+-Câmera Mugshot
 Config.MugshotCamera = {
     DefaultFov = 50.0,
     FovMin = 15.0,
@@ -554,7 +588,7 @@ Config.MugshotCamera = {
     FovSpeed = 5.0,
 }
 
--- Security Camera Viewer
+-Visualizador de câmera de segurança
 Config.CameraViewer = {
     RotationSpeed = 0.15,
     ZoomClamp = { min = 0.25, max = 10.0 },
@@ -563,84 +597,84 @@ Config.CameraViewer = {
     FovMin = 10.0,
     FovMax = 100.0,
     FovStep = 2.0,
-    -- Yaw offset (degrees) applied to the *view* of cameras that spawn a real
-    -- CCTV prop (player-placed ones). Those props face the opposite way from the
-    -- camera's look direction, so the feed needs +180. Virtual cameras
-    -- (spawns_model = false) are unaffected. Set to 0.0 if your prop models
-    -- already look the right way.
+    --Deslocamento de guinada (graus) aplicado à *visão*de câmeras que geram uma imagem real
+    -Suporte CCTV (colocados pelo jogador). Esses adereços estão voltados para o lado oposto do
+    --direção do olhar da câmera, então o feed precisa de +180. Câmeras virtuais
+    --(spawns_model = false) não são afetados. Defina como 0,0 se seus modelos de suporte
+    -já olhe para o lado certo.
     HeadingOffset = 180.0,
-    -- On-screen CCTV overlay shown while viewing a camera
+    -Sobreposição de CFTV na tela mostrada durante a visualização de uma câmera
     Overlay = {
         enabled = true,
-        showTimestamp = true,   -- real date/time (top right)
-        recBlink = true,        -- blinking REC indicator (false = always on)
+        showTimestamp = true,   --data/hora real (canto superior direito)
+        recBlink = true,        --indicador REC piscando (falso = sempre ligado)
     },
 }
 
--- ============================================================================
---  Dashcams (police vehicle cameras)
---  IMPORTANT: a vehicle only gets a working dashcam if its model is listed in
---  `Positions.models` below. Unconfigured vehicles still show in the camera
---  list, but opening them returns an error instead of a feed. There is no
---  `default` on purpose - this prevents every cop car from silently working.
---  Offsets are in the vehicle's local space: side = +right, forward = +front,
---  height = +up (metres), pitch = camera tilt (negative looks down). Rear
---  values are optional and fall back to the front values. Keys are spawn names.
--- ============================================================================
+--=========================================================================
+-Dashcams (câmeras de veículos policiais)
+-IMPORTANTE: um veículo só recebe uma câmera de painel funcionando se seu modelo estiver listado em
+--`Positions.models` abaixo. Veículos não configurados ainda aparecem na câmera
+--list, mas abri-los retorna um erro em vez de um feed. Não há
+--`padrão` de propósito -isso evita que todos os carros de polícia trabalhem silenciosamente.
+--Os deslocamentos estão no espaço local do veículo: lateral = +direita, frente = +frente,
+--altura = +para cima (metros), pitch = inclinação da câmera (o negativo olha para baixo). Traseira
+--os valores são opcionais e retornam aos valores iniciais. Chaves são nomes de spawn.
+--=========================================================================
 Config.Dashcam = {
-    -- Only vehicles of this class are considered (18 = Emergency, same as the
-    -- tracking system uses to identify police vehicles). Checked on the client.
+    --São considerados apenas veículos desta classe (18 = Emergência, igual ao
+    -sistema de rastreamento usado para identificar veículos policiais). Verificado no cliente.
     EmergencyClass = 18,
-    -- How often (ms) the server pushes a unit's live position to dashcam
-    -- viewers. Lower = smoother for far-away units, but more network traffic.
+    --Com que frequência (ms) o servidor envia a posição ao vivo de uma unidade para a câmera do painel
+    --espectadores. Menor = mais suave para unidades distantes, mas com mais tráfego de rede.
     UpdateInterval = 250,
     Positions = {
         models = {
             ['police']  = { side = 0.0, forward = 0.75, height = 0.55, pitch = 1.0, rearForward = 1.2, rearHeight = 0.60, rearPitch = 1.0 },
-            -- ['police2'] = { side = 0.0, forward = 1.1, height = 0.85, pitch = -6.0 },
+            -['police2'] = {lado = 0,0, frente = 1,1, altura = 0,85, altura = -6,0},
 
-            -- Example with a rear camera tuned separately:
-            -- ['fbi2'] = { forward = 2.0, height = 0.9, pitch = -5.0, rearForward = 2.4, rearHeight = 0.8, rearPitch = -8.0 },
+            --Exemplo com uma câmera traseira sintonizada separadamente:
+            -['fbi2'] = { forward = 2,0, height = 0,9, pitch = -5,0, rearForward = 2,4, rearHeight = 0,8, rearPitch = -8,0 },
         },
     },
 }
 
--- Management permissions and defaults (per job grade)
+--Permissões e padrões de gerenciamento (por nível de trabalho)
 Config.ManagementPermissions = {
-    -- Citizens
+    -Cidadãos
     'citizens_search',
     'citizens_edit_licenses',
-    -- BOLOs
+    --BOLOS
     'bolos_view',
     'bolos_create',
-    -- Vehicles
+    -Veículos
     'vehicles_search',
     'vehicles_edit_dmv',
-    -- Weapons
+    -Armas
     'weapons_search',
     'weapons_add',
-    -- Cases
+    -Casos
     'cases_view',
     'cases_create',
     'cases_edit',
     'cases_delete',
-    -- Evidence
+    -Evidência
     'evidence_view',
     'evidence_create',
     'evidence_transfer',
     'evidence_upload',
-    -- Reports
+    --Relatórios
     'reports_view',
     'reports_create',
     'reports_delete',
-    -- Warrants
+    -Garantias
     'warrants_view',
     'warrants_issue',
     'warrants_close',
-    -- Charges
+    -Encargos
     'charges_view',
     'charges_edit',
-    -- Dispatch
+    -Despacho
     'map_patrols_view',
     "map_patrols_manage",
     "map_patrols_edit",
@@ -649,30 +683,30 @@ Config.ManagementPermissions = {
     'dispatch_assign',
     'dispatch_notes',
 
-    -- Impound
+    -Apreender
     'vehicle_impound',
     'vehicle_impound_release',
     'vehicle_impound_override',
-    -- Cameras & Bodycams
+    -Câmeras e câmeras corporais
     'cameras_view',
     'bodycams_view',
     'dashcams_view',
-    -- Notes
+    -Notas
     'notes_edit_department',
-    -- Roster
+    -Lista
     'roster_manage_certifications',
     'roster_manage_officers',
-    -- PPR
+    -PPR
     'ppr_view',
     'ppr_manage',
-    -- FTO
+    -FTO
     'fto_view',
     'fto_manage',
-    -- BulletIn Board
+    -Quadro de avisos
     'bulletin_view',
     'bulletin_post',
     'bulletin_pin',
-    -- Calendar (court hearings are court_*; trainings/meetings/other are training_*)
+    --Calendário (audiências judiciais são tribunal_*; treinamentos/reuniões/outros são treinamento_*)
     'court_view',
     'court_create',
     'court_edit',
@@ -681,13 +715,13 @@ Config.ManagementPermissions = {
     'training_create',
     'training_edit',
     'training_delete',
-    -- Internal Affairs
+    -Assuntos Internos
     'ia_view',
     'ia_manage',
-    -- SOP
+    -POP
     'sop_view',
     'sop_manage',
-    -- Management
+    --Gerenciamento
     'management_permissions',
     'management_bulletins',
     'management_activity',
@@ -696,7 +730,7 @@ Config.ManagementPermissions = {
     'management_settings',
 }
 
--- Bodycam Settings (override defaults if needed, remove to use built-in defaults)
+-Configurações da Bodycam (substitua os padrões se necessário, remova para usar os padrões integrados)
 Config.Bodycam = {
     DutyEvent = 'QBCore:Server:OnJobUpdate',
     DutyEventMode = 'qbcore',
@@ -705,66 +739,66 @@ Config.Bodycam = {
     MultiJobResource = 'ps-multijob',
 }
 
--- Officer Status (Map tab) ---------------------------------------------------
--- Defines every selectable status. `id` is the stable key stored in the DB and
--- sent over the wire — never rename an existing id, only add new ones, or
--- officers who saved an old status will fall back to Default below.
--- `id`   : stable key (string, no spaces, lowercase recommended)
--- `label`: display name shown in the UI
--- `color`: hex used for the badge/dot and map marker ring
--- `icon` : optional emoji/short glyph shown next to the label (purely visual)
--- To add a new status, just append a new entry — no other file needs to change.
+--Status do Oficial (guia Mapa) ------------------------------------------------------------------
+--Define todos os status selecionáveis. `id` é a chave estável armazenada no banco de dados e
+-enviado pela rede -nunca renomeie um ID existente, apenas adicione novos, ou
+--os oficiais que salvaram um status antigo retornarão ao padrão abaixo.
+--`id` : chave estável (string, sem espaços, letras minúsculas recomendadas)
+--`label`: nome de exibição mostrado na UI
+--`color`: hexadecimal usado para o crachá/ponto e anel marcador do mapa
+--`icon` : emoji opcional/glifo curto mostrado ao lado do rótulo (puramente visual)
+--Para adicionar um novo status, basta anexar uma nova entrada — nenhum outro arquivo precisa ser alterado.
 Config.OfficerStatus = {
     list = {
         { id = 'active', label = 'Active', color = '#22C55E', icon = '●' },
         { id = 'busy',   label = 'Busy',   color = '#F59E0B', icon = '●' },
-        -- Examples for future statuses (uncomment / adjust as needed):
-        -- { id = 'enroute',   label = 'En Route',   color = '#3B82F6', icon = '●' },
-        -- { id = 'unavailable', label = 'Unavailable', color = '#EF4444', icon = '●' },
-        -- { id = 'break',     label = 'On Break',    color = '#8B5CF6', icon = '●' },
+        --Exemplos de status futuros (descomente/ajuste conforme necessário):
+        --{ id = 'enroute', label = 'En Route', color = '#3B82F6', icon = '●' },
+        --{ id = 'indisponível', label = 'Indisponível', color = '#EF4444', icon = '●' },
+        --{ id = 'break', label = 'On Break', color = '#8B5CF6', icon = '●' },
     },
-    -- Status id assumed for any officer who has never set one.
+    --ID de status assumido para qualquer oficial que nunca tenha definido um.
     Default = 'active',
-    -- Max length for the optional free-text note (e.g. "Traffic Stop").
+    --Comprimento máximo para a nota de texto livre opcional (por exemplo, "Traffic Stop").
     MaxNoteLength = 60,
-    -- Minimum ms between two status changes from the same player (anti-spam).
+    --Mínimo ms entre duas mudanças de status do mesmo player (anti-spam).
     ChangeCooldownMs = 1500,
 }
 
--- Optional defaults for role permissions by job/grade
--- Example:
--- Config.PermissionDefaults = {
---     police = {
---         ['0'] = { 'access_reports' },
---         ['1'] = { 'access_reports', 'view_bodycams' },
---     }
--- }
+--Padrões opcionais para permissões de função por cargo/classe
+-Exemplo:
+--Config.PermissionDefaults={
+--polícia = {
+--['0'] = { 'relatórios_de acesso' },
+--['1'] = { 'access_reports', 'view_bodycams' },
+--}
+--}
 Config.PermissionDefaults = Config.PermissionDefaults or {}
 
--- HIGHLY recommended not tuse this natively. Use FiveManage for this.
--- Activity Tracking - Controls which actions are logged to the audit trail
--- Categories can be toggled on/off from the Settings page in the MDT
--- These are the DEFAULT values; runtime changes are stored in the mdt_settings table
+-ALTAMENTE recomendado não usar isso nativamente. Use FiveManage para isso.
+--Activity Tracking -Controla quais ações são registradas na trilha de auditoria
+-As categorias podem ser ativadas/desativadas na página Configurações no MDT
+--Estes são os valores PADRÃO; alterações de tempo de execução são armazenadas na tabela mdt_settings
 Config.AuditTracking = {
-    authentication = true,   -- Login/logout events
-    reports = true,          -- Report create, update, delete
-    cases = true,            -- Case CRUD, officer assignments, attachments
-    evidence = true,         -- Evidence CRUD, transfers, images
-    warrants = true,         -- Warrant issued/closed
-    vehicles = true,         -- Vehicle updates, impound/release
-    weapons = true,          -- Weapon create, update, delete
-    charges = true,          -- Fines processed, charges updated
-    searches = false,        -- Citizen/player/officer searches (high volume)
-    dispatch = true,         -- Signal 100 activate/deactivate
-    officers = true,         -- Callsign changes
-    sentencing = true,       -- Jail sentencing
-    arrests = true,          -- Arrest logging
-    icu = true,              -- ICU record deletion
-    cameras = true,          -- Security camera access
-    bodycams = true,         -- Officer bodycam access
+    authentication = true,   -Eventos de login/logout
+    reports = true,          -Criar relatório, atualizar, excluir
+    cases = true,            -Caso CRUD, atribuições de oficiais, anexos
+    evidence = true,         -Evidência CRUD, transferências, imagens
+    warrants = true,         --Warrant emitido/fechado
+    vehicles = true,         -Atualizações de veículos, apreensão/liberação
+    weapons = true,          -Criar, atualizar, excluir arma
+    charges = true,          -Multas processadas, cobranças atualizadas
+    searches = false,        -Pesquisas de cidadãos/jogadores/oficiais (alto volume)
+    dispatch = true,         -Sinal 100 ativar/desativar
+    officers = true,         -Mudanças de indicativo
+    sentencing = true,       -Pena de prisão
+    arrests = true,          -Registro de prisão
+    icu = true,              -Exclusão de registro de UTI
+    cameras = true,          -Acesso à câmera de segurança
+    bodycams = true,         -Acesso à câmera corporal do oficial
 }
 
--- Camera models available for static camera placement
+--Modelos de câmeras disponíveis para posicionamento de câmera estática
 Config.CameraModels = {
     ['security_cam_01'] = 'v_serv_securitycam_1a',
     ['security_cam_02'] = 'v_serv_securitycam_03',
@@ -794,19 +828,19 @@ Config.CameraModels = {
     ['cctv_cam_09'] = 'hei_prop_bank_cctv_02',
 }
 
--- ============================================================================
---  Static Camera Placer (admin tool)
---  Opens an in-game menu to create / edit / reposition / delete static
---  security cameras using a 3D gizmo. The entry command is registered through
---  ox_lib's lib.addCommand, whose `restricted` field handles the admin gating
---  server-side (it auto-creates the `command.<name>` ace).
--- ============================================================================
+--=========================================================================
+-Colocador de câmera estática (ferramenta de administração)
+--Abre um menu no jogo para criar/editar/reposicionar/excluir estática
+-câmeras de segurança usando um dispositivo 3D. O comando de entrada é registrado através
+--lib.addCommand do ox_lib, cujo campo `restricted` lida com o controle administrativo
+--server-side (ele cria automaticamente o `command.<name>` ás).
+--=========================================================================
 Config.CameraPlacer = {
-    command = 'cameraplacer',  -- Chat command that opens the placer menu
-    restricted = 'group.admin', -- ox_lib restricted group/ace allowed to use it
+    command = 'cameraplacer',  --Comando de bate-papo que abre o menu do placer
+    restricted = 'group.admin', --grupo restrito ox_lib/ace tem permissão para usá-lo
 }
 
--- Which Weapons should be allowed to be registered manually
+-Quais armas devem poder ser registradas manualmente
 Config.Weapons = {
     { model = "weapon_heavypistol", label = "Heavy Pistol" },
     { model = "weapon_sniperrifle", label = "Hunting Rifle" },
@@ -815,61 +849,61 @@ Config.Weapons = {
     { model = "weapon_navyrevolver", label = "Navy Revolver" },
     { model = "weapon_musket", label = "Musket" },
 }
--- ============================================================================
---  Court / Calendar (hearings, meetings, trainings)
---  Drives the DOJ calendar: reminder SMS, invite e-mails, automatic status
---  lifecycle and the attendee quick-add groups.
--- ============================================================================
+--=========================================================================
+-Tribunal /Calendário (audiências, reuniões, treinamentos)
+-Aciona o calendário do DOJ: SMS de lembrete, e-mails de convite, status automático
+-ciclo de vida e grupos de adição rápida de participantes.
+--=========================================================================
 Config.Court = {
-    -- How many minutes before a hearing the reminder SMS goes out.
+    -Quantos minutos antes da audiência o SMS de lembrete é enviado.
     ReminderLeadMinutes = 15,
 
-    -- When a hearing created from a warrant is completed, auto-resolve the
-    -- linked BOLO (matched on the warrant's reportId). Set false to opt out.
+    -Quando uma audiência criada a partir de um mandado for concluída, resolva automaticamente o
+    --BOLO vinculado (correspondente ao reportId do mandado). Defina falso para cancelar.
     ResolveBolosOnComplete = true,
 
-    -- Default lead time (days) for hearings scheduled straight from a warrant
-    -- via the "Schedule hearing" button in the warrants list.
+    --Prazo de entrega padrão (dias) para audiências agendadas diretamente de um mandado
+    -através do botão "Agendar audiência" na lista de mandados.
     WarrantHearingLeadDays = 2,
 
-    -- ---- Reminder SMS (replaces the old MDT notify) ----------------------
+    ------SMS de lembrete (substitui a antiga notificação do MDT) ----------------------
     Sms = {
         enabled = true,
-        SendDelayMs = 25,    -- ms between each send so big invite lists don't spike the frame
+        SendDelayMs = 25,    --ms entre cada envio para que grandes listas de convidados não aumentem o quadro
     },
 
-    -- ---- Invite e-mail on create -----------------------------------------
+    ------Convidar e-mail na criação -----------------------------------------
     Email = {
         enabled = true,
-        -- If a hearing is created with MORE attendees than this, the per-person
-        -- e-mails are skipped entirely (they still get the reminder SMS). This
-        -- prevents lag spikes on huge invite lists.
+        --Se uma audiência for criada com MAIS participantes do que isso, o valor por pessoa
+        -os e-mails são totalmente ignorados (eles ainda recebem o SMS de lembrete). Isto
+        -evita picos de atraso em grandes listas de convidados.
         MaxRecipients = 25,
-        SendDelayMs = 50,    -- ms between each mail send
+        SendDelayMs = 50,    --ms entre cada envio de e-mail
     },
 
-    -- ---- Automatic status lifecycle --------------------------------------
+    ------Ciclo de vida de status automático ---------------------------------------
     AutoStatus = {
         enabled = true,
-        -- scheduled  -> in_session  once scheduled_at is reached
-        -- in_session -> completed   once scheduled_at + duration + grace passed
+        --agendado -> in_session assim que o agendamento_at for alcançado
+        --in_session -> concluído uma vez agendado_at + duração + tolerância passada
         CompleteGraceMinutes = 5,
-        -- true  = a completed hearing is deleted (calendar self-cleans)
-        -- false = a completed hearing is kept with status 'completed'
+        --true = uma audiência concluída é excluída (limpeza automática do calendário)
+        --false = uma audiência concluída é mantida com o status 'concluído'
         DeleteOnComplete = true,
     },
 
-    -- ---- Attendee quick-add groups (buttons in the create/edit modal) ----
-    -- id:         stable identifier
-    -- label:      button text
-    -- role:       attendee role the bulk-added people get (see VALID_ROLES)
-    -- domain:     'police' (police + DOJ share a calendar) or 'ems' (separate)
-    -- jobType:    match against the framework job.type (leo / doj / ems ...)
-    -- jobs:       optional explicit job-name whitelist (overrides jobType)
-    -- maxGrade:   optional grade-level ceiling (e.g. rookies = grade 0-1)
-    -- onlyOnDuty: only include players currently on duty
+    ------Grupos de adição rápida de participantes (botões no modal criar/editar) ----
+    --id: identificador estável
+    --label: texto do botão
+    --role: função do participante que as pessoas adicionadas em massa recebem (consulte VALID_ROLES)
+    --domínio: 'police' (polícia + DOJ compartilham um calendário) ou 'ems' (separado)
+    --jobType: corresponde à estrutura job.type (leo/doj/ems...)
+    --jobs: lista de permissões explícita opcional de nomes de trabalho (substitui jobType)
+--maxGrade: teto opcional de nível de série (por exemplo, novatos = nota 0-1)
+    --onlyOnDuty: inclui apenas jogadores atualmente em serviço
     Groups = {
-        -- Police / DOJ domain
+        -Domínio Polícia /DOJ
         { id = 'all_officers', label = 'All Officers',  role = 'officer',  domain = 'police', jobType = Config.PoliceJobType },
         { id = 'rookies',      label = 'Rookies',       role = 'officer',  domain = 'police', jobType = Config.PoliceJobType, maxGrade = 1 },
         { id = 'on_duty',      label = 'On-Duty Units', role = 'officer',  domain = 'police', jobType = Config.PoliceJobType, onlyOnDuty = true },
@@ -877,40 +911,40 @@ Config.Court = {
         { id = 'judges',       label = 'Judges',        role = 'judge',    domain = 'police', jobs = { 'judge' } },
         { id = 'lawyers',      label = 'Lawyers',       role = 'attendee', domain = 'police', jobs = { 'lawyer' } },
 
-        -- EMS domain (separate calendar)
+        -Domínio EMS (calendário separado)
         { id = 'all_ems',       label = 'All EMS',        role = 'attendee', domain = 'ems', jobType = Config.MedicalJobType },
         { id = 'ems_rookies',   label = 'EMS Rookies',    role = 'trainee',  domain = 'ems', jobType = Config.MedicalJobType, maxGrade = 1 },
         { id = 'ems_on_duty',   label = 'On-Duty EMS',    role = 'attendee', domain = 'ems', jobType = Config.MedicalJobType, onlyOnDuty = true },
     },
 }
--- ═══════════════════════════════════════════════════════════════════════════
---  Radio in MDT
---  Lets players push-to-talk on the radio while the MDT is open. Because the
---  MDT holds full NUI focus (keyboard goes to the UI, not the game), the UI
---  itself captures the PTT key and forwards it to the client, which drives the
---  active voice system. No extra RegisterKeyMapping is added — where possible
---  the player's EXISTING radio keybind is detected and reused.
--- ═══════════════════════════════════════════════════════════════════════════
+--═════════════════════════════════════ ══════════════════════════════════════
+-Rádio em MDT
+-Permite que os jogadores pressionem para falar no rádio enquanto o MDT está aberto. Porque o
+-O MDT mantém o foco total do NUI (o teclado vai para a IU, não para o jogo), a IU
+--ele próprio captura a chave PTT e a encaminha para o cliente, o que aciona o
+-sistema de voz ativo. Nenhum RegisterKeyMapping extra é adicionado -sempre que possível
+-o teclado de rádio EXISTENTE do player é detectado e reutilizado.
+--═════════════════════════════════════ ══════════════════════════════════════
 Config.Radio = {
     Enabled = true,
 
-    -- Which voice resource to drive:
-    --   'auto'       → detect the first running one (order below in AutoDetect)
-    --   'pma-voice' | 'saltychat' | 'yaca' → force a specific system
+    --Qual recurso de voz direcionar:
+    --'auto' → detecta o primeiro em execução (ordem abaixo no AutoDetect)
+    --'pma-voz' | 'chat salgado' | 'yaca' → forçar um sistema específico
     VoiceSystem = 'auto',
 
-    -- Fallback PTT key the MDT listens for IF the real keybind can't be read
-    -- (browser KeyboardEvent value — a code like 'AltLeft'/'CapsLock' or a
-    -- single character like 'n'). Pick a non-text key to avoid clashing with
-    -- typing in reports. The real in-game radio key is auto-detected when
-    -- possible and takes priority over this.
+    -Tecla PTT de fallback que o MDT escuta SE o atalho de teclado real não puder ser lido
+    --(valor KeyboardEvent do navegador — um código como 'AltLeft'/'CapsLock' ou um
+    --caractere único como 'n'). Escolha uma chave não textual para evitar conflito com
+    -digitando relatórios. A chave de rádio real do jogo é detectada automaticamente quando
+    -possível e tem prioridade sobre isso.
     PTTKey = 'AltLeft',
 
-    -- Per-system trigger + which command's key to read for the NUI listener.
-    --   type = 'command' → ExecuteCommand(start) / ExecuteCommand(stop)
-    --   type = 'export'  → exports[resource][fn](state)
-    -- `keyCmd` is the keymapping command whose bound key we read (nil = use the
-    -- fallback PTTKey). `startCandidates` lets us match fork-renamed commands.
+    --Gatilho por sistema + qual chave de comando ler para o ouvinte NUI.
+    --type = 'comando' → ExecuteCommand(iniciar) /ExecuteCommand(parar)
+    --type = 'exportar' → exportações[recurso][fn](estado)
+    --`keyCmd` é o comando de mapeamento de teclado cuja chave vinculada lemos (nil = use o
+    --PTTKey substituto). `startCandidates` nos permite combinar comandos renomeados como fork.
     Systems = {
         ['pma-voice'] = {
             type = 'command',
@@ -924,20 +958,20 @@ Config.Radio = {
             start = '+primaryRadio',
             stop = '-primaryRadio',
             keyCmd = '+primaryRadio',
-            -- SaltyChat forks name this differently; first registered wins.
+            -Os garfos do SaltyChat nomeiam isso de forma diferente; primeiras vitórias registradas.
             startCandidates = { '+primaryRadio', '+radioPrimary', '+SaltyChat_RadioPrimary' },
         },
         ['yaca'] = {
             type = 'export',
             resource = 'yaca-voice',
             fn = 'radioTalkingStart',
-            -- YACA drives radio via an export; no stable command to read, so
-            -- the NUI listens for the fallback PTTKey (set it to your YACA key).
+            --YACA conduz rádio através de uma exportação; nenhum comando estável para ler, então
+            -o NUI escuta o PTTKey substituto (defina-o como sua chave YACA).
             keyCmd = nil,
         },
     },
 
-    -- 'auto' detection order: { system = key in Systems, resource = res name }.
+    --ordem de detecção 'automática': { system = key in Systems, resource = res name }.
     AutoDetect = {
         { system = 'pma-voice', resource = 'pma-voice' },
         { system = 'saltychat', resource = 'saltychat' },
