@@ -97,7 +97,7 @@ local function getOfficerInfo(src)
     elseif ps and ps.getIdentifier then
         return {
             citizenid = ps.getIdentifier(src),
-            name      = (ps.getPlayerName and ps.getPlayerName(src)) or GetPlayerName(src) or 'Unknown',
+            name      = (ps.getPlayerName and ps.getPlayerName(src)) or GetPlayerName(src) or L('officer_status.unknown'),
             callsign  = ps.getMetadata and ps.getMetadata(src, 'callsign') or nil,
         }
     end

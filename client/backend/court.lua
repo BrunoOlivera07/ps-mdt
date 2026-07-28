@@ -22,34 +22,34 @@ RegisterNUICallback('getHearing', function(data, cb)
 end)
 
 RegisterNUICallback('createHearing', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:createHearing', data or {})
-    cb(result or { success = false, error = 'Failed to create hearing' })
+    cb(result or { success = false, error = L('client.create_hearing_failed') })
 end)
 
 RegisterNUICallback('createHearingFromWarrant', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:createHearingFromWarrant', {
         reportId = data and data.reportId,
     })
-    cb(result or { success = false, error = 'Failed to create hearing' })
+    cb(result or { success = false, error = L('client.create_hearing_failed') })
 end)
 
 RegisterNUICallback('updateHearing', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:updateHearing', {
         hearingId = data and data.hearingId,
         data      = data and data.data,
     })
-    cb(result or { success = false, error = 'Failed to update hearing' })
+    cb(result or { success = false, error = L('client.update_hearing_failed') })
 end)
 
 RegisterNUICallback('deleteHearing', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:deleteHearing', {
         hearingId = data and data.hearingId,
     })
-    cb(result or { success = false, error = 'Failed to delete hearing' })
+    cb(result or { success = false, error = L('client.delete_hearing_failed') })
 end)
 
 RegisterNUICallback('addHearingAttendee', function(data, cb)
@@ -67,12 +67,12 @@ RegisterNUICallback('removeHearingAttendee', function(data, cb)
 end)
 
 RegisterNUICallback('setHearingStatus', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:setHearingStatus', {
         hearingId = data and data.hearingId,
         status    = data and data.status,
     })
-    cb(result or { success = false, error = 'Failed to set status' })
+    cb(result or { success = false, error = L('client.set_status_failed') })
 end)
 
 RegisterNUICallback('getAttendeeGroups', function(data, cb)

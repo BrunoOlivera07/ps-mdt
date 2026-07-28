@@ -1,16 +1,12 @@
 <script lang="ts">
 	import { REPORT_TYPES } from "../constants";
 	import type { Report } from "../interfaces/IReportEditor";
-	import { t } from "../lib/i18n";
+	import { t, translateReportType } from "../lib/i18n";
 
 	export let report: Report;
 	export let formatDate: (timestamp: number) => string;
 	export let formatTime: (timestamp: number) => string;
 
-	function reportTypeLabel(type: string): string {
-		const key = type.replace(/ Report$/, "").toLowerCase();
-		return t(`reportMetadata.types.${key}`);
-	}
 </script>
 
 <section class="report-metadata" aria-label={t("reportMetadata.information")}>
@@ -34,7 +30,7 @@
 				aria-label={t("reportMetadata.reportType")}
 			>
 				{#each REPORT_TYPES as type}
-					<option value={type}>{reportTypeLabel(type)}</option>
+					<option value={type}>{translateReportType(type)}</option>
 				{/each}
 			</select>
 		</div>

@@ -553,11 +553,11 @@
 			<div class="form-row">
 				<div class="form-group">
 					<span class="form-label">{t("pages.ppr.linkedReportOptional")}</span>
-					<input type="number" class="form-input" bind:value={newLinkedReportId} placeholder="Report ID" />
+					<input type="number" class="form-input" bind:value={newLinkedReportId} placeholder={t("pages.ppr.reportIdPlaceholder")} />
 				</div>
 				<div class="form-group">
 					<span class="form-label">{t("pages.ppr.linkedCaseOptional")}</span>
-					<input type="number" class="form-input" bind:value={newLinkedCaseId} placeholder="Case ID" />
+					<input type="number" class="form-input" bind:value={newLinkedCaseId} placeholder={t("pages.ppr.caseIdPlaceholder")} />
 				</div>
 			</div>
 

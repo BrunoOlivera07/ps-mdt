@@ -101,7 +101,7 @@ end
 
 local function getOfficerDisplayName(src)
     local callsign = ps.getMetadata(src, 'callsign')
-    local name = ps.getPlayerName(src) or 'Unknown'
+    local name = ps.getPlayerName(src) or L('court.unknown')
     if callsign and tostring(callsign) ~= '' then
         return tostring(callsign) .. ' ' .. name
     end
@@ -179,7 +179,7 @@ local function sendHearingMail(citizenid, subject, message)
     if not number then return false end
     local mok, email = pcall(function() return exports[res]:GetEmailAddress(number) end)
     if not mok or not email or tostring(email) == '' then return false end
-    local sender = (Config and Config.Phone and Config.Phone.MailSender) or 'Court'
+    local sender = (Config and Config.Phone and Config.Phone.MailSender) or L('court.sender')
     local sok = pcall(function()
         exports[res]:SendMail({
             to = email,
@@ -194,10 +194,10 @@ end
 -- Body for the lead-time reminder SMS.
 local function buildReminderSms(row, lead)
     local lines = {}
-    lines[#lines + 1] = ('Reminder: "%s" starts in ~%d min.'):format(row.title or 'Hearing', lead)
-    lines[#lines + 1] = 'When: ' .. formatScheduled(row.scheduled_at)
+    lines[#lines + 1] = L('court.reminder', { title = row.title or L('court.hearing'), minutes = lead })
+    lines[#lines + 1] = L('court.when', { value = formatScheduled(row.scheduled_at) })
     if row.location and tostring(row.location) ~= '' then
-        lines[#lines + 1] = 'Where: ' .. row.location
+        lines[#lines + 1] = L('court.where', { value = row.location })
     end
     return table.concat(lines, '\n')
 end
@@ -205,18 +205,18 @@ end
 -- Body for the "you have been added" invite e-mail.
 local function buildHearingMailBody(h)
     local lines = {}
-    lines[#lines + 1] = ('You have been added to: %s'):format(h.title or 'an event')
+    lines[#lines + 1] = L('court.added_to', { title = h.title or L('court.generic_event') })
     lines[#lines + 1] = ''
-    lines[#lines + 1] = 'When: ' .. formatScheduled(h.scheduled_at)
-    if h.duration_minutes then lines[#lines + 1] = ('Duration: %d min'):format(tonumber(h.duration_minutes) or 30) end
-    if h.location and tostring(h.location) ~= '' then lines[#lines + 1] = 'Where: ' .. h.location end
-    if h.judge_name and tostring(h.judge_name) ~= '' then lines[#lines + 1] = 'Lead / Judge: ' .. h.judge_name end
+    lines[#lines + 1] = L('court.when', { value = formatScheduled(h.scheduled_at) })
+    if h.duration_minutes then lines[#lines + 1] = L('court.duration', { minutes = tonumber(h.duration_minutes) or 30 }) end
+    if h.location and tostring(h.location) ~= '' then lines[#lines + 1] = L('court.where', { value = h.location }) end
+    if h.judge_name and tostring(h.judge_name) ~= '' then lines[#lines + 1] = L('court.lead_judge', { name = h.judge_name }) end
     if h.notes and tostring(h.notes) ~= '' then
         lines[#lines + 1] = ''
-        lines[#lines + 1] = 'Notes: ' .. h.notes
+        lines[#lines + 1] = L('court.notes', { notes = h.notes })
     end
     lines[#lines + 1] = ''
-    lines[#lines + 1] = 'You will receive a reminder shortly before it starts.'
+    lines[#lines + 1] = L('court.reminder_notice')
     return table.concat(lines, '\n')
 end
 
@@ -237,7 +237,7 @@ local function dispatchCreateEmails(hearing, targets)
         return
     end
 
-    local subject = ('Invitation: %s'):format(hearing.title or 'Event')
+    local subject = L('court.invitation', { title = hearing.title or L('court.event') })
     local body = buildHearingMailBody(hearing)
     local delay = tonumber(cfg.Email.SendDelayMs) or 50
 
@@ -295,12 +295,12 @@ end)
 -- Fetch a single hearing with its attendees
 ps.registerCallback(resourceName .. ':server:getHearing', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
-    if not canViewCalendar(src) then return { success = false, error = 'No permission' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
+    if not canViewCalendar(src) then return { success = false, error = L('court.no_permission') } end
 
     payload = payload or {}
     local hearingId = tonumber(payload.hearingId)
-    if not hearingId then return { success = false, error = 'Missing hearing id' } end
+    if not hearingId then return { success = false, error = L('court.missing_hearing') } end
 
     local hearing = MySQL.single.await([[
         SELECT h.*, DATE_FORMAT(h.scheduled_at, '%Y-%m-%d %H:%i:%s') AS scheduled_at,
@@ -310,10 +310,10 @@ ps.registerCallback(resourceName .. ':server:getHearing', function(source, paylo
         WHERE h.id = ?
     ]], { hearingId })
 
-    if not hearing then return { success = false, error = 'Hearing not found' } end
+    if not hearing then return { success = false, error = L('court.hearing_not_found') } end
     -- Don't leak events from the other domain (police/DOJ <-> EMS).
     if hearing.job_type and hearing.job_type ~= callerCalendarDomain(src) then
-        return { success = false, error = 'Hearing not found' }
+        return { success = false, error = L('court.hearing_not_found') }
     end
 
     local attendees = MySQL.query.await([[
@@ -362,29 +362,29 @@ end)
 
 ps.registerCallback(resourceName .. ':server:createHearing', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
 
     payload = payload or {}
     local category = normalizeCategory(payload.category)
     local domain = callerCalendarDomain(src)
     if not categoryAllowedForDomain(category, domain) then
-        return { success = false, error = 'Category not allowed for this department' }
+        return { success = false, error = L('court.category_not_allowed') }
     end
     if not CheckPermission(src, permForCategory(category, 'create')) then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('court.no_permission') }
     end
     if not payload.title or tostring(payload.title) == '' then
-        return { success = false, error = 'Title is required' }
+        return { success = false, error = L('court.title_required') }
     end
     if not payload.scheduled_at or tostring(payload.scheduled_at) == '' then
-        return { success = false, error = 'Date/time is required' }
+        return { success = false, error = L('court.datetime_required') }
     end
 
     local citizenid = ps.getIdentifier(src)
-    if not citizenid then return { success = false, error = 'Missing citizen id' } end
+    if not citizenid then return { success = false, error = L('court.missing_citizen') } end
 
     local caseId, caseOk = resolveCaseId(payload.case_id)
-    if not caseOk then return { success = false, error = 'Case ID does not exist' } end
+    if not caseOk then return { success = false, error = L('court.case_not_found') } end
 
     local hearingId = MySQL.insert.await([[
         INSERT INTO mdt_court_hearings
@@ -412,7 +412,7 @@ ps.registerCallback(resourceName .. ':server:createHearing', function(source, pa
         domain,
     })
 
-    if not hearingId then return { success = false, error = 'Failed to create hearing' } end
+    if not hearingId then return { success = false, error = L('court.create_failed') } end
 
     -- Optional initial attendees in the same call.
     -- Single batched multi-row insert instead of one round-trip per attendee.
@@ -467,19 +467,19 @@ end)
 -- NUI only needs to pass the reportId — one click from the warrants list.
 ps.registerCallback(resourceName .. ':server:createHearingFromWarrant', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
 
     payload = payload or {}
     local reportId = tonumber(payload.reportId)
-    if not reportId then return { success = false, error = 'Missing report id' } end
+    if not reportId then return { success = false, error = L('court.missing_report') } end
 
     local category = normalizeCategory(payload.category)
     local domain = callerCalendarDomain(src)
     if not categoryAllowedForDomain(category, domain) then
-        return { success = false, error = 'Category not allowed for this department' }
+        return { success = false, error = L('court.category_not_allowed') }
     end
     if not CheckPermission(src, permForCategory(category, 'create')) then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('court.no_permission') }
     end
 
     -- Resolve the still-active warrant + defendant name.
@@ -492,10 +492,10 @@ ps.registerCallback(resourceName .. ':server:createHearingFromWarrant', function
         WHERE w.reportid = ? AND w.expirydate >= NOW()
         LIMIT 1
     ]], { reportId })
-    if not w then return { success = false, error = 'No active warrant for that report' } end
+    if not w then return { success = false, error = L('court.no_warrant') } end
 
     local name = ((w.firstname or '') .. ' ' .. (w.lastname or '')):gsub('^%s+', ''):gsub('%s+$', '')
-    if name == '' then name = ps.getPlayerNameByIdentifier(w.citizenid) or 'Unknown' end
+    if name == '' then name = ps.getPlayerNameByIdentifier(w.citizenid) or L('court.unknown') end
 
     -- Default the hearing a few days out at a round hour so it lands cleanly on the calendar.
     local leadDays = tonumber(courtCfg().WarrantHearingLeadDays) or 2
@@ -508,7 +508,7 @@ ps.registerCallback(resourceName .. ':server:createHearingFromWarrant', function
              scheduled_at, duration_minutes, status, created_by, created_by_name, job_type)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ]], {
-        ('Warrant hearing — %s'):format(name),
+        L('court.warrant_hearing', { name = name }),
         category,
         normalizeType(payload.hearing_type),
         reportId,
@@ -522,7 +522,7 @@ ps.registerCallback(resourceName .. ':server:createHearingFromWarrant', function
         domain,
     })
 
-    if not hearingId then return { success = false, error = 'Failed to create hearing' } end
+    if not hearingId then return { success = false, error = L('court.create_failed') } end
 
     if ps.auditLog then
         ps.auditLog(src, 'court_hearing_from_warrant', 'court_hearing', hearingId, { reportId = reportId, defendant = w.citizenid })
@@ -542,13 +542,13 @@ end)
 -- and notes. Returns hearingId on success, or nil + error string.
 function CreateWarrantHearingForReport(src, reportId, opts)
     reportId = tonumber(reportId)
-    if not reportId then return nil, 'Missing report id' end
+    if not reportId then return nil, L('court.missing_report') end
     opts = opts or {}
 
     local category = normalizeCategory(opts.category or 'court')
     local domain = callerCalendarDomain(src)
-    if not categoryAllowedForDomain(category, domain) then return nil, 'Category not allowed for this department' end
-    if not CheckPermission(src, permForCategory(category, 'create')) then return nil, 'No permission to schedule hearings' end
+    if not categoryAllowedForDomain(category, domain) then return nil, L('court.category_not_allowed') end
+    if not CheckPermission(src, permForCategory(category, 'create')) then return nil, L('court.no_schedule_permission') end
 
     local w = MySQL.single.await([[
         SELECT w.reportid, w.citizenid,
@@ -559,10 +559,10 @@ function CreateWarrantHearingForReport(src, reportId, opts)
         WHERE w.reportid = ? AND w.expirydate >= NOW()
         LIMIT 1
     ]], { reportId })
-    if not w then return nil, 'No active warrant for that report' end
+    if not w then return nil, L('court.no_warrant') end
 
     local name = ((w.firstname or '') .. ' ' .. (w.lastname or '')):gsub('^%s+', ''):gsub('%s+$', '')
-    if name == '' then name = ps.getPlayerNameByIdentifier(w.citizenid) or 'Unknown' end
+    if name == '' then name = ps.getPlayerNameByIdentifier(w.citizenid) or L('court.unknown') end
 
     -- Use the DOJ-provided date/time when valid, otherwise fall back to a sensible
     -- default a couple of days out at a round hour.
@@ -581,7 +581,7 @@ function CreateWarrantHearingForReport(src, reportId, opts)
              scheduled_at, duration_minutes, status, notes, created_by, created_by_name, job_type)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ]], {
-        ('Warrant hearing — %s'):format(name),
+        L('court.warrant_hearing', { name = name }),
         category,
         normalizeType(opts.hearing_type),
         reportId,
@@ -595,7 +595,7 @@ function CreateWarrantHearingForReport(src, reportId, opts)
         getOfficerDisplayName(src),
         domain,
     })
-    if not hearingId then return nil, 'Failed to create hearing' end
+    if not hearingId then return nil, L('court.hearing_create_failed') end
 
     if ps.auditLog then
         ps.auditLog(src, 'court_hearing_from_warrant', 'court_hearing', hearingId, {
@@ -615,27 +615,27 @@ end
 
 ps.registerCallback(resourceName .. ':server:updateHearing', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
 
     payload = payload or {}
     local hearingId = tonumber(payload.hearingId)
-    if not hearingId then return { success = false, error = 'Missing hearing id' } end
+    if not hearingId then return { success = false, error = L('court.missing_hearing') } end
     local data = payload.data or {}
 
     -- Gate by the hearing's CURRENT category
     local existing = MySQL.single.await('SELECT category, status FROM mdt_court_hearings WHERE id = ?', { hearingId })
-    if not existing then return { success = false, error = 'Hearing not found' } end
+    if not existing then return { success = false, error = L('court.hearing_not_found') } end
     if not CheckPermission(src, permForCategory(existing.category, 'edit')) then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('court.no_permission') }
     end
     -- A live or completed hearing is locked — only status actions are allowed.
     if isLockedStatus(existing.status) then
-        return { success = false, error = 'Hearing is locked and can no longer be edited' }
+        return { success = false, error = L('court.locked_edit') }
     end
     -- If moving it to a different category, require rights for the target too
     if data.category ~= nil and normalizeCategory(data.category) ~= existing.category then
         if not CheckPermission(src, permForCategory(data.category, 'create')) then
-            return { success = false, error = 'No permission for target category' }
+            return { success = false, error = L('court.no_target_category') }
         end
     end
 
@@ -650,7 +650,7 @@ ps.registerCallback(resourceName .. ':server:updateHearing', function(source, pa
     if data.hearing_type ~= nil then add('hearing_type', normalizeType(data.hearing_type)) end
     if data.case_id ~= nil then
         local caseId, caseOk = resolveCaseId(data.case_id)
-        if not caseOk then return { success = false, error = 'Case ID does not exist' } end
+        if not caseOk then return { success = false, error = L('court.case_not_found') } end
         add('case_id', caseId)
     end
     if data.warrant_reportid ~= nil then add('warrant_reportid', tonumber(data.warrant_reportid) or nil) end
@@ -664,7 +664,7 @@ ps.registerCallback(resourceName .. ':server:updateHearing', function(source, pa
     if data.status ~= nil then add('status', normalizeStatus(data.status)) end
     if data.notes ~= nil then add('notes', data.notes) end
 
-    if #updates == 0 then return { success = false, error = 'No updates provided' } end
+    if #updates == 0 then return { success = false, error = L('court.no_updates') } end
 
     -- If the time was moved, reset reminder flags so attendees get re-notified
     if data.scheduled_at ~= nil then
@@ -676,7 +676,7 @@ ps.registerCallback(resourceName .. ':server:updateHearing', function(source, pa
         ('UPDATE mdt_court_hearings SET %s WHERE id = ?'):format(table.concat(updates, ', ')),
         values
     )
-    if not ok then return { success = false, error = 'Failed to update hearing' } end
+    if not ok then return { success = false, error = L('court.update_failed') } end
 
     if ps.auditLog then
         ps.auditLog(src, 'court_hearing_updated', 'court_hearing', hearingId, data)
@@ -691,21 +691,21 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteHearing', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
 
     payload = payload or {}
     local hearingId = tonumber(payload.hearingId)
-    if not hearingId then return { success = false, error = 'Missing hearing id' } end
+    if not hearingId then return { success = false, error = L('court.missing_hearing') } end
 
     local existing = MySQL.single.await('SELECT category FROM mdt_court_hearings WHERE id = ?', { hearingId })
-    if not existing then return { success = false, error = 'Hearing not found' } end
+    if not existing then return { success = false, error = L('court.hearing_not_found') } end
     if not CheckPermission(src, permForCategory(existing.category, 'delete')) then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('court.no_permission') }
     end
 
     -- attendees cascade via FK
     local ok = MySQL.update.await('DELETE FROM mdt_court_hearings WHERE id = ?', { hearingId })
-    if not ok then return { success = false, error = 'Failed to delete hearing' } end
+    if not ok then return { success = false, error = L('court.delete_failed') } end
 
     if ps.auditLog then
         ps.auditLog(src, 'court_hearing_deleted', 'court_hearing', hearingId, {})
@@ -720,21 +720,21 @@ end)
 
 ps.registerCallback(resourceName .. ':server:addHearingAttendee', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
 
     payload = payload or {}
     local hearingId = tonumber(payload.hearingId)
     if not hearingId or not payload.citizenid or tostring(payload.citizenid) == '' then
-        return { success = false, error = 'Missing data' }
+        return { success = false, error = L('court.missing_data') }
     end
 
     local existing = MySQL.single.await('SELECT category, status FROM mdt_court_hearings WHERE id = ?', { hearingId })
-    if not existing then return { success = false, error = 'Hearing not found' } end
+    if not existing then return { success = false, error = L('court.hearing_not_found') } end
     if isLockedStatus(existing.status) then
-        return { success = false, error = 'Hearing is locked' }
+        return { success = false, error = L('court.locked') }
     end
     if not CheckPermission(src, permForCategory(existing.category, 'edit')) then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('court.no_permission') }
     end
 
     local id = MySQL.insert.await([[
@@ -754,11 +754,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:removeHearingAttendee', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
 
     payload = payload or {}
     local attendeeId = tonumber(payload.attendeeId)
-    if not attendeeId then return { success = false, error = 'Missing attendee id' } end
+    if not attendeeId then return { success = false, error = L('court.missing_attendee') } end
 
     -- Gate by the parent hearing's category
     local row = MySQL.single.await([[
@@ -767,7 +767,7 @@ ps.registerCallback(resourceName .. ':server:removeHearingAttendee', function(so
         WHERE a.id = ?
     ]], { attendeeId })
     if row and not CheckPermission(src, permForCategory(row.category, 'edit')) then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('court.no_permission') }
     end
 
     local ok = MySQL.update.await('DELETE FROM mdt_court_attendees WHERE id = ?', { attendeeId })
@@ -781,21 +781,21 @@ end)
 
 ps.registerCallback(resourceName .. ':server:setHearingStatus', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
 
     payload = payload or {}
     local hearingId = tonumber(payload.hearingId)
     local target = payload.status and normalizeStatus(payload.status) or nil
-    if not hearingId or not target then return { success = false, error = 'Missing data' } end
+    if not hearingId or not target then return { success = false, error = L('court.missing_data') } end
 
     local existing = MySQL.single.await('SELECT category, status, warrant_reportid, defendant_cid FROM mdt_court_hearings WHERE id = ?', { hearingId })
-    if not existing then return { success = false, error = 'Hearing not found' } end
+    if not existing then return { success = false, error = L('court.hearing_not_found') } end
     if not CheckPermission(src, permForCategory(existing.category, 'edit')) then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('court.no_permission') }
     end
 
     local allowed = ALLOWED_TRANSITIONS[existing.status] or {}
-    if not allowed[target] then return { success = false, error = 'Invalid status transition' } end
+    if not allowed[target] then return { success = false, error = L('court.invalid_transition') } end
 
     -- When a hearing that came from a warrant is completed, auto-resolve the
     -- linked BOLO (matched strictly on the warrant's reportId, so we never touch
@@ -833,7 +833,7 @@ ps.registerCallback(resourceName .. ':server:setHearingStatus', function(source,
     end
 
     local ok = MySQL.update.await('UPDATE mdt_court_hearings SET status = ? WHERE id = ?', { target, hearingId })
-    if not ok then return { success = false, error = 'Failed to update status' } end
+    if not ok then return { success = false, error = L('court.status_failed') } end
 
     if ps.auditLog then
         ps.auditLog(src, 'court_hearing_status', 'court_hearing', hearingId, { from = existing.status, to = target })
@@ -865,7 +865,7 @@ end)
 ps.registerCallback(resourceName .. ':server:getGroupMembers', function(source, payload)
     local src = source
     if not CheckAuth(src) then return { success = false } end
-    if not canViewCalendar(src) then return { success = false, error = 'No permission' } end
+    if not canViewCalendar(src) then return { success = false, error = L('court.no_permission') } end
 
     payload = payload or {}
     local gid = payload.groupId and tostring(payload.groupId) or nil
@@ -875,7 +875,7 @@ ps.registerCallback(resourceName .. ':server:getGroupMembers', function(source, 
     for _, g in ipairs(courtCfg().Groups or {}) do
         if g and tostring(g.id) == gid and (g.domain or 'police') == domain then group = g break end
     end
-    if not group then return { success = false, error = 'Unknown group' } end
+    if not group then return { success = false, error = L('court.unknown_group') } end
 
     -- Optional explicit job-name whitelist (takes precedence over jobType).
     local jobSet
@@ -935,18 +935,18 @@ end)
 -- Bulk-add attendees to an existing hearing (used by group quick-add in edit mode).
 ps.registerCallback(resourceName .. ':server:addHearingAttendeesBulk', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('court.unauthorized') } end
 
     payload = payload or {}
     local hearingId = tonumber(payload.hearingId)
     local list = payload.attendees
-    if not hearingId or type(list) ~= 'table' then return { success = false, error = 'Missing data' } end
+    if not hearingId or type(list) ~= 'table' then return { success = false, error = L('court.missing_data') } end
 
     local existing = MySQL.single.await('SELECT category, status FROM mdt_court_hearings WHERE id = ?', { hearingId })
-    if not existing then return { success = false, error = 'Hearing not found' } end
-    if isLockedStatus(existing.status) then return { success = false, error = 'Hearing is locked' } end
+    if not existing then return { success = false, error = L('court.hearing_not_found') } end
+    if isLockedStatus(existing.status) then return { success = false, error = L('court.locked') } end
     if not CheckPermission(src, permForCategory(existing.category, 'edit')) then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('court.no_permission') }
     end
 
     -- Single batched insert, then one lookup to resolve real row ids

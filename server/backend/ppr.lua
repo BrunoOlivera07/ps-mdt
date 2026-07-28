@@ -86,19 +86,19 @@ end)
 -- Get single PPR entry with notes
 ps.registerCallback(resourceName .. ':server:getPPR', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ppr.unauthorized') } end
 
     local pprId = tonumber(data)
-    if not pprId then return { success = false, error = 'Invalid PPR id' } end
+    if not pprId then return { success = false, error = L('ppr.invalid_id') } end
 
     local entry = MySQL.single.await('SELECT * FROM mdt_ppr WHERE id = ?', { pprId })
-    if not entry then return { success = false, error = 'PPR not found' } end
+    if not entry then return { success = false, error = L('ppr.not_found') } end
 
     -- Permission check: ppr_view OR own record
     local citizenId = ps.getIdentifier(src)
     local hasPPRView = CheckPermission(src, 'ppr_view')
     if not hasPPRView and entry.officer_citizenid ~= citizenId then
-        return { success = false, error = 'Unauthorized' }
+        return { success = false, error = L('ppr.unauthorized') }
     end
 
     local nOk, notes = pcall(MySQL.query.await, [[
@@ -146,22 +146,22 @@ end)
 -- Create a new PPR entry
 ps.registerCallback(resourceName .. ':server:createPPR', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ppr.unauthorized') } end
     if not CheckPermission(src, 'ppr_manage') then
-        return { success = false, error = 'No permission to create PPR entries' }
+        return { success = false, error = L('ppr.no_create_permission') }
     end
 
     data = data or {}
 
     local citizenId = ps.getIdentifier(src)
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { citizenId })
-    local authorName = profile and profile.fullname or 'Unknown'
+    local authorName = profile and profile.fullname or L('ppr.unknown')
 
     local officerCitizenId = data.officer_citizenid or ''
     local officerName = data.officer_name or ''
 
     if officerCitizenId == '' or officerName == '' then
-        return { success = false, error = 'Officer is required' }
+        return { success = false, error = L('ppr.officer_required') }
     end
 
     local pprId = MySQL.insert.await([[
@@ -185,7 +185,7 @@ ps.registerCallback(resourceName .. ':server:createPPR', function(source, data)
     })
 
     if not pprId then
-        return { success = false, error = 'Failed to create PPR entry' }
+        return { success = false, error = L('ppr.create_failed') }
     end
     local pprNumber = buildPPRNumber(pprId)
     MySQL.update.await('UPDATE mdt_ppr SET ppr_number = ? WHERE id = ?', { pprNumber, pprId })
@@ -196,14 +196,14 @@ end)
 -- Update a PPR entry
 ps.registerCallback(resourceName .. ':server:updatePPR', function(source, pprId, updates)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ppr.unauthorized') } end
     if not CheckPermission(src, 'ppr_manage') then
-        return { success = false, error = 'No permission to edit PPR entries' }
+        return { success = false, error = L('ppr.no_edit_permission') }
     end
 
     pprId = tonumber(pprId)
     updates = updates or {}
-    if not pprId then return { success = false, error = 'Invalid PPR id' } end
+    if not pprId then return { success = false, error = L('ppr.invalid_id') } end
 
     local sets = {}
     local vals = {}
@@ -217,7 +217,7 @@ ps.registerCallback(resourceName .. ':server:updatePPR', function(source, pprId,
     end
 
     if #sets == 0 then
-        return { success = false, error = 'No fields to update' }
+        return { success = false, error = L('ppr.no_fields') }
     end
 
     vals[#vals + 1] = pprId
@@ -228,13 +228,13 @@ end)
 -- Delete a PPR entry
 ps.registerCallback(resourceName .. ':server:deletePPR', function(source, pprId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ppr.unauthorized') } end
     if not CheckPermission(src, 'ppr_manage') then
-        return { success = false, error = 'No permission to delete PPR entries' }
+        return { success = false, error = L('ppr.no_delete_permission') }
     end
 
     pprId = tonumber(pprId)
-    if not pprId then return { success = false, error = 'Invalid PPR id' } end
+    if not pprId then return { success = false, error = L('ppr.invalid_id') } end
 
     MySQL.query.await('DELETE FROM mdt_ppr WHERE id = ?', { pprId })
     return { success = true }
@@ -243,19 +243,19 @@ end)
 -- Add a note to a PPR entry
 ps.registerCallback(resourceName .. ':server:addPPRNote', function(source, pprId, content)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ppr.unauthorized') } end
     if not CheckPermission(src, 'ppr_manage') then
-        return { success = false, error = 'No permission to add PPR notes' }
+        return { success = false, error = L('ppr.no_add_note_permission') }
     end
 
     pprId = tonumber(pprId)
     if not pprId or not content or content == '' then
-        return { success = false, error = 'Invalid PPR id or empty note' }
+        return { success = false, error = L('ppr.invalid_note') }
     end
 
     local citizenId = ps.getIdentifier(src)
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { citizenId })
-    local authorName = profile and profile.fullname or 'Unknown'
+    local authorName = profile and profile.fullname or L('ppr.unknown')
 
     MySQL.insert.await([[
         INSERT INTO mdt_ppr_notes (ppr_id, content, author_citizenid, author_name)
@@ -268,15 +268,15 @@ end)
 -- Delete a PPR note
 ps.registerCallback(resourceName .. ':server:deletePPRNote', function(source, noteId, pprId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ppr.unauthorized') } end
     if not CheckPermission(src, 'ppr_manage') then
-        return { success = false, error = 'No permission to delete PPR notes' }
+        return { success = false, error = L('ppr.no_delete_note_permission') }
     end
 
     noteId = tonumber(noteId)
     pprId = tonumber(pprId)
     if not noteId or not pprId then
-        return { success = false, error = 'Invalid note or PPR id' }
+        return { success = false, error = L('ppr.invalid_note_id') }
     end
 
     MySQL.query.await('DELETE FROM mdt_ppr_notes WHERE id = ? AND ppr_id = ?', { noteId, pprId })

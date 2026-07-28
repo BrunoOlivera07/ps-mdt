@@ -3,7 +3,7 @@ local resourceName = tostring(GetCurrentResourceName())
 -- Events
 RegisterNUICallback('viewBodycam', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -15,7 +15,7 @@ RegisterNUICallback('viewBodycam', function(data, cb)
     end
 
     if not bodycamId then
-        cb({ success = false, message = 'Invalid bodycam ID' })
+        cb({ success = false, message = L('client.invalid_bodycam') })
         return
     end
 
@@ -25,14 +25,14 @@ RegisterNUICallback('viewBodycam', function(data, cb)
         CloseMDT(true)
         cb({ success = true })
     else
-        cb({ success = false, message = result and result.error or 'Failed to view bodycam' })
+        cb({ success = false, message = result and result.error or L('client.view_bodycam_failed') })
     end
 
 end)
 
 RegisterNUICallback('getBodycams', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open', data = {} })
+        cb({ success = false, message = L('client.mdt_not_open'), data = {} })
         return
     end
 
@@ -41,6 +41,6 @@ RegisterNUICallback('getBodycams', function(_, cb)
     if bodycams then
         cb({ success = true, data = bodycams })
     else
-        cb({ success = false, message = 'Failed to fetch bodycams', data = {} })
+        cb({ success = false, message = L('client.fetch_bodycams_failed'), data = {} })
     end
 end)

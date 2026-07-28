@@ -33,7 +33,7 @@ local function collectCitizenFlags(citizenids)
         for _, row in ipairs(warrantRows or {}) do
             if row.citizenid then
                 flagsByCid[row.citizenid] = flagsByCid[row.citizenid] or {}
-                table.insert(flagsByCid[row.citizenid], 'Active Warrant')
+                table.insert(flagsByCid[row.citizenid], L('citizens.active_warrant'))
             end
         end
     end
@@ -71,7 +71,7 @@ local function getGender(gen)
     elseif gen == 1 then
         return 'Female'
     end
-    return 'Unknown'
+    return L('citizens.unknown')
 end
 
 -- SetMetaData only updates the player's IN-MEMORY metadata; the players row is
@@ -396,7 +396,7 @@ ps.registerCallback(resourceName .. ':server:getBOLO', function(source, boloType
         local formattedBolo = {
             id = v.id,
             reportId = v.reportId and tostring(v.reportId) or 'N/A',
-            name = v.subject_name or ps.getPlayerNameByIdentifier(v.subject_id) or 'Unknown',
+            name = v.subject_name or ps.getPlayerNameByIdentifier(v.subject_id) or L('citizens.unknown'),
             type = v.type,
             notes = v.notes or '',
             status = v.status,
@@ -412,7 +412,7 @@ ps.registerCallback(resourceName .. ':server:getCitizenProfile', function(source
     if not CheckAuth(src) then return end
 
     if not citizenid or citizenid == '' then
-        return { success = false, message = 'Missing citizen id' }
+        return { success = false, message = L('citizens.missing_id') }
     end
 
     local playerRow = MySQL.single.await([[
@@ -431,7 +431,7 @@ ps.registerCallback(resourceName .. ':server:getCitizenProfile', function(source
     ]], { citizenid })
 
     if not playerRow then
-        return { success = false, message = 'Citizen not found' }
+        return { success = false, message = L('citizens.not_found') }
     end
 
     -- Online players keep PlayerData.metadata in memory as the source of truth; the
@@ -633,8 +633,8 @@ ps.registerCallback(resourceName .. ':server:getCitizenProfile', function(source
         success = true,
         profile = {
             citizenid = citizenid,
-            firstName = playerRow.firstname or 'Unknown',
-            lastName = playerRow.lastname or 'Unknown',
+            firstName = playerRow.firstname or L('citizens.unknown'),
+            lastName = playerRow.lastname or L('citizens.unknown'),
             gender = getGender(tonumber(playerRow.gender)),
             dob = playerRow.dateofbirth or 'N/A',
             phone = (GetCitizenPhoneNumber and GetCitizenPhoneNumber(citizenid, playerRow.phone)) or playerRow.phone or 'N/A',
@@ -746,14 +746,14 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateCitizenLicense', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local citizenId = payload.citizenid
     local licenseType = payload.license
     local enabled = payload.enabled == true
     if not citizenId or not licenseType then
-        return { success = false, message = 'Missing citizen id or license' }
+        return { success = false, message = L('citizens.missing_license') }
     end
 
     -- When the citizen is ONLINE, QBCore/QBX keep PlayerData.metadata in memory as
@@ -776,7 +776,7 @@ ps.registerCallback(resourceName .. ':server:updateCitizenLicense', function(sou
     -- is safe and authoritative.
     local row = MySQL.single.await('SELECT metadata FROM players WHERE citizenid = ? LIMIT 1', { citizenId })
     if not row then
-        return { success = false, message = 'Citizen not found' }
+        return { success = false, message = L('citizens.not_found') }
     end
 
     local metadata = row.metadata and json.decode(row.metadata) or {}
@@ -789,7 +789,7 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateCitizenCustomLicense', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local citizenId = payload.citizenid
@@ -797,13 +797,13 @@ ps.registerCallback(resourceName .. ':server:updateCitizenCustomLicense', functi
     local enabled = payload.enabled == true
 
     if not citizenId or not licenseId then
-        return { success = false, message = 'Missing citizen id or license id' }
+        return { success = false, message = L('citizens.missing_license_id') }
     end
 
     -- Verify the license exists
     local licenseExists = MySQL.scalar.await('SELECT id FROM mdt_custom_licenses WHERE id = ?', { licenseId })
     if not licenseExists then
-        return { success = false, message = 'License not found' }
+        return { success = false, message = L('citizens.license_not_found') }
     end
 
     local grantedBy = ps.getIdentifier(src)
@@ -820,10 +820,10 @@ end)
 -- Trigger fingerprint scan on a suspect (opens qb-policejob fingerprint UI)
 ps.registerCallback(resourceName .. ':server:addSuspectFingerprint', function(source, citizenid)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     if not citizenid or citizenid == '' then
-        return { success = false, message = 'Missing citizen id' }
+        return { success = false, message = L('citizens.missing_id') }
     end
 
     -- Check if suspect already has a fingerprint on file
@@ -838,33 +838,33 @@ ps.registerCallback(resourceName .. ':server:addSuspectFingerprint', function(so
     -- Find the suspect's server source (they must be online)
     local targetPlayer = ps.getPlayerByIdentifier(citizenid)
     if not targetPlayer then
-        return { success = false, message = 'Suspect is not online' }
+        return { success = false, message = L('citizens.suspect_offline') }
     end
 
     local targetSource = targetPlayer.source or (targetPlayer.PlayerData and targetPlayer.PlayerData.source)
     if not targetSource then
-        return { success = false, message = 'Could not find suspect' }
+        return { success = false, message = L('citizens.suspect_not_found') }
     end
 
     -- Trigger the fingerprint scan UI on both officer and suspect
     local scanConfig = Config.FingerprintScan
     if not scanConfig or not scanConfig.enabled then
-        return { success = false, message = 'Fingerprint scanning is not configured' }
+        return { success = false, message = L('citizens.fingerprint_not_configured') }
     end
 
     TriggerClientEvent(scanConfig.suspectEvent, targetSource, src)
     TriggerClientEvent(scanConfig.officerEvent, src, targetSource)
 
-    return { success = true, message = 'Fingerprint scan initiated' }
+    return { success = true, message = L('citizens.fingerprint_started') }
 end)
 
 -- Update citizen fingerprint
 ps.registerCallback(resourceName .. ':server:updateCitizenFingerprint', function(source, citizenid, fingerprint)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     if not citizenid or citizenid == '' then
-        return { success = false, message = 'Missing citizen id' }
+        return { success = false, message = L('citizens.missing_id') }
     end
 
     -- Online: write through the live player object so the next autosave does not
@@ -882,7 +882,7 @@ ps.registerCallback(resourceName .. ':server:updateCitizenFingerprint', function
     -- Offline fallback: direct DB write is safe.
     local row = MySQL.single.await('SELECT metadata FROM players WHERE citizenid = ? LIMIT 1', { citizenid })
     if not row then
-        return { success = false, message = 'Citizen not found' }
+        return { success = false, message = L('citizens.not_found') }
     end
 
     local metadata = row.metadata and json.decode(row.metadata) or {}
@@ -899,10 +899,10 @@ end)
 -- Update citizen dna
 ps.registerCallback(resourceName .. ':server:updateCitizenDNA', function(source, citizenid, dna)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     if not citizenid or citizenid == '' then
-        return { success = false, message = 'Missing citizen id' }
+        return { success = false, message = L('citizens.missing_id') }
     end
 
     local Player = ps.getPlayerByIdentifier(citizenid)
@@ -917,7 +917,7 @@ ps.registerCallback(resourceName .. ':server:updateCitizenDNA', function(source,
 
     local row = MySQL.single.await('SELECT metadata FROM players WHERE citizenid = ? LIMIT 1', { citizenid })
     if not row then
-        return { success = false, message = 'Citizen not found' }
+        return { success = false, message = L('citizens.not_found') }
     end
 
     local metadata = row.metadata and json.decode(row.metadata) or {}
@@ -933,7 +933,7 @@ end)
 
 ps.registerCallback(resourceName .. ':server:createBolo', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local boloType = payload.type or 'citizen'
@@ -943,7 +943,7 @@ ps.registerCallback(resourceName .. ':server:createBolo', function(source, paylo
     local notes = payload.notes
 
 	if not subjectName or subjectName == '' then
-		return { success = false, message = 'Missing required fields' }
+		return { success = false, message = L('citizens.missing_fields') }
 	end
 
     local allowedTypes = { citizen = true, vehicle = true, weapon = true, property = true, other = true }
@@ -962,7 +962,7 @@ ps.registerCallback(resourceName .. ':server:createBolo', function(source, paylo
 			LIMIT 1
 		]], { boloType, subjectValue, reportValue })
 		if existing then
-			return { success = false, message = 'An active BOLO already exists.' }
+			return { success = false, message = L('citizens.active_bolo_exists') }
 		end
 	end
 
@@ -978,7 +978,7 @@ ps.registerCallback(resourceName .. ':server:createBolo', function(source, paylo
 	})
 
     if not inserted then
-        return { success = false, message = 'Failed to create BOLO' }
+        return { success = false, message = L('citizens.bolo_create_failed') }
     end
 
     return { success = true, id = inserted }
@@ -987,12 +987,12 @@ end)
 -- Delete a BOLO
 ps.registerCallback(resourceName .. ':server:deleteBolo', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local id = tonumber(payload.id)
     if not id then
-        return { success = false, message = 'Invalid BOLO ID' }
+        return { success = false, message = L('citizens.invalid_bolo') }
     end
 
     MySQL.query.await('DELETE FROM mdt_bolos WHERE id = ?', { id })
@@ -1002,18 +1002,18 @@ end)
 -- Update BOLO status (resolve, deactivate, reactivate)
 ps.registerCallback(resourceName .. ':server:updateBoloStatus', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local id = tonumber(payload.id)
     local status = payload.status
     if not id or not status then
-        return { success = false, message = 'Missing BOLO ID or status' }
+        return { success = false, message = L('citizens.missing_bolo_status') }
     end
 
     local allowedStatuses = { active = true, inactive = true, resolved = true }
     if not allowedStatuses[status] then
-        return { success = false, message = 'Invalid status' }
+        return { success = false, message = L('citizens.invalid_status') }
     end
 
     MySQL.update.await('UPDATE mdt_bolos SET status = ? WHERE id = ?', { status, id })
@@ -1023,12 +1023,12 @@ end)
 -- Save citizen profile notes and profile picture
 ps.registerCallback(resourceName .. ':server:updateCitizen', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local citizenId = payload.citizenid
     if not citizenId or citizenId == '' then
-        return { success = false, message = 'Missing citizen id' }
+        return { success = false, message = L('citizens.missing_id') }
     end
 
     EnsureProfileExists(citizenId)
@@ -1046,24 +1046,24 @@ end)
 -- Add a tag to a citizen profile
 ps.registerCallback(resourceName .. ':server:addCitizenTag', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local citizenId = payload.citizenid
     local tag = payload.tag
     if not citizenId or not tag or tag == '' then
-        return { success = false, message = 'Missing citizen id or tag' }
+        return { success = false, message = L('citizens.missing_tag') }
     end
 
     local profile = MySQL.single.await('SELECT id FROM mdt_profiles WHERE citizenid = ?', { citizenId })
     if not profile then
-        return { success = false, message = 'Profile not found' }
+        return { success = false, message = L('citizens.profile_not_found') }
     end
 
     -- Check for duplicate
     local existing = MySQL.scalar.await('SELECT COUNT(*) FROM mdt_profiles_tags WHERE profileId = ? AND tag = ?', { profile.id, tag })
     if existing and existing > 0 then
-        return { success = false, message = 'Tag already exists' }
+        return { success = false, message = L('citizens.tag_exists') }
     end
 
     MySQL.insert.await('INSERT INTO mdt_profiles_tags (profileId, tag) VALUES (?, ?)', { profile.id, tag })
@@ -1073,18 +1073,18 @@ end)
 -- Remove a tag from a citizen profile
 ps.registerCallback(resourceName .. ':server:removeCitizenTag', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local citizenId = payload.citizenid
     local tag = payload.tag
     if not citizenId or not tag then
-        return { success = false, message = 'Missing citizen id or tag' }
+        return { success = false, message = L('citizens.missing_tag') }
     end
 
     local profile = MySQL.single.await('SELECT id FROM mdt_profiles WHERE citizenid = ?', { citizenId })
     if not profile then
-        return { success = false, message = 'Profile not found' }
+        return { success = false, message = L('citizens.profile_not_found') }
     end
 
     MySQL.query.await('DELETE FROM mdt_profiles_tags WHERE profileId = ? AND tag = ?', { profile.id, tag })
@@ -1094,19 +1094,19 @@ end)
 -- Add an image to a citizen profile gallery
 ps.registerCallback(resourceName .. ':server:addCitizenGallery', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local citizenId = payload.citizenid
     local image = payload.image
     local label = payload.label or ''
     if not citizenId or not image or image == '' then
-        return { success = false, message = 'Missing citizen id or image URL' }
+        return { success = false, message = L('citizens.missing_image_url') }
     end
 
     local profile = MySQL.single.await('SELECT id FROM mdt_profiles WHERE citizenid = ?', { citizenId })
     if not profile then
-        return { success = false, message = 'Profile not found' }
+        return { success = false, message = L('citizens.profile_not_found') }
     end
 
     MySQL.insert.await('INSERT INTO mdt_profiles_gallery (profileId, image, label) VALUES (?, ?, ?)', { profile.id, image, label })
@@ -1116,18 +1116,18 @@ end)
 -- Remove an image from a citizen profile gallery
 ps.registerCallback(resourceName .. ':server:removeCitizenGallery', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     payload = payload or {}
     local citizenId = payload.citizenid
     local image = payload.image
     if not citizenId or not image then
-        return { success = false, message = 'Missing citizen id or image' }
+        return { success = false, message = L('citizens.missing_image') }
     end
 
     local profile = MySQL.single.await('SELECT id FROM mdt_profiles WHERE citizenid = ?', { citizenId })
     if not profile then
-        return { success = false, message = 'Profile not found' }
+        return { success = false, message = L('citizens.profile_not_found') }
     end
 
     MySQL.query.await('DELETE FROM mdt_profiles_gallery WHERE profileId = ? AND image = ?', { profile.id, image })
@@ -1139,7 +1139,7 @@ ps.registerCallback(resourceName .. ':server:getMyProfile', function(source)
     local src = source
     local citizenid = ps.getIdentifier(src)
     if not citizenid or citizenid == '' then
-        return { success = false, message = 'Could not identify player' }
+        return { success = false, message = L('citizens.identify_failed') }
     end
 
     -- Run all queries in parallel using promises
@@ -1157,7 +1157,7 @@ ps.registerCallback(resourceName .. ':server:getMyProfile', function(source)
     ]], { citizenid })
 
     if not pOk or not pPlayer then
-        return { success = false, message = 'Profile not found' }
+        return { success = false, message = L('citizens.profile_not_found') }
     end
 
     local fingerprint, dna = nil, nil
@@ -1266,8 +1266,8 @@ ps.registerCallback(resourceName .. ':server:getMyProfile', function(source)
         success = true,
         profile = {
             citizenid = citizenid,
-            firstName = pPlayer.firstname or 'Unknown',
-            lastName = pPlayer.lastname or 'Unknown',
+            firstName = pPlayer.firstname or L('citizens.unknown'),
+            lastName = pPlayer.lastname or L('citizens.unknown'),
             gender = getGender(tonumber(pPlayer.gender)),
             dob = pPlayer.dateofbirth or 'N/A',
             phone = (GetCitizenPhoneNumber and GetCitizenPhoneNumber(citizenid, pPlayer.phone)) or pPlayer.phone or 'N/A',
@@ -1323,17 +1323,17 @@ end)
 
 ps.registerCallback(resourceName .. ':server:getProperty', function(source, propertyId)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('citizens.unauthorized') } end
 
     if not propertyId then
-        return { success = false, message = 'Missing property id' }
+        return { success = false, message = L('citizens.missing_property') }
     end
 
     -- Look the property up via the configured housing system (Config.Housing).
     local propRow = Housing.GetById(propertyId)
  
     if not propRow then
-        return { success = false, message = 'Property not found' }
+        return { success = false, message = L('citizens.property_not_found') }
     end
  
     -- Decode coords JSON → table
@@ -1408,7 +1408,7 @@ ps.registerCallback(resourceName .. ':server:getProperty', function(source, prop
             if cid ~= propRow.owner then
                 keyholders[#keyholders + 1] = {
                     citizenid = cid,
-                    name = nameMap[cid] or 'Unknown',
+                    name = nameMap[cid] or L('citizens.unknown'),
                 }
             end
         end

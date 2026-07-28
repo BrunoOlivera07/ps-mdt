@@ -136,6 +136,27 @@
 		return impoundLots.find(l => l.id === id)?.label ?? id;
 	}
 
+	function vehicleStatusLabel(status?: string): string {
+		switch ((status || "valid").toLowerCase()) {
+			case "valid": return t("pages.vehicles.valid");
+			case "uninsured": return t("pages.vehicles.uninsured");
+			case "impounded": return t("pages.vehicles.impounded");
+			case "stolen": return t("pages.vehicles.stolen");
+			case "bolo": return t("pages.vehicles.bolo");
+			case "active": return t("pages.vehicles.active");
+			default: return status || t("pages.vehicles.valid");
+		}
+	}
+
+	function vehicleFlagLabel(flag: string): string {
+		switch (flag.toLowerCase()) {
+			case "stolen": return t("pages.vehicles.stolen");
+			case "bolo": return t("pages.vehicles.bolo");
+			case "active warrant": return t("pages.vehicles.activeWarrant");
+			default: return flag;
+		}
+	}
+
 	function money(n: number | null | undefined): string {
 		return "$" + (n ?? 0).toLocaleString();
 	}
@@ -659,8 +680,8 @@
 				{ id: 2, model: 'adder', label: 'Truffade Adder', plate: 'XYZ 789', owner: 'Sarah Williams', class: 'Super', type: 'car', flags: [], status: 'valid', points: 0 },
 				{ id: 3, model: 'bati801', label: 'Pegassi Bati 801', plate: 'MOT 456', owner: 'David Chen', class: 'Motorcycles', type: 'bike', flags: ['Bolo'], status: 'bolo', points: 1 },
 				{ id: 4, model: 'zentorno', label: 'Pegassi Zentorno', plate: 'SPD 001', owner: 'LSPD Fleet', class: 'Super', type: 'car', flags: [], status: 'valid', points: 0 },
-				{ id: 5, model: 'sanchez', label: 'Sanchez', plate: 'DRT 321', owner: 'James Miller', class: 'Off-Road', type: 'bike', flags: ['Active Warrant'], status: 'impounded', points: 6, registered: false, registrationReason: 'No active registration' },
-				{ id: 6, model: 'futo', label: 'Karin Futo', plate: 'INS 404', owner: 'Olivia Brown', class: 'Sports', type: 'car', flags: [], status: 'uninsured', reason: 'No active insurance', points: 2, registered: true },
+				{ id: 5, model: 'sanchez', label: 'Sanchez', plate: 'DRT 321', owner: 'James Miller', class: 'Off-Road', type: 'bike', flags: ['Active Warrant'], status: 'impounded', points: 6, registered: false, registrationReason: t("pages.vehicles.noActiveRegistration") },
+				{ id: 6, model: 'futo', label: 'Karin Futo', plate: 'INS 404', owner: 'Olivia Brown', class: 'Sports', type: 'car', flags: [], status: 'uninsured', reason: t("pages.vehicles.noActiveInsurance"), points: 2, registered: true },
 			];
 			loading = false;
 		} else {
@@ -712,7 +733,7 @@
 					{/if}
 					{#if features.insurance}
 						<span class="pill {getStatusClass(selectedVehicle.status || 'valid')}">
-							{(selectedVehicle.status || 'Valid').charAt(0).toUpperCase() + (selectedVehicle.status || 'Valid').slice(1)}{selectedVehicle.reason?.trim() ? ` (${selectedVehicle.reason.trim()})` : ''}
+							{vehicleStatusLabel(selectedVehicle.status)}{selectedVehicle.reason?.trim() ? ` (${selectedVehicle.reason.trim()})` : ''}
 						</span>
 					{/if}
 					{#if features.registration && !isVehicleRegistered(selectedVehicle)}
@@ -853,7 +874,7 @@
 										<span class="hold-pill hold-locked">{t("pages.vehicles.untilOfficerRelease")}</span>
 									{:else if activeImpound.hold_type === 'timed' && !activeImpound.hold_releasable}
 										<span class="hold-pill hold-timed">
-											{activeImpound.hold_label || 'Held'} · {holdLeft(activeImpound.hold_seconds_left ?? 0)}
+											{activeImpound.hold_label || t("pages.vehicles.held")} · {holdLeft(activeImpound.hold_seconds_left ?? 0)}
 										</span>
 										<span class="hold-until">until {formatDateTime(activeImpound.hold_until ?? 0)}</span>
 									{:else}
@@ -899,7 +920,7 @@
 								</div>
 								{#if activeImpound.hold_releasable === false}
 									<div class="imp-gate-hint">
-										{activeImpound.hold_reason}{#if !canOverride} — you are not authorised to override this hold{/if}
+										{activeImpound.hold_reason}{#if !canOverride} — {t("pages.vehicles.overrideNotAuthorized")}{/if}
 									</div>
 								{:else if requireFeePaid && (activeImpound.total ?? activeImpound.fee) > 0 && !activeImpound.fee_paid}
 									<div class="imp-hint">{t("pages.vehicles.feeRequired")}</div>
@@ -914,14 +935,16 @@
 
 					{#if impoundHistory.filter(r => r.status === 'released').length > 0}
 						<button class="imp-history-toggle" onclick={() => showHistory = !showHistory}>
-							{showHistory ? 'Hide' : 'Show'} impound history ({impoundHistory.filter(r => r.status === 'released').length})
+						{showHistory
+							? t("pages.vehicles.hideImpoundHistory", { count: impoundHistory.filter(r => r.status === 'released').length })
+							: t("pages.vehicles.showImpoundHistory", { count: impoundHistory.filter(r => r.status === 'released').length })}
 						</button>
 						{#if showHistory}
 							<div class="imp-history">
 								{#each impoundHistory.filter(r => r.status === 'released') as rec (rec.id)}
 									<div class="imp-hist-row">
 										<div class="imp-hist-main">
-											<span class="imp-hist-reason">{rec.reason || 'Impounded'}</span>
+										<span class="imp-hist-reason">{rec.reason || t("pages.vehicles.impounded")}</span>
 											<span class="imp-hist-meta">
 												{formatDate(rec.time)}
 												{#if rec.released_at}→ {formatDate(rec.released_at)}{/if}
@@ -981,7 +1004,7 @@
 						<div class="section-title">{t("pages.vehicles.flags")}</div>
 						<div class="flags-row">
 							{#each selectedVehicle.flags.filter(f => !f.toLowerCase().startsWith('status:')) as flag}
-								<span class={getFlagClass(flag)}>{flag}</span>
+								<span class={getFlagClass(flag)}>{vehicleFlagLabel(flag)}</span>
 							{/each}
 						</div>
 					</div>
@@ -1249,8 +1272,8 @@
 								<span class="col-status">
 									<span 
 										class="status-pill {getStatusClass(vehicle.status || 'valid')}"
-										title={vehicle.reason?.trim() ? `${vehicle.status}: ${vehicle.reason}` : undefined}
-										>{vehicle.status || 'Valid'}
+									title={vehicle.reason?.trim() ? `${vehicleStatusLabel(vehicle.status)}: ${vehicle.reason}` : undefined}
+									>{vehicleStatusLabel(vehicle.status)}
 									</span>
 								</span>
 							{/if}
@@ -1259,13 +1282,13 @@
 									<span 
 										class="status-pill {isVehicleRegistered(vehicle) ? 'status-registered' : 'status-unregistered'}"
 										title={!isVehicleRegistered(vehicle) && vehicle.registrationReason?.trim() ? vehicle.registrationReason : undefined}
-										>{isVehicleRegistered(vehicle) ? 'Registered' : 'Unregistered'}
+									>{isVehicleRegistered(vehicle) ? t("pages.vehicles.registered") : t("pages.vehicles.unregistered")}
 									</span>
 								</span>
 							{/if}
 							<span class="col-flags">
 								{#each (vehicle.flags || []).filter(f => !f.toLowerCase().startsWith('status:')) as flag}
-									<span class={getFlagClass(flag)}>{flag}</span>
+									<span class={getFlagClass(flag)}>{vehicleFlagLabel(flag)}</span>
 								{/each}
 							</span>
 						</button>

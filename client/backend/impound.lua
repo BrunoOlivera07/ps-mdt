@@ -5,15 +5,15 @@ local resourceName = tostring(GetCurrentResourceName())
 local function bridge(name, event, requirePlate)
     RegisterNUICallback(name, function(data, cb)
         if not MDTOpen then
-            cb({ success = false, message = 'MDT is not open' })
+            cb({ success = false, message = L('client.mdt_not_open') })
             return
         end
         if requirePlate and (type(data) ~= 'table' or not data.plate) then
-            cb({ success = false, message = 'Missing plate number' })
+            cb({ success = false, message = L('client.missing_plate_number') })
             return
         end
         local result = ps.callback(resourceName .. ':server:' .. event, data or {})
-        cb(result or { success = false, message = 'Request failed' })
+        cb(result or { success = false, message = L('client.request_failed') })
     end)
 end
 

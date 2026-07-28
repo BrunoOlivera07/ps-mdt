@@ -18,7 +18,7 @@ end)
 RegisterNUICallback('getPPR', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.id then
-        cb({ success = false, message = 'Missing PPR ID' })
+        cb({ success = false, message = L('client.missing_ppr') })
         return
     end
     local result = ps.callback(resourceName .. ':server:getPPR', data.id)
@@ -40,7 +40,7 @@ end)
 RegisterNUICallback('createPPR', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data then
-        cb({ success = false, message = 'Missing data' })
+        cb({ success = false, message = L('client.missing_data') })
         return
     end
     local result = ps.callback(resourceName .. ':server:createPPR', data)
@@ -51,7 +51,7 @@ end)
 RegisterNUICallback('updatePPR', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.id then
-        cb({ success = false, message = 'Missing PPR ID' })
+        cb({ success = false, message = L('client.missing_ppr') })
         return
     end
     local pprId = data.id
@@ -64,7 +64,7 @@ end)
 RegisterNUICallback('deletePPR', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.id then
-        cb({ success = false, message = 'Missing PPR ID' })
+        cb({ success = false, message = L('client.missing_ppr') })
         return
     end
     local result = ps.callback(resourceName .. ':server:deletePPR', data.id)
@@ -75,7 +75,7 @@ end)
 RegisterNUICallback('addPPRNote', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.pprId or not data.content or data.content == '' then
-        cb({ success = false, message = 'Missing PPR ID or note content' })
+        cb({ success = false, message = L('client.missing_ppr_note') })
         return
     end
     local result = ps.callback(resourceName .. ':server:addPPRNote', data.pprId, data.content)
@@ -86,7 +86,7 @@ end)
 RegisterNUICallback('deletePPRNote', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.noteId or not data.pprId then
-        cb({ success = false, message = 'Missing note ID or PPR ID' })
+        cb({ success = false, message = L('client.missing_note_ppr') })
         return
     end
     local result = ps.callback(resourceName .. ':server:deletePPRNote', data.noteId, data.pprId)

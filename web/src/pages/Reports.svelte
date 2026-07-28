@@ -6,7 +6,7 @@
 	import { debugError } from "../utils/debug";
 	import { isEnvBrowser } from "../utils/misc";
 	import { NUI_EVENTS } from "../constants/nuiEvents";
-	import { REPORT_TYPES } from "../constants";
+	import { getReportTypesForJob } from "../constants";
 	import ReportEditor from "./ReportEditor.svelte";
 	import type { createInstanceStateService } from "../services/instanceStateService.svelte";
 	import { createReportService } from "../services/reportService.svelte";
@@ -18,7 +18,7 @@
 	import type { MDTTab } from "../constants";
 	import Pagination from "../components/Pagination.svelte";
 	import type { JobType } from "../interfaces/IUser";
-	import { t, tf } from "../lib/i18n";
+	import { t, tf, translateReportType } from "../lib/i18n";
 
 	interface Props {
 		instanceStateService: ReturnType<typeof createInstanceStateService>;
@@ -27,6 +27,7 @@
 	}
 
 	let { instanceStateService, tabService, jobType = 'leo' }: Props = $props();
+	let reportTypes = $derived(getReportTypesForJob(jobType === "civilian" ? "leo" : jobType));
 
 	function navigateTo(tab: MDTTab) {
 		if (!tabService) return;
@@ -58,7 +59,17 @@
 	let filterType = $state("");
 	let filterStartDate = $state("");
 	let filterEndDate = $state("");
-	let analytics = $state({ incidents: 0, arrests: 0, warrants: 0 });
+	let analytics = $state({
+		incidents: 0,
+		arrests: 0,
+		warrants: 0,
+		medical: 0,
+		trauma: 0,
+		overdose: 0,
+		courtFilings: 0,
+		judicialOrders: 0,
+		sentencing: 0,
+	});
 	let isLoading = $state(false);
 	let currentPage = $state(1);
 	let reportsPerPage = $state(25);
@@ -89,17 +100,31 @@
 	onMount(() => {
 		if (isEnvBrowser()) {
 			const now = Date.now();
-			reports = [
-				{ id: '1', title: 'Armed Robbery at Fleeca Bank', reportId: 'RPT-001', author: 'identifier_123', authorplaintext: 'Ofc. Smith', type: 'Incident', datecreated: now - 86400000, dateupdated: now - 3600000, tag: 'Priority' },
-				{ id: '2', title: 'Traffic Stop - Suspended License', reportId: 'RPT-002', author: 'identifier_123', authorplaintext: 'Ofc. Johnson', type: 'Citation', datecreated: now - 172800000, dateupdated: now - 86400000 },
-				{ id: '3', title: 'Drive-by Shooting on Vinewood Blvd', reportId: 'RPT-003', author: 'identifier_123', authorplaintext: 'Det. Williams', type: 'Incident', datecreated: now - 259200000, dateupdated: now - 172800000, tag: 'Priority' },
-				{ id: '4', title: 'Arrest Report - David Chen', reportId: 'RPT-004', author: 'identifier_123', authorplaintext: 'Sgt. Smith', type: 'Arrest', datecreated: now - 345600000, dateupdated: now - 259200000 },
-				{ id: '5', title: 'Noise Complaint - Vespucci Beach', reportId: 'RPT-005', author: 'identifier_123', authorplaintext: 'Ofc. Brown', type: 'Incident', datecreated: now - 432000000, dateupdated: now - 345600000 },
-				{ id: '6', title: 'Warrant Execution - Marcus Johnson', reportId: 'RPT-006', author: 'identifier_123', authorplaintext: 'Det. Williams', type: 'Arrest', datecreated: now - 518400000, dateupdated: now - 432000000, tag: 'Warrant' },
-				{ id: '7', title: 'Hit and Run - Del Perro Pier', reportId: 'RPT-007', author: 'identifier_123', authorplaintext: 'Ofc. Smith', type: 'Incident', datecreated: now - 604800000, dateupdated: now - 518400000 },
-			];
-			analytics = { incidents: 4, arrests: 2, warrants: 1 };
-			totalReports = 7;
+			if (jobType === "ems") {
+				reports = [
+					{ id: "1", title: t("pages.reports.demo.emsMedical"), reportId: "EMS-001", author: "identifier_123", authorplaintext: "Paramedic Silva", type: "Medical Report", datecreated: now - 86400000, dateupdated: now - 3600000 },
+					{ id: "2", title: t("pages.reports.demo.emsTrauma"), reportId: "EMS-002", author: "identifier_123", authorplaintext: "Dr. Costa", type: "Trauma Report", datecreated: now - 172800000, dateupdated: now - 86400000 },
+					{ id: "3", title: t("pages.reports.demo.emsOverdose"), reportId: "EMS-003", author: "identifier_123", authorplaintext: "Paramedic Lima", type: "Overdose Report", datecreated: now - 259200000, dateupdated: now - 172800000 },
+					{ id: "4", title: t("pages.reports.demo.emsPsychiatric"), reportId: "EMS-004", author: "identifier_123", authorplaintext: "Dr. Santos", type: "Psychiatric Report", datecreated: now - 345600000, dateupdated: now - 259200000 },
+					{ id: "5", title: t("pages.reports.demo.emsMassCasualty"), reportId: "EMS-005", author: "identifier_123", authorplaintext: "Chief Rocha", type: "Mass Casualty Report", datecreated: now - 432000000, dateupdated: now - 345600000 },
+				];
+				analytics = { ...analytics, medical: 1, trauma: 1, overdose: 1 };
+			} else if (jobType === "doj") {
+				reports = [
+					{ id: "1", title: t("pages.reports.demo.dojFiling"), reportId: "DOJ-001", author: "identifier_123", authorplaintext: "Judge Silva", type: "Court Filing", datecreated: now - 86400000, dateupdated: now - 3600000 },
+					{ id: "2", title: t("pages.reports.demo.dojOrder"), reportId: "DOJ-002", author: "identifier_123", authorplaintext: "Judge Costa", type: "Judicial Order", datecreated: now - 172800000, dateupdated: now - 86400000 },
+					{ id: "3", title: t("pages.reports.demo.dojSentencing"), reportId: "DOJ-003", author: "identifier_123", authorplaintext: "Judge Santos", type: "Sentencing Report", datecreated: now - 259200000, dateupdated: now - 172800000 },
+				];
+				analytics = { ...analytics, courtFilings: 1, judicialOrders: 1, sentencing: 1 };
+			} else {
+				reports = [
+					{ id: "1", title: t("pages.reports.demo.leoIncident"), reportId: "RPT-001", author: "identifier_123", authorplaintext: "Ofc. Smith", type: "Incident Report", datecreated: now - 86400000, dateupdated: now - 3600000 },
+					{ id: "2", title: t("pages.reports.demo.leoTraffic"), reportId: "RPT-002", author: "identifier_123", authorplaintext: "Ofc. Johnson", type: "Traffic Report", datecreated: now - 172800000, dateupdated: now - 86400000 },
+					{ id: "3", title: t("pages.reports.demo.leoArrest"), reportId: "RPT-003", author: "identifier_123", authorplaintext: "Sgt. Smith", type: "Arrest Report", datecreated: now - 259200000, dateupdated: now - 172800000 },
+				];
+				analytics = { ...analytics, incidents: 1, arrests: 1, warrants: 1 };
+			}
+			totalReports = reports.length;
 			isLoading = false;
 			return;
 		}
@@ -231,7 +256,7 @@
 	}
 
 	function reportTypeLabel(type: string): string {
-		return tf(`pages.reports.types.${type.toLowerCase().replace(/\s+/g, "_")}`, type);
+		return translateReportType(type);
 	}
 </script>
 
@@ -276,7 +301,7 @@
 					aria-label={t("pages.reports.filterType")}
 				>
 					<option value="">{t("pages.reports.allTypes")}</option>
-					{#each REPORT_TYPES as type}
+					{#each reportTypes as type}
 						<option value={type}>{reportTypeLabel(type)}</option>
 					{/each}
 				</select>
@@ -306,20 +331,20 @@
 		<div class="analytics-strip">
 			<div class="stat-item">
 				<svg class="stat-icon stat-icon-blue" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-				<span class="stat-value">{analytics.incidents}</span>
-					<span class="stat-label">{t("pages.reports.incidents")}</span>
+				<span class="stat-value">{jobType === "ems" ? analytics.medical : jobType === "doj" ? analytics.courtFilings : analytics.incidents}</span>
+				<span class="stat-label">{jobType === "ems" ? t("pages.reports.medicalReports") : jobType === "doj" ? t("pages.reports.courtFilings") : t("pages.reports.incidents")}</span>
 			</div>
 			<div class="stat-divider"></div>
 			<div class="stat-item">
 				<svg class="stat-icon stat-icon-red" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-				<span class="stat-value">{analytics.arrests}</span>
-					<span class="stat-label">{t("pages.reports.arrests")}</span>
+				<span class="stat-value">{jobType === "ems" ? analytics.trauma : jobType === "doj" ? analytics.judicialOrders : analytics.arrests}</span>
+				<span class="stat-label">{jobType === "ems" ? t("pages.reports.traumaReports") : jobType === "doj" ? t("pages.reports.judicialOrders") : t("pages.reports.arrests")}</span>
 			</div>
 			<div class="stat-divider"></div>
 			<div class="stat-item">
 				<svg class="stat-icon stat-icon-amber" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-				<span class="stat-value">{analytics.warrants}</span>
-					<span class="stat-label">{t("pages.reports.warrants")}</span>
+				<span class="stat-value">{jobType === "ems" ? analytics.overdose : jobType === "doj" ? analytics.sentencing : analytics.warrants}</span>
+				<span class="stat-label">{jobType === "ems" ? t("pages.reports.overdoseReports") : jobType === "doj" ? t("pages.reports.sentencingReports") : t("pages.reports.warrants")}</span>
 			</div>
 		</div>
 

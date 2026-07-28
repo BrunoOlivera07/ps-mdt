@@ -1,6 +1,7 @@
 # Dependencies
 /web/node_modules
 /web/dist
+/scripts/.translate-sql-cache*.json
 
 # Editor
 .vscode/

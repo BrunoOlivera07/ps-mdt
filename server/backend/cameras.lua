@@ -10,7 +10,7 @@ ps.registerCallback(resourceName .. ':server:getCameraModels', function(source)
     for key, hash in pairs(Camera.models or {}) do
         -- Format the label nicely
         local displayName = key:gsub('_', ' '):upper()
-        displayName = displayName:gsub('CAM', 'Camera')
+        displayName = displayName:gsub('CAM', L('cameras.model_name'))
         displayName = displayName:gsub('CCTV', 'CCTV')
 
         table.insert(models, {

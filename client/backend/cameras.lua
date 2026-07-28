@@ -3,7 +3,7 @@ local resourceName = tostring(GetCurrentResourceName())
 -- Events
 RegisterNUICallback('viewCamera', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -15,7 +15,7 @@ RegisterNUICallback('viewCamera', function(data, cb)
     end
 
     if not cameraId then
-        cb({ success = false, message = 'Invalid camera ID' })
+        cb({ success = false, message = L('client.invalid_camera') })
         return
     end
 
@@ -25,14 +25,14 @@ RegisterNUICallback('viewCamera', function(data, cb)
         CloseMDT(true)
         cb({ success = true })
     else
-        cb({ success = false, message = result and result.error or 'Failed to view camera' })
+        cb({ success = false, message = result and result.error or L('client.view_camera_failed') })
     end
 
 end)
 
 RegisterNUICallback('getCameras', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open', data = {} })
+        cb({ success = false, message = L('client.mdt_not_open'), data = {} })
         return
     end
 
@@ -41,6 +41,6 @@ RegisterNUICallback('getCameras', function(_, cb)
     if cameras then
         cb({ success = true, data = cameras })
     else
-        cb({ success = false, message = 'Failed to fetch cameras', data = {} })
+        cb({ success = false, message = L('client.fetch_cameras_failed'), data = {} })
     end
 end)

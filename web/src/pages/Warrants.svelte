@@ -71,7 +71,7 @@
 	async function handleCloseWarrant(warrant: Warrant) {
 		isLoading = true;
 		try {
-			const result = await fetchNui<{ success: boolean; error?: string }>(
+			const result = await fetchNui<{ success: boolean; error?: string; message?: string }>(
 				NUI_EVENTS.WARRANT.CLOSE_WARRANT,
 				{ reportId: warrant.reportid, citizenid: warrant.citizenid },
 				{ success: true },
@@ -82,7 +82,7 @@
 				);
 				globalNotifications.success(t("pages.warrants.closedFor", { name: warrant.name }));
 			} else {
-				globalNotifications.error(result.error || t("pages.warrants.closeFailed"));
+				globalNotifications.error(result.error || result.message || t("pages.warrants.closeFailed"));
 			}
 		} catch {
 			globalNotifications.error(t("pages.warrants.closeFailed"));

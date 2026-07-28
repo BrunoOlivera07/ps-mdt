@@ -4,12 +4,12 @@ local function getActorData(src)
     if not src then
         return {
             citizenid = nil,
-            name = 'System'
+            name = L('audit.system')
         }
     end
 
     local citizenid = ps.getIdentifier(src)
-    local name = ps.getPlayerName(src) or 'Unknown'
+    local name = ps.getPlayerName(src) or L('audit.unknown')
     local callsign = ps.getMetadata(src, 'callsign')
     if callsign and callsign ~= '' then
         name = callsign .. ' ' .. name

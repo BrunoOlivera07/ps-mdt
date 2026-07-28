@@ -2,7 +2,7 @@ local resourceName = tostring(GetCurrentResourceName())
 
 RegisterNUICallback('issueWarrant', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -10,13 +10,14 @@ RegisterNUICallback('issueWarrant', function(data, cb)
     if result and result.success then
         cb({ success = true })
     else
-        cb({ success = false, message = result and result.error or 'Failed to issue warrant' })
+        local errorMessage = result and (result.error or result.message) or L('client.issue_warrant_failed')
+        cb({ success = false, error = errorMessage, message = errorMessage })
     end
 end)
 
 RegisterNUICallback('closeWarrant', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -24,7 +25,8 @@ RegisterNUICallback('closeWarrant', function(data, cb)
     if result and result.success then
         cb({ success = true })
     else
-        cb({ success = false, message = result and result.error or 'Failed to close warrant' })
+        local errorMessage = result and (result.error or result.message) or L('client.close_warrant_failed')
+        cb({ success = false, error = errorMessage, message = errorMessage })
     end
 end)
 

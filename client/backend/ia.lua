@@ -16,7 +16,7 @@ exports('openComplaint', OpenComplaintForm)
 -- Submit complaint (no MDTOpen check - standalone form)
 RegisterNUICallback('submitComplaint', function(data, cb)
     if not data or not data.officerName or data.officerName == '' or not data.description or data.description == '' then
-        cb({ success = false, message = 'Missing required fields' })
+        cb({ success = false, message = L('client.missing_fields') })
         return
     end
 
@@ -48,12 +48,12 @@ end)
 
 RegisterNUICallback('getIAComplaint', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.id then
-        cb({ success = false, message = 'Missing complaint ID' })
+        cb({ success = false, message = L('client.missing_complaint') })
         return
     end
 
@@ -80,7 +80,7 @@ end)
 RegisterNUICallback('updateIAComplaintInfo', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.id then
-        cb({ success = false, message = 'Missing complaint ID' })
+        cb({ success = false, message = L('client.missing_complaint') })
         return
     end
     local result = ps.callback(resourceName .. ':server:updateIAComplaintInfo', data.id, {
@@ -94,12 +94,12 @@ end)
 
 RegisterNUICallback('updateIAStatus', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.id or not data.status then
-        cb({ success = false, message = 'Missing complaint ID or status' })
+        cb({ success = false, message = L('client.missing_complaint_status') })
         return
     end
 
@@ -109,12 +109,12 @@ end)
 
 RegisterNUICallback('assignIAComplaint', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.id or not data.citizenid then
-        cb({ success = false, message = 'Missing complaint ID or citizen ID' })
+        cb({ success = false, message = L('client.missing_complaint_citizen') })
         return
     end
 
@@ -126,7 +126,7 @@ RegisterNUICallback('addIANote', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
 
     if not data or not data.complaintId or not data.content or data.content == '' then
-        cb({ success = false, message = 'Missing complaint ID or note content' })
+        cb({ success = false, message = L('client.missing_complaint_note') })
         return
     end
 
@@ -138,7 +138,7 @@ RegisterNUICallback('deleteIANote', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
 
     if not data or not data.noteId or not data.complaintId then
-        cb({ success = false, message = 'Missing note ID or complaint ID' })
+        cb({ success = false, message = L('client.missing_note_complaint') })
         return
     end
 

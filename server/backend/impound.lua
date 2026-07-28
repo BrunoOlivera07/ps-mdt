@@ -48,7 +48,7 @@ local function mailOwner(citizenid, subject, body)
 
     SendCitizenMail(
         citizenid,
-        impoundCfg().MailSender or 'Vehicle Impound Unit',
+        impoundCfg().MailSender or L('config.impound_mail_sender'),
         subject,
         body
     )
@@ -91,7 +91,7 @@ end
 local function holdStatus(row)
     local t = row.hold_type or 'immediate'
     if t == 'indefinite' then
-        return false, 'This vehicle is held until an officer authorises its release'
+        return false, L('impound.hold_indefinite')
     end
     if t == 'timed' then
         local until_ = tonumber(row.hold_until) or 0
@@ -100,9 +100,9 @@ local function holdStatus(row)
             local days = math.floor(left / 86400)
             local hours = math.floor((left % 86400) / 3600)
             local when = days > 0
-                and ('%d day(s), %d hour(s)'):format(days, hours)
-                or ('%d hour(s)'):format(math.max(1, hours))
-            return false, ('This vehicle is held for another %s'):format(when)
+                and L('impound.duration_days_hours', { days = days, hours = hours })
+                or L('impound.duration_hours', { hours = math.max(1, hours) })
+            return false, L('impound.hold_remaining', { duration = when })
         end
     end
     return true, nil
@@ -178,7 +178,7 @@ local function officerInfo(src)
     end)
     if ok and res then name = res:gsub('^%s+', ''):gsub('%s+$', '') end
     if name == '' then name = nil end
-    return cid, (name or ps.getPlayerName(src) or 'Unknown')
+    return cid, (name or ps.getPlayerName(src) or L('impound.unknown'))
 end
 
 -- Fetch the active impound row for a vehicle id (or nil).
@@ -196,26 +196,26 @@ end
 -- The impound itself. Shared by the MDT callback and the on-site flow, so both
 -- write exactly the same record and enforce exactly the same rules.
 local function doImpound(src, payload)
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('impound.unauthorized') } end
     if not CheckPermission(src, 'vehicle_impound') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('impound.insufficient_permissions') }
     end
 
     payload = payload or {}
     local plate = cleanPlate(payload.plate)
-    if not plate then return { success = false, message = 'Missing plate number' } end
+    if not plate then return { success = false, message = L('impound.missing_plate') } end
 
     local cfg = impoundCfg()
     local fee = math.floor(tonumber(payload.fee) or cfg.DefaultFee or 0)
     if fee < 0 then fee = 0 end
     local maxFee = cfg.MaxFee or 50000
     if fee > maxFee then
-        return { success = false, message = ('Fee exceeds the maximum of $%d'):format(maxFee) }
+        return { success = false, message = L('impound.fee_above_max', { amount = maxFee }) }
     end
 
     local reason = type(payload.reason) == 'string' and payload.reason:sub(1, 100) or nil
     if not reason or reason == '' then
-        return { success = false, message = 'An impound reason is required' }
+        return { success = false, message = L('impound.reason_required') }
     end
     local notes = type(payload.notes) == 'string' and payload.notes:sub(1, 500) or nil
     if notes == '' then notes = nil end
@@ -227,7 +227,7 @@ local function doImpound(src, payload)
 
     local lotId = payload.lot and tostring(payload.lot) or defaultLotId()
     if not getLot(lotId) then
-        return { success = false, message = 'Unknown impound lot' }
+        return { success = false, message = L('impound.unknown_lot') }
     end
 
     local linkedReport = tonumber(payload.reportId)
@@ -235,7 +235,7 @@ local function doImpound(src, payload)
     local vehicle = MySQL.single.await(
         'SELECT id, citizenid, plate, state FROM player_vehicles WHERE plate = ? LIMIT 1', { plate })
     if not vehicle then
-        return { success = false, message = 'Vehicle not found' }
+        return { success = false, message = L('impound.vehicle_not_found') }
     end
 
     -- From the MDT a vehicle can only be impounded while it sits in a garage.
@@ -244,11 +244,11 @@ local function doImpound(src, payload)
     if not payload.onSite and vehicle.state ~= 1 then
         return {
             success = false,
-            message = 'Vehicle is not in a garage — impound it on site',
+            message = L('impound.not_in_garage'),
         }
     end
     if activeImpound(vehicle.id) then
-        return { success = false, message = 'Vehicle is already impounded' }
+        return { success = false, message = L('impound.already_impounded') }
     end
 
     local cid, officerName = officerInfo(src)
@@ -272,26 +272,22 @@ local function doImpound(src, payload)
     -- Tell the owner. They had no way of knowing before this.
     local lotForMail = getLot(lotId)
     local storageCfg = impoundCfg().Storage or {}
-    local body = ('Your vehicle %s has been impounded.'):format(plate)
-    body = body .. ('\n\nReason: %s'):format(reason)
-    body = body .. ('\nHeld at: %s'):format((lotForMail and lotForMail.label) or lotId)
+    local body = L('impound.mail_impounded_body', { plate = plate, reason = reason, lot = (lotForMail and lotForMail.label) or lotId })
     if fee > 0 then
-        body = body .. ('\nRelease fee: $%d'):format(fee)
+        body = body .. L('impound.mail_release_fee', { amount = fee })
         if (storageCfg.PerDay or 0) > 0 then
-            body = body .. ('\nStorage: $%d per day, up to %d days')
-                :format(storageCfg.PerDay, storageCfg.MaxDays or 0)
+            body = body .. L('impound.mail_storage', { amount = storageCfg.PerDay, days = storageCfg.MaxDays or 0 })
         end
     else
-        body = body .. '\nRelease fee: none'
+        body = body .. L('impound.mail_no_release_fee')
     end
     if holdType == 'indefinite' then
-        body = body .. '\n\nHold: the vehicle will not be released until law enforcement authorises it.'
+        body = body .. L('impound.mail_indefinite_hold')
     elseif holdType == 'timed' and holdUntil then
-        body = body .. ('\n\nHold: the vehicle cannot be released before %s.')
-            :format(os.date('%Y-%m-%d %H:%M', holdUntil))
+        body = body .. L('impound.mail_timed_hold', { date = os.date('%Y-%m-%d %H:%M', holdUntil) })
     end
-    body = body .. '\n\nSpeak to an officer to arrange release. The longer it stays with us, the more it will cost you.'
-    mailOwner(vehicle.citizenid, ('Vehicle impounded — %s'):format(plate), body)
+    body = body .. L('impound.mail_release_instructions')
+    mailOwner(vehicle.citizenid, L('impound.mail_impounded_subject', { plate = plate }), body)
 
     if ps.auditLog then
         local lot = getLot(lotId)
@@ -304,13 +300,12 @@ local function doImpound(src, payload)
             onSite       = payload.onSite == true,
             boloClosed   = boloClosed,
             hold         = holdLabel,
-            action_label = ('Impounded %s at %s — %s (fee $%d, held: %s)'):format(
-                plate, (lot and lot.label) or lotId, reason, fee, holdLabel or 'immediate'),
+            action_label = L('impound.audit_impounded', { plate = plate, lot = (lot and lot.label) or lotId, reason = reason, fee = fee, hold = holdLabel or L('impound.immediate') }),
         })
     end
 
-    local msg = ('%s impounded'):format(plate)
-    if boloClosed then msg = msg .. ' — BOLO resolved' end
+    local msg = L('impound.impounded', { plate = plate })
+    if boloClosed then msg = msg .. L('impound.bolo_resolved') end
     return { success = true, message = msg, boloClosed = boloClosed }
 end
 
@@ -323,38 +318,38 @@ end)
 -- ─────────────────────────────────────────────────────────────────────────────
 ps.registerCallback(resourceName .. ':server:payImpoundFee', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('impound.unauthorized') } end
     if not CheckPermission(src, 'vehicle_impound_release') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('impound.insufficient_permissions') }
     end
 
     payload = payload or {}
     local plate = cleanPlate(payload.plate)
-    if not plate then return { success = false, message = 'Missing plate number' } end
+    if not plate then return { success = false, message = L('impound.missing_plate') } end
 
     local vehicle = MySQL.single.await(
         'SELECT id, citizenid FROM player_vehicles WHERE plate = ? LIMIT 1', { plate })
-    if not vehicle then return { success = false, message = 'Vehicle not found' } end
+    if not vehicle then return { success = false, message = L('impound.vehicle_not_found') } end
 
     local row = activeImpound(vehicle.id)
-    if not row then return { success = false, message = 'Vehicle is not impounded' } end
-    if isTruthy(row.fee_paid) then return { success = false, message = 'Fee is already paid' } end
+    if not row then return { success = false, message = L('impound.not_impounded') } end
+    if isTruthy(row.fee_paid) then return { success = false, message = L('impound.fee_already_paid') } end
 
     -- What's actually owed is the impound fee plus whatever storage has accrued.
     local owed, storage = totalOwed(row)
     if owed <= 0 then
         MySQL.update.await('UPDATE mdt_impound SET fee_paid = 1 WHERE id = ?', { row.id })
-        return { success = true, message = 'No fee due' }
+        return { success = true, message = L('impound.no_fee_due') }
     end
 
     -- The owner pays. They must be online for money to be taken.
     local owner = vehicle.citizenid and ps.getPlayerByIdentifier(vehicle.citizenid) or nil
     if not owner then
-        return { success = false, message = 'Vehicle owner must be online to pay the fee' }
+        return { success = false, message = L('impound.owner_must_be_online') }
     end
     local ownerSrc = owner.PlayerData and owner.PlayerData.source or owner.source
     if not ownerSrc then
-        return { success = false, message = 'Vehicle owner must be online to pay the fee' }
+        return { success = false, message = L('impound.owner_must_be_online') }
     end
 
     -- Claim the payment BEFORE taking money. The conditional update is the lock:
@@ -362,27 +357,26 @@ ps.registerCallback(resourceName .. ':server:payImpoundFee', function(source, pa
     local claimed = MySQL.update.await(
         'UPDATE mdt_impound SET fee_paid = 1 WHERE id = ? AND fee_paid = 0', { row.id })
     if not claimed or claimed < 1 then
-        return { success = false, message = 'Fee is already paid' }
+        return { success = false, message = L('impound.fee_already_paid') }
     end
 
     local account = impoundCfg().FeeAccount or 'bank'
     local removed = ps.removeMoney(ownerSrc, account, owed, 'mdt-impound-fee')
     if not removed then
         MySQL.update.await('UPDATE mdt_impound SET fee_paid = 0 WHERE id = ?', { row.id })
-        return { success = false, message = 'Owner could not cover the fee' }
+        return { success = false, message = L('impound.insufficient_owner_funds') }
     end
 
     -- Money leaving an account warrants immediate feedback, so the on-screen note
     -- stays; the e-mail is the receipt they can actually go back and read.
-    ps.notify(ownerSrc, ('$%d impound fee charged for %s'):format(owed, plate), 'error')
+    ps.notify(ownerSrc, L('impound.fee_charged_notification', { amount = owed, plate = plate }), 'error')
 
-    local receipt = ('$%d has been charged for the release of %s.'):format(owed, plate)
+    local receipt = L('impound.receipt_charged', { amount = owed, plate = plate })
     if storage > 0 then
-        receipt = receipt .. ('\n\nImpound fee: $%d\nStorage: $%d\nTotal: $%d')
-            :format(row.fee or 0, storage, owed)
+        receipt = receipt .. L('impound.receipt_breakdown', { fee = row.fee or 0, storage = storage, total = owed })
     end
-    receipt = receipt .. '\n\nYour vehicle can now be released.'
-    mailOwner(vehicle.citizenid, ('Impound fee paid — %s'):format(plate), receipt)
+    receipt = receipt .. L('impound.receipt_release_ready')
+    mailOwner(vehicle.citizenid, L('impound.receipt_subject', { plate = plate }), receipt)
 
     if ps.auditLog then
         ps.auditLog(src, 'vehicle_impound_fee_paid', 'vehicle', plate, {
@@ -391,12 +385,12 @@ ps.registerCallback(resourceName .. ':server:payImpoundFee', function(source, pa
             storage      = storage,
             total        = owed,
             action_label = storage > 0
-                and ('Collected $%d for %s ($%d fee + $%d storage)'):format(owed, plate, row.fee, storage)
-                or  ('Collected the $%d impound fee for %s'):format(owed, plate),
+                and L('impound.audit_fee_storage', { total = owed, plate = plate, fee = row.fee, storage = storage })
+                or L('impound.audit_fee', { amount = owed, plate = plate }),
         })
     end
 
-    return { success = true, message = ('$%d collected'):format(owed) }
+    return { success = true, message = L('impound.collected', { amount = owed }) }
 end)
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -405,28 +399,28 @@ end)
 -- ─────────────────────────────────────────────────────────────────────────────
 ps.registerCallback(resourceName .. ':server:releaseImpound', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('impound.unauthorized') } end
     if not CheckPermission(src, 'vehicle_impound_release') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('impound.insufficient_permissions') }
     end
 
     payload = payload or {}
     local plate = cleanPlate(payload.plate)
-    if not plate then return { success = false, message = 'Missing plate number' } end
+    if not plate then return { success = false, message = L('impound.missing_plate') } end
 
     local vehicle = MySQL.single.await([[
         SELECT id, plate, vehicle, fuel, engine, body, citizenid
         FROM player_vehicles WHERE plate = ? LIMIT 1
     ]], { plate })
-    if not vehicle then return { success = false, message = 'Vehicle not found' } end
+    if not vehicle then return { success = false, message = L('impound.vehicle_not_found') } end
 
     local row = activeImpound(vehicle.id)
-    if not row then return { success = false, message = 'Vehicle is not impounded' } end
+    if not row then return { success = false, message = L('impound.not_impounded') } end
 
     -- Fee gate (configurable).
     local owed = totalOwed(row)
     if impoundCfg().RequireFeePaid and owed > 0 and not isTruthy(row.fee_paid) then
-        return { success = false, message = ('Outstanding fee of $%d must be paid first'):format(owed) }
+        return { success = false, message = L('impound.outstanding_fee', { amount = owed }) }
     end
 
     -- Hold gate. Cutting a hold short is a deliberate override: it needs its own
@@ -443,10 +437,10 @@ ps.registerCallback(resourceName .. ':server:releaseImpound', function(source, p
             return { success = false, message = holdWhy, held = true }
         end
         if not CheckPermission(src, 'vehicle_impound_override') then
-            return { success = false, message = 'You are not authorised to override an impound hold' }
+            return { success = false, message = L('impound.override_not_authorized') }
         end
         if not overrideReason then
-            return { success = false, message = 'An override needs a reason' }
+            return { success = false, message = L('impound.override_reason_required') }
         end
     else
         -- Nothing to override; treat it as the routine release it is.
@@ -456,7 +450,7 @@ ps.registerCallback(resourceName .. ':server:releaseImpound', function(source, p
 
     local lotId = row.lot or defaultLotId()
     local lot = getLot(lotId)
-    if not lot then return { success = false, message = 'Unknown impound lot' } end
+    if not lot then return { success = false, message = L('impound.unknown_lot') } end
 
     local cid, officerName = officerInfo(src)
 
@@ -473,9 +467,8 @@ ps.registerCallback(resourceName .. ':server:releaseImpound', function(source, p
     -- Let the owner know it's waiting for them. By e-mail, so it also reaches them
     -- if they were offline when it was released.
     mailOwner(vehicle.citizenid,
-        ('Vehicle released — %s'):format(plate),
-        ('Your vehicle %s has been released from the impound lot.\n\nIt is back in your garage.')
-            :format(plate))
+        L('impound.mail_released_subject', { plate = plate }),
+        L('impound.mail_released_body', { plate = plate }))
 
     if ps.auditLog then
         ps.auditLog(src, override and 'vehicle_impound_override' or 'vehicle_released', 'vehicle', plate, {
@@ -485,14 +478,14 @@ ps.registerCallback(resourceName .. ':server:releaseImpound', function(source, p
             override_reason = overrideReason,
             hold            = row.hold_label,
             action_label = override
-                and ('OVERRODE the hold on %s and released it — %s'):format(plate, overrideReason)
-                or ('Released %s from %s'):format(plate, (lot and lot.label) or lotId),
+                and L('impound.audit_override', { plate = plate, reason = overrideReason })
+                or L('impound.audit_released', { plate = plate, lot = (lot and lot.label) or lotId }),
         })
     end
 
     return {
         success = true,
-        message = ('%s released — returned to the owner\'s garage'):format(plate),
+        message = L('impound.released', { plate = plate }),
     }
 end)
 
@@ -549,23 +542,23 @@ end
 -- Returns entity, errorMessage.
 local function resolveVehicle(src, netId)
     netId = tonumber(netId)
-    if not netId then return nil, 'No vehicle selected' end
+    if not netId then return nil, L('impound.no_vehicle_selected') end
 
     local entity = NetworkGetEntityFromNetworkId(netId)
     if not entity or entity == 0 or not DoesEntityExist(entity) then
-        return nil, 'That vehicle no longer exists'
+        return nil, L('impound.vehicle_no_longer_exists')
     end
     if GetEntityType(entity) ~= 2 then -- 2 = vehicle
-        return nil, 'That is not a vehicle'
+        return nil, L('impound.not_a_vehicle')
     end
 
     -- The officer has to actually be next to it.
     local ped = GetPlayerPed(src)
-    if not ped or ped == 0 then return nil, 'Player not found' end
+    if not ped or ped == 0 then return nil, L('impound.player_not_found') end
     local maxDist = onSiteCfg().MaxDistance or 6.0
     local dist = #(GetEntityCoords(ped) - GetEntityCoords(entity))
     if dist > (maxDist + 2.0) then -- small grace for movement during the round-trip
-        return nil, 'You are too far from the vehicle'
+        return nil, L('impound.too_far')
     end
 
     return entity, nil
@@ -617,9 +610,9 @@ end
 -- owned vehicle (full impound form) or unowned traffic (quick removal).
 ps.registerCallback(resourceName .. ':server:inspectOnSiteVehicle', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('impound.unauthorized') } end
     if not CheckPermission(src, 'vehicle_impound') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('impound.insufficient_permissions') }
     end
 
     payload = payload or {}
@@ -627,7 +620,7 @@ ps.registerCallback(resourceName .. ':server:inspectOnSiteVehicle', function(sou
     if not entity then return { success = false, message = err } end
 
     if hasPlayerOccupant(entity) then
-        return { success = false, message = 'There is somebody in that vehicle' }
+        return { success = false, message = L('impound.vehicle_occupied') }
     end
 
     local plate = cleanPlate(payload.plate)
@@ -650,7 +643,7 @@ ps.registerCallback(resourceName .. ':server:inspectOnSiteVehicle', function(sou
     end
 
     if activeImpound(owned.id) then
-        return { success = false, message = 'That vehicle is already impounded' }
+        return { success = false, message = L('impound.already_impounded') }
     end
 
     -- Everything the officer standing next to the car ought to know before they
@@ -694,23 +687,23 @@ end)
 -- Step 2a: owned vehicle — impound it properly, then remove it from the world.
 ps.registerCallback(resourceName .. ':server:impoundOnSite', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('impound.unauthorized') } end
     if not CheckPermission(src, 'vehicle_impound') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('impound.insufficient_permissions') }
     end
 
     payload = payload or {}
     local entity, err = resolveVehicle(src, payload.netId)
     if not entity then return { success = false, message = err } end
     if hasPlayerOccupant(entity) then
-        return { success = false, message = 'There is somebody in that vehicle' }
+        return { success = false, message = L('impound.vehicle_occupied') }
     end
 
     -- Same impound path as the MDT; onSite lifts the "must be garaged" rule.
     payload.onSite = true
     local result = doImpound(src, payload)
     if not result or not result.success then
-        return result or { success = false, message = 'Impound failed' }
+        return result or { success = false, message = L('impound.failed') }
     end
 
     -- Give the client a moment to fade it out; this is the backstop if it never does.
@@ -722,16 +715,16 @@ end)
 -- Step 2b: unowned traffic — remove it and pay the officer for clearing the road.
 ps.registerCallback(resourceName .. ':server:cleanupVehicle', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('impound.unauthorized') } end
     if not CheckPermission(src, 'vehicle_impound') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('impound.insufficient_permissions') }
     end
 
     payload = payload or {}
     local entity, err = resolveVehicle(src, payload.netId)
     if not entity then return { success = false, message = err } end
     if hasPlayerOccupant(entity) then
-        return { success = false, message = 'There is somebody in that vehicle' }
+        return { success = false, message = L('impound.vehicle_occupied') }
     end
 
     -- Re-check ownership server-side: an owned car must never go through here,
@@ -741,13 +734,13 @@ ps.registerCallback(resourceName .. ':server:cleanupVehicle', function(source, p
         local owned = MySQL.single.await(
             'SELECT id FROM player_vehicles WHERE plate = ? LIMIT 1', { plate })
         if owned then
-            return { success = false, message = 'That vehicle has an owner — impound it instead' }
+            return { success = false, message = L('impound.owned_vehicle') }
         end
     end
 
     local cfg = onSiteCfg().Cleanup or {}
     local cid = ps.getIdentifier and ps.getIdentifier(src) or nil
-    if not cid then return { success = false, message = 'Player not found' } end
+    if not cid then return { success = false, message = L('impound.player_not_found') } end
 
     local state = CleanupState[cid] or { last = 0, count = 0 }
     local now = os.time()
@@ -755,7 +748,7 @@ ps.registerCallback(resourceName .. ':server:cleanupVehicle', function(source, p
     local cooldown = cfg.Cooldown or 0
     if cooldown > 0 and (now - state.last) < cooldown then
         local wait = cooldown - (now - state.last)
-        return { success = false, message = ('Wait %d more second(s) before the next tow'):format(wait) }
+        return { success = false, message = L('impound.tow_cooldown', { seconds = wait }) }
     end
 
     local maxPerShift = cfg.MaxPerShift or 0
@@ -786,8 +779,8 @@ ps.registerCallback(resourceName .. ':server:cleanupVehicle', function(source, p
             reward       = reward,
             capped       = capped,
             action_label = capped
-                and ('Removed an abandoned vehicle (%s) — shift payout limit reached'):format(plate or 'no plate')
-                or  ('Removed an abandoned vehicle (%s) — earned $%d'):format(plate or 'no plate', reward),
+                and L('impound.audit_cleanup_capped', { plate = plate or L('impound.no_plate') })
+                or L('impound.audit_cleanup_reward', { plate = plate or L('impound.no_plate'), amount = reward }),
         })
     end
 
@@ -796,8 +789,8 @@ ps.registerCallback(resourceName .. ':server:cleanupVehicle', function(source, p
         reward  = reward,
         capped  = capped,
         message = capped
-            and 'Towed away — shift payout limit reached'
-            or  ('Towed away — earned $%d'):format(reward),
+            and L('impound.cleanup_capped')
+            or L('impound.cleanup_reward', { amount = reward }),
     }
 end)
 
@@ -927,7 +920,7 @@ CreateThread(function()
             INSERT INTO mdt_impound
                 (vehicleid, status, plate, reason, lot, fee, fee_paid, officer_name, time)
             VALUES (?, 'active', ?, ?, ?, 0, 0, ?, ?)
-        ]], { v.id, v.plate, 'Impounded outside the MDT', defaultLotId(), 'System', os.time() })
+        ]], { v.id, v.plate, L('impound.outside_mdt'), defaultLotId(), L('impound.system'), os.time() })
     end
 
     ps.debug(('[impound] adopted %d vehicle(s) that were impounded outside the MDT'):format(#orphans))

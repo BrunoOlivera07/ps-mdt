@@ -10,22 +10,22 @@
 	}
 
 	const TRACKING_CATEGORIES: { key: string; label: string; description: string }[] = [
-		{ key: "authentication", label: "Authentication", description: "Login and logout events" },
-		{ key: "reports", label: "Reports", description: "Report create, update, and delete" },
-		{ key: "cases", label: "Cases", description: "Case CRUD, officer assignments, attachments" },
-		{ key: "evidence", label: "Evidence", description: "Evidence CRUD, transfers, and images" },
-		{ key: "warrants", label: "Warrants", description: "Warrant issued and closed" },
-		{ key: "vehicles", label: "Vehicles", description: "Vehicle updates, impound, and release" },
-		{ key: "weapons", label: "Weapons", description: "Weapon create, update, and delete" },
-		{ key: "charges", label: "Charges & Fines", description: "Fines processed and charges updated" },
-		{ key: "searches", label: "Searches", description: "Citizen, player, and officer searches" },
-		{ key: "dispatch", label: "Dispatch", description: "Signal 100 activate and deactivate" },
-		{ key: "officers", label: "Officers", description: "Callsign changes" },
-		{ key: "sentencing", label: "Sentencing", description: "Jail sentencing" },
-		{ key: "arrests", label: "Arrests", description: "Arrest logging" },
-		{ key: "icu", label: "ICU", description: "ICU record deletion" },
-		{ key: "cameras", label: "Cameras", description: "Security camera access" },
-		{ key: "bodycams", label: "Bodycams", description: "Officer bodycam access" },
+		{ key: "authentication", label: t("management.tracking.categories.authentication.label"), description: t("management.tracking.categories.authentication.description") },
+		{ key: "reports", label: t("management.tracking.categories.reports.label"), description: t("management.tracking.categories.reports.description") },
+		{ key: "cases", label: t("management.tracking.categories.cases.label"), description: t("management.tracking.categories.cases.description") },
+		{ key: "evidence", label: t("management.tracking.categories.evidence.label"), description: t("management.tracking.categories.evidence.description") },
+		{ key: "warrants", label: t("management.tracking.categories.warrants.label"), description: t("management.tracking.categories.warrants.description") },
+		{ key: "vehicles", label: t("management.tracking.categories.vehicles.label"), description: t("management.tracking.categories.vehicles.description") },
+		{ key: "weapons", label: t("management.tracking.categories.weapons.label"), description: t("management.tracking.categories.weapons.description") },
+		{ key: "charges", label: t("management.tracking.categories.charges.label"), description: t("management.tracking.categories.charges.description") },
+		{ key: "searches", label: t("management.tracking.categories.searches.label"), description: t("management.tracking.categories.searches.description") },
+		{ key: "dispatch", label: t("management.tracking.categories.dispatch.label"), description: t("management.tracking.categories.dispatch.description") },
+		{ key: "officers", label: t("management.tracking.categories.officers.label"), description: t("management.tracking.categories.officers.description") },
+		{ key: "sentencing", label: t("management.tracking.categories.sentencing.label"), description: t("management.tracking.categories.sentencing.description") },
+		{ key: "arrests", label: t("management.tracking.categories.arrests.label"), description: t("management.tracking.categories.arrests.description") },
+		{ key: "icu", label: t("management.tracking.categories.icu.label"), description: t("management.tracking.categories.icu.description") },
+		{ key: "cameras", label: t("management.tracking.categories.cameras.label"), description: t("management.tracking.categories.cameras.description") },
+		{ key: "bodycams", label: t("management.tracking.categories.bodycams.label"), description: t("management.tracking.categories.bodycams.description") },
 	];
 
 	let trackingConfig: TrackingConfig = $state({});

@@ -73,7 +73,7 @@ local function buildFullName(firstname, lastname, citizenid)
     if full ~= '' then
         return full
     end
-    return ps.getPlayerNameByIdentifier(citizenid) or 'Unknown'
+    return ps.getPlayerNameByIdentifier(citizenid) or L('reports.unknown')
 end
 
 
@@ -611,8 +611,8 @@ ps.registerCallback(resourceName .. ':server:searchVehiclesForReport', function(
         local vehicleData = vehicleShared and vehicleShared[row.vehicle] or nil
         table.insert(results, {
             plate = row.plate and string.upper(row.plate):gsub('%s+', '') or 'UNKNOWN',
-            vehicle_label = vehicleData and vehicleData.name or row.vehicle or 'Unknown',
-            owner_name = row.owner_name or 'Unknown',
+            vehicle_label = vehicleData and vehicleData.name or row.vehicle or L('reports.unknown'),
+            owner_name = row.owner_name or L('reports.unknown'),
             owner_citizenid = row.citizenid or nil,
         })
     end
@@ -630,23 +630,23 @@ ps.registerCallback(resourceName..':server:saveReport', function(source, reportD
 
     local title = reportData.report and reportData.report.title
     if not title or title == "" then
-        ps.notify(src, 'Failed to save Report: Needs a title', 'error')
+        ps.notify(src, L('reports.title_required'), 'error')
         ps.warn('Report with missing/empty title from player: ' .. src .. ' Name: ' .. playerName)
-        return { success = false, error = 'Report needs a title' }
+        return { success = false, error = L('reports.title_required') }
     end
 
     local content = reportData.report and reportData.report.content
     if not content or content == "" then
-        ps.notify(src, 'Failed to save Report: Needs content', 'error')
+        ps.notify(src, L('reports.content_required'), 'error')
         ps.warn('Report with missing/empty content from player: ' .. src .. ' Name: ' .. playerName)
-        return { success = false, error = 'Report needs content' }
+        return { success = false, error = L('reports.content_required') }
     end
 
     -- Tags are required
     local tags = reportData.tags
     if not tags or type(tags) ~= 'table' or #tags == 0 then
-        ps.notify(src, 'Failed to save Report: At least one tag is required', 'error')
-        return { success = false, message = 'At least one tag is required' }
+        ps.notify(src, L('reports.tag_required'), 'error')
+        return { success = false, message = L('reports.tag_required') }
     end
 
     local reportId = reportData.report and tonumber(reportData.report.id) or nil
@@ -667,10 +667,10 @@ ps.registerCallback(resourceName..':server:saveReport', function(source, reportD
 
     if reportId then
         if not checkReportAccess(src, reportId) then
-            ps.notify(src, 'Failed to save Report: Not found or no access', 'error')
+            ps.notify(src, L('reports.not_found_or_no_access'), 'error')
             ps.warn(('[Failed to save] Player [%s] %s tried to save a report (%s), but it was not found or they do not have access.')
                 :format(src, playerName, reportId))
-            return { success = false, error = "Report not found or access denied" }
+            return { success = false, error = L('reports.not_found_or_access_denied') }
         end
     end
 
@@ -684,14 +684,14 @@ ps.registerCallback(resourceName..':server:saveReport', function(source, reportD
             json.encode(content),
             type(content) == "string" and content or json.encode(content),
             identifier,
-            (callsign or '') .. ' ' .. (playerName or 'Unknown')
+            (callsign or '') .. ' ' .. (playerName or L('reports.unknown'))
         })
 
         if not insertResult then
-            ps.notify(src, 'Failed to save Report', 'error')
+            ps.notify(src, L('reports.save_failed'), 'error')
             ps.warn(('[Failed to save] Player [%s] %s tried to save a report (new). Insert failed.')
                 :format(src, playerName))
-            return { success = false, error = 'Failed to insert report' }
+            return { success = false, error = L('reports.insert_failed') }
         end
         reportId = insertResult
     else
@@ -705,15 +705,15 @@ ps.registerCallback(resourceName..':server:saveReport', function(source, reportD
             json.encode(content),
             type(content) == "string" and content or json.encode(content),
             identifier,
-            (callsign or '') .. ' ' .. (playerName or 'Unknown'),
+            (callsign or '') .. ' ' .. (playerName or L('reports.unknown')),
             reportId
         })
 
         if not updateSuccess or updateSuccess == 0 then
-            ps.notify(src, 'Failed to save Report', 'error')
+            ps.notify(src, L('reports.save_failed'), 'error')
             ps.warn(('[Failed to save] Player [%s] %s tried to save a report (%s). Update failed.')
                 :format(src, playerName, reportId))
-            return { success = false, error = 'Failed to update report' }
+            return { success = false, error = L('reports.update_failed') }
         end
 
         local cleanupQueries = {
@@ -731,7 +731,7 @@ ps.registerCallback(resourceName..':server:saveReport', function(source, reportD
         end)
         if not cleanupOk then
             ps.warn(('[Cleanup Transaction Error] Report %s: %s'):format(reportId, tostring(cleanupErr)))
-            return { success = false, error = "Failed to clean up old report data: " .. tostring(cleanupErr) }
+            return { success = false, error = L('reports.cleanup_failed', { error = tostring(cleanupErr) }) }
         end
     end
 
@@ -822,7 +822,7 @@ ps.registerCallback(resourceName..':server:saveReport', function(source, reportD
         end)
         if not attachOk then
             ps.warn(('[Attachment Transaction Error] Report %s: %s'):format(reportId, tostring(attachErr)))
-            return { success = false, error = "Failed to save report attachments: " .. tostring(attachErr) }
+            return { success = false, error = L('reports.attachments_failed', { error = tostring(attachErr) }) }
         end
     end
 
@@ -888,31 +888,31 @@ ps.registerCallback(resourceName..':server:saveReport', function(source, reportD
     return {
         success = true,
         reportId = reportId,
-        message = reportId and "Report updated successfully" or "Report created successfully"
+        message = reportId and L('reports.updated') or L('reports.created')
     }
 end)
 
 ps.registerCallback(resourceName..':server:updateReportContent', function(source, reportid, content, reportData)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = "Unauthorized" } end
+    if not CheckAuth(src) then return { success = false, error = L('reports.unauthorized') } end
 
     if not content then
-        return { success = false, error = "Missing content" }
+        return { success = false, error = L('reports.missing_content') }
     end
 
     local reportId = reportid and tonumber(reportid) or nil
-    local title = (reportData and reportData.title) or "Draft Report"
+    local title = (reportData and reportData.title) or L('reports.draft_title')
     local reportType = (reportData and reportData.type) or "Incident Report"
 
     local identifier = ps.getIdentifier(src)
     local playerName = ps.getPlayerName(src)
     local callsign = ps.getMetadata(src, 'callsign')
 
-    if not identifier then return { success = false, error = "Player not found" } end
+    if not identifier then return { success = false, error = L('reports.player_not_found') } end
 
     if reportId then
         if not checkReportAccess(src, reportId) then
-            return { success = false, error = "Report not found or access denied" }
+            return { success = false, error = L('reports.not_found_or_access_denied') }
         end
     end
 
@@ -930,13 +930,13 @@ ps.registerCallback(resourceName..':server:updateReportContent', function(source
         })
 
         if not insertResult then
-            return { success = false, error = "Failed to save content" }
+            return { success = false, error = L('reports.content_save_failed') }
         end
 
         return {
             success = true,
             reportId = insertResult,
-            message = "Content saved successfully",
+            message = L('reports.content_saved'),
             isNewReport = true
         }
     end
@@ -955,12 +955,12 @@ ps.registerCallback(resourceName..':server:updateReportContent', function(source
         return {
             success = true,
             reportId = reportId,
-            message = "Content saved successfully",
+            message = L('reports.content_saved'),
             isNewReport = false
         }
     end
 
-    return { success = false, error = "Failed to save content" }
+    return { success = false, error = L('reports.content_save_failed') }
 end)
 
 ps.registerCallback(resourceName..':server:deleteReport', function(source, reportId)
@@ -969,27 +969,27 @@ ps.registerCallback(resourceName..':server:deleteReport', function(source, repor
 
     reportId = tonumber(reportId)
     if not reportId then
-        return { success = false, error = "Missing/Invalid report ID" }
+        return { success = false, error = L('reports.invalid_report_id') }
     end
 
     local playerName = ps.getPlayerName(src)
 
     if not checkReportAccess(src, reportId) then
-        ps.notify(src, 'Failed to delete Report: Not found or no access', 'error')
+        ps.notify(src, L('reports.delete_not_found_or_no_access'), 'error')
         ps.warn(('[Failed to delete] Player [%s] %s tried to delete a report (%s), but it was not found or they do not have access.')
             :format(src, playerName, reportId))
-        return { success = false, error = "Report not found or access denied" }
+        return { success = false, error = L('reports.not_found_or_access_denied') }
     end
 
     local reportInfo = MySQL.query.await("SELECT title FROM mdt_reports WHERE id = ?", { reportId })
-    local reportTitle = reportInfo and reportInfo[1] and reportInfo[1].title or "Unknown"
+    local reportTitle = reportInfo and reportInfo[1] and reportInfo[1].title or L('reports.unknown')
 
     local success = MySQL.query.await("DELETE FROM mdt_reports WHERE id = ?", { reportId })
 
     if success then
         Cache.invalidate('dashboard:reportStats')
         Cache.invalidate('dashboard:usageMetrics')
-        ps.notify(src, 'Report deleted successfully', 'success')
+        ps.notify(src, L('reports.deleted'), 'success')
         ps.debug(('[Report Deleted] Player [%s] %s successfully deleted report (%s): "%s"')
             :format(src, playerName, reportId, reportTitle))
 
@@ -1001,17 +1001,17 @@ ps.registerCallback(resourceName..':server:deleteReport', function(source, repor
 
         return {
             success = true,
-            message = "Report deleted successfully",
+            message = L('reports.deleted'),
             reportId = reportId
         }
     else
-        ps.notify(src, 'Failed to delete report', 'error')
+        ps.notify(src, L('reports.delete_failed'), 'error')
         ps.warn(('[Failed to delete] Player [%s] %s tried to delete report (%s). Database query failed.')
             :format(src, playerName, reportId))
 
         return {
             success = false,
-            error = "Failed to delete report from database"
+            error = L('reports.delete_database_failed')
         }
     end
 end)
@@ -1090,18 +1090,24 @@ ps.registerCallback(resourceName..':server:getReportAnalytics', function(source,
         return { success = true, data = cached }
     end
 
-	local incidentQuery = ([[
-        SELECT COUNT(*) AS total
-        FROM mdt_reports AS mr
-        LEFT JOIN mdt_reports_restrictions AS mrr ON mr.id = mrr.reportid
-        WHERE %s%s
-          AND mr.type = 'Incident Report'
+	local typeSummaryQuery = ([[
+		SELECT
+			COUNT(DISTINCT CASE WHEN mr.type = 'Incident Report' THEN mr.id END) AS incidents,
+			COUNT(DISTINCT CASE WHEN mr.type = 'Medical Report' THEN mr.id END) AS medical,
+			COUNT(DISTINCT CASE WHEN mr.type = 'Trauma Report' THEN mr.id END) AS trauma,
+			COUNT(DISTINCT CASE WHEN mr.type = 'Overdose Report' THEN mr.id END) AS overdose,
+			COUNT(DISTINCT CASE WHEN mr.type = 'Court Filing' THEN mr.id END) AS court_filings,
+			COUNT(DISTINCT CASE WHEN mr.type = 'Judicial Order' THEN mr.id END) AS judicial_orders,
+			COUNT(DISTINCT CASE WHEN mr.type = 'Sentencing Report' THEN mr.id END) AS sentencing
+		FROM mdt_reports AS mr
+		LEFT JOIN mdt_reports_restrictions AS mrr ON mr.id = mrr.reportid
+		WHERE %s%s
 	]]):format(accessClause, filterClause)
-	local incidentParams = { jobType, jobType, jobType, identifier, job, jobType }
+	local typeSummaryParams = { jobType, jobType, jobType, identifier, job, jobType }
 	for _, value in ipairs(filterValues or {}) do
-		incidentParams[#incidentParams + 1] = value
+		typeSummaryParams[#typeSummaryParams + 1] = value
 	end
-	local incidentRow = MySQL.single.await(incidentQuery, incidentParams)
+	local typeSummary = MySQL.single.await(typeSummaryQuery, typeSummaryParams)
 
 	local arrestQuery = ([[
         SELECT COUNT(*) AS total
@@ -1131,9 +1137,15 @@ ps.registerCallback(resourceName..':server:getReportAnalytics', function(source,
 	local warrantRow = MySQL.single.await(warrantQuery, warrantParams)
 
     local data = {
-        incidents = tonumber(incidentRow and incidentRow.total) or 0,
+        incidents = tonumber(typeSummary and typeSummary.incidents) or 0,
         arrests = tonumber(arrestRow and arrestRow.total) or 0,
         warrants = tonumber(warrantRow and warrantRow.total) or 0,
+        medical = tonumber(typeSummary and typeSummary.medical) or 0,
+        trauma = tonumber(typeSummary and typeSummary.trauma) or 0,
+        overdose = tonumber(typeSummary and typeSummary.overdose) or 0,
+        courtFilings = tonumber(typeSummary and typeSummary.court_filings) or 0,
+        judicialOrders = tonumber(typeSummary and typeSummary.judicial_orders) or 0,
+        sentencing = tonumber(typeSummary and typeSummary.sentencing) or 0,
     }
 
     Cache.set(cacheKey, data, 15)

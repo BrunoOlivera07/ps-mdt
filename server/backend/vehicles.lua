@@ -21,7 +21,7 @@ local resourceName = tostring(GetCurrentResourceName())
 
 local function formatLabel(value)
     if not value or value == '' then
-        return 'Unknown'
+        return L('vehicles.unknown')
     end
     local formatted = tostring(value)
     formatted = formatted:gsub("^%l", string.upper)
@@ -113,7 +113,7 @@ local function mapInsurance(hasInsurance)
     if hasInsurance then
         return cfg.insuredStatus or 'valid', ''
     end
-    return cfg.uninsuredStatus or 'uninsured', cfg.uninsuredReason or 'No active insurance'
+    return cfg.uninsuredStatus or 'uninsured', cfg.uninsuredReason or L('vehicles.no_insurance')
 end
 
 -- Resolve a single plate synchronously (used by the detail view).
@@ -156,7 +156,7 @@ local function mapRegistration(hasRegistration)
     if hasRegistration then
         return true, ''
     end
-    return false, cfg.unregisteredReason or 'No active registration'
+    return false, cfg.unregisteredReason or L('vehicles.no_registration')
 end
 
 -- Resolve a single plate synchronously (used by the detail view).
@@ -265,11 +265,11 @@ ps.registerCallback(resourceName .. ':server:GetVehicles', function(source)
         table.insert(bolos, {
             id = bolo.id,
             reportId = bolo.reportId and tostring(bolo.reportId) or 'N/A',
-            name = bolo.subject_name or 'Unknown Vehicle',
+            name = bolo.subject_name or L('vehicles.unknown_vehicle'),
             type = bolo.type,
             notes = bolo.notes or '',
             status = bolo.status,
-            plate = bolo.subject_id or 'Unknown',
+            plate = bolo.subject_id or L('vehicles.unknown'),
             image = bolo.image or 'https://docs.fivem.net/vehicles/elegy.webp',
         })
     end
@@ -301,11 +301,11 @@ ps.registerCallback(resourceName .. ':server:GetVehicles', function(source)
         table.insert(vehicles, {
             id = v.id,
             model = v.vehicle,
-            label = vehicleData and vehicleData.name or 'Unknown Vehicle',
+            label = vehicleData and vehicleData.name or L('vehicles.unknown_vehicle'),
             plate = plate,
-            owner = ps.getPlayerNameByIdentifier(v.citizenid) or 'Unknown',
-            class = formatLabel(vehicleData and vehicleData.category or 'Unknown'),
-            type = formatLabel(vehicleData and vehicleData.type or 'Unknown'),
+            owner = ps.getPlayerNameByIdentifier(v.citizenid) or L('vehicles.unknown'),
+            class = formatLabel(vehicleData and vehicleData.category or L('vehicles.unknown')),
+            type = formatLabel(vehicleData and vehicleData.type or L('vehicles.unknown')),
             flags = flags,
             image = (v.image and v.image ~= '' and v.image) or ('https://docs.fivem.net/vehicles/' .. v.vehicle .. '.webp'),
             seenIn = reportCount,
@@ -343,17 +343,17 @@ end)
 
 ps.registerCallback(resourceName .. ':server:UpdateVehicle', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('vehicles.unauthorized') } end
 
     payload = payload or {}
     local plate = payload.plate
     if not plate or plate == '' then
-        return { success = false, message = 'Missing plate' }
+        return { success = false, message = L('vehicles.missing_plate') }
     end
 
     local ownerRow = MySQL.single.await('SELECT citizenid FROM player_vehicles WHERE plate = ? LIMIT 1', { plate })
     if not ownerRow or not ownerRow.citizenid then
-        return { success = false, message = 'Vehicle not found' }
+        return { success = false, message = L('vehicles.not_found') }
     end
 
     local updates = {}
@@ -374,14 +374,14 @@ ps.registerCallback(resourceName .. ':server:UpdateVehicle', function(source, pa
     local points = nil
     if payload.points ~= nil then
         if not pointsEnabled() then
-            return { success = false, message = 'Points are disabled' }
+            return { success = false, message = L('vehicles.points_disabled') }
         end
         if not CheckPermission(src, 'vehicles_edit_dmv') then
-            return { success = false, message = 'Insufficient permissions' }
+            return { success = false, message = L('vehicles.insufficient_permissions') }
         end
         points = tonumber(payload.points)
         if not points then
-            return { success = false, message = 'Invalid points value' }
+            return { success = false, message = L('vehicles.invalid_points') }
         end
         if points < 0 then points = 0 end
         if points > 1000 then points = 1000 end -- sane upper bound
@@ -414,7 +414,7 @@ ps.registerCallback(resourceName .. ':server:GetVehicle', function(source, plate
     if not CheckAuth(src) then return end
 
     if not plate or plate == '' then
-        return { success = false, message = 'Missing plate' }
+        return { success = false, message = L('vehicles.missing_plate') }
     end
 
     local vehicleRow = MySQL.query.await([[
@@ -436,7 +436,7 @@ ps.registerCallback(resourceName .. ':server:GetVehicle', function(source, plate
     ]], { plate })
 
     if not vehicleRow or not vehicleRow[1] then
-        return { success = false, message = 'Vehicle not found' }
+        return { success = false, message = L('vehicles.not_found') }
     end
 
     local row = vehicleRow[1]
@@ -479,12 +479,12 @@ ps.registerCallback(resourceName .. ':server:GetVehicle', function(source, plate
         vehicle = {
             id = row.id,
             model = row.vehicle,
-            label = vehicleData and vehicleData.name or 'Unknown Vehicle',
+            label = vehicleData and vehicleData.name or L('vehicles.unknown_vehicle'),
             brand = vehicleData and vehicleData.brand or nil,
             plate = plateUpper,
-            owner = ps.getPlayerNameByIdentifier(row.citizenid) or 'Unknown',
-            class = formatLabel(vehicleData and vehicleData.category or 'Unknown'),
-            type = formatLabel(vehicleData and vehicleData.type or 'Unknown'),
+            owner = ps.getPlayerNameByIdentifier(row.citizenid) or L('vehicles.unknown'),
+            class = formatLabel(vehicleData and vehicleData.category or L('vehicles.unknown')),
+            type = formatLabel(vehicleData and vehicleData.type or L('vehicles.unknown')),
             image = (row.image and row.image ~= '' and row.image) or ('https://docs.fivem.net/vehicles/' .. row.vehicle .. '.webp'),
             information = row.information or '',
             points = tonumber(row.points) or 0,

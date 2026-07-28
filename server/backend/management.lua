@@ -113,21 +113,6 @@ ps.registerCallback(resourceName .. ':server:getPermissionRoles', function(sourc
     if not CheckAuth(src) then return {} end
 
     local jobName, job = getPoliceJobDefinition(src)
-    local hasBossAccess = false
-    if ps and ps.getJobData then
-        local jobData = ps.getJobData(src)
-        if jobData and jobData.grade then
-            if type(jobData.grade) == 'table' then
-                hasBossAccess = jobData.grade.isboss == true or jobData.grade.isBoss == true or jobData.grade.boss == true
-            else
-                local grades = job and job.grades and normalizeGrades(job.grades) or nil
-                if grades then
-                    local gradeData = grades[tostring(jobData.grade)]
-                    hasBossAccess = isBossGrade(gradeData)
-                end
-            end
-        end
-    end
     ps.debug('[getPermissionRoles] jobName', jobName, 'job', job and job.label or 'nil')
     if not job or not job.grades then
         ps.debug('[getPermissionRoles] no job grades, using fallback')
@@ -135,11 +120,11 @@ ps.registerCallback(resourceName .. ':server:getPermissionRoles', function(sourc
         local fallbackPermissions = getDefaultRolePermissions(jobName, 0, isBoss)
         return {
             job = jobName,
-            label = 'Law Enforcement',
+            label = L('management.law_enforcement'),
             roles = {
                 {
                     key = '0',
-                    label = 'Officer',
+                    label = L('management.officer'),
                     isBoss = isBoss,
                     permissions = fallbackPermissions,
                 }
@@ -166,7 +151,7 @@ ps.registerCallback(resourceName .. ':server:getPermissionRoles', function(sourc
     end
     ps.debug('[getPermissionRoles] grade count', gradeCount)
     for gradeKeyString, gradeData in pairs(grades) do
-        local isBoss = hasBossAccess or isBossGrade(gradeData)
+        local isBoss = isBossGrade(gradeData)
         local permissions = storedByGrade[gradeKeyString]
         if not permissions or #permissions == 0 then
             permissions = getDefaultRolePermissions(jobName, gradeKeyString, isBoss)
@@ -227,14 +212,14 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updatePermissionRole', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('management.unauthorized') } end
     if not CheckPermission(src, 'management_permissions') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('management.insufficient_permissions') }
     end
 
     payload = payload or {}
     if not payload.job or payload.grade == nil or type(payload.permissions) ~= 'table' then
-        return { success = false, message = 'Invalid payload' }
+        return { success = false, message = L('management.invalid_payload') }
     end
 
     local jobName, job = getPoliceJobDefinition(src)
@@ -301,7 +286,7 @@ local VALID_TAG_JOBS = { leo = true, ems = true, all = true }
 
 ps.registerCallback(resourceName .. ':server:createTag', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('management.unauthorized') } end
 
     payload = payload or {}
     local name = payload.name
@@ -313,21 +298,21 @@ ps.registerCallback(resourceName .. ':server:createTag', function(source, payloa
     if not VALID_TAG_JOBS[jobType] then jobType = 'all' end
 
     if not name or name == '' then
-        return { success = false, message = 'Tag name is required' }
+        return { success = false, message = L('management.tag_name_required') }
     end
     if #name > 25 then
-        return { success = false, message = 'Tag name must be 25 characters or less' }
+        return { success = false, message = L('management.tag_name_too_long') }
     end
 
     -- Check duplicate
     local existing = MySQL.scalar.await('SELECT id FROM mdt_tags WHERE name = ?', { name })
     if existing then
-        return { success = false, message = 'Tag already exists' }
+        return { success = false, message = L('management.tag_exists') }
     end
 
     local id = MySQL.insert.await('INSERT INTO mdt_tags (name, type, color, job_type, description) VALUES (?, ?, ?, ?, ?)', { name, tagType, color, jobType, payload.description or nil })
     if not id then
-        return { success = false, message = 'Failed to create tag' }
+        return { success = false, message = L('management.tag_create_failed') }
     end
 
     return { success = true, id = id }
@@ -335,7 +320,7 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateTag', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('management.unauthorized') } end
 
     payload = payload or {}
     local id = tonumber(payload.id)
@@ -348,13 +333,13 @@ ps.registerCallback(resourceName .. ':server:updateTag', function(source, payloa
     if not VALID_TAG_JOBS[jobType] then jobType = 'all' end
 
     if not id then
-        return { success = false, message = 'Invalid tag ID' }
+        return { success = false, message = L('management.invalid_tag') }
     end
     if not name or name == '' then
-        return { success = false, message = 'Tag name is required' }
+        return { success = false, message = L('management.tag_name_required') }
     end
     if #name > 25 then
-        return { success = false, message = 'Tag name must be 25 characters or less' }
+        return { success = false, message = L('management.tag_name_too_long') }
     end
 
     -- Get old name to update references
@@ -364,7 +349,7 @@ ps.registerCallback(resourceName .. ':server:updateTag', function(source, payloa
     -- Check duplicate (excluding self)
     local dup = MySQL.scalar.await('SELECT id FROM mdt_tags WHERE name = ? AND id != ?', { name, id })
     if dup then
-        return { success = false, message = 'Another tag with that name already exists' }
+        return { success = false, message = L('management.tag_name_exists') }
     end
 
     MySQL.update.await('UPDATE mdt_tags SET name = ?, type = ?, color = ?, job_type = ?, description = ? WHERE id = ?', { name, tagType, color, jobType, payload.description or nil, id })
@@ -407,9 +392,9 @@ end)
 
 ps.registerCallback(resourceName .. ':server:saveAward', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('management.unauthorized') } end
     if not CheckPermission(src, 'management_permissions') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('management.insufficient_permissions') }
     end
 
     payload = payload or {}
@@ -421,10 +406,10 @@ ps.registerCallback(resourceName .. ':server:saveAward', function(source, payloa
     local goalAmount = tonumber(payload.goalAmount) or 1
 
     if not name or name == '' then
-        return { success = false, message = 'Award name is required' }
+        return { success = false, message = L('management.award_name_required') }
     end
     if not goalType or goalType == '' then
-        return { success = false, message = 'Goal type is required' }
+        return { success = false, message = L('management.goal_type_required') }
     end
 
     local id = payload.id and tonumber(payload.id)
@@ -445,7 +430,7 @@ ps.registerCallback(resourceName .. ':server:saveAward', function(source, payloa
     end
 
     if not id then
-        return { success = false, message = 'Failed to save award' }
+        return { success = false, message = L('management.award_save_failed') }
     end
 
     return { success = true, id = id }
@@ -453,12 +438,12 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteAward', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('management.unauthorized') } end
 
     payload = payload or {}
     local id = tonumber(payload.id)
     if not id then
-        return { success = false, message = 'Invalid award ID' }
+        return { success = false, message = L('management.invalid_award') }
     end
 
     MySQL.query.await('DELETE FROM mdt_awards WHERE id = ?', { id })
@@ -473,7 +458,7 @@ ps.registerCallback(resourceName .. ':server:getAwardsData', function(source, pa
     if not citizenid then return nil end
 
     -- Get officer info
-    local playerName = ps.getName(src) or 'Unknown'
+    local playerName = ps.getName(src) or L('management.unknown')
     local jobData = ps.getJobData(src)
     local callsign = ''
     local rank = ''
@@ -619,7 +604,7 @@ ps.registerCallback(resourceName .. ':server:getAwardsData', function(source, pa
 
         leaderboard[#leaderboard + 1] = {
             rank = i,
-            name = row.authorplaintext or 'Unknown',
+            name = row.authorplaintext or L('management.unknown'),
             callsign = '',
             department = '',
             reports = reports,
@@ -669,14 +654,14 @@ end)
 
 ps.registerCallback(resourceName .. ':server:saveCustomLicense', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('management.unauthorized') } end
 
     payload = payload or {}
     local name = payload.name
     local description = payload.description or ''
 
     if not name or name == '' then
-        return { success = false, message = 'License name is required' }
+        return { success = false, message = L('management.license_name_required') }
     end
 
     local id = payload.id and tonumber(payload.id)
@@ -685,20 +670,20 @@ ps.registerCallback(resourceName .. ':server:saveCustomLicense', function(source
         -- Check duplicate (excluding self)
         local dup = MySQL.scalar.await('SELECT id FROM mdt_custom_licenses WHERE name = ? AND id != ?', { name, id })
         if dup then
-            return { success = false, message = 'A license with that name already exists' }
+            return { success = false, message = L('management.license_exists') }
         end
         MySQL.update.await('UPDATE mdt_custom_licenses SET name = ?, description = ? WHERE id = ?', { name, description, id })
     else
         -- Check duplicate
         local existing = MySQL.scalar.await('SELECT id FROM mdt_custom_licenses WHERE name = ?', { name })
         if existing then
-            return { success = false, message = 'A license with that name already exists' }
+            return { success = false, message = L('management.license_exists') }
         end
         id = MySQL.insert.await('INSERT INTO mdt_custom_licenses (name, description) VALUES (?, ?)', { name, description })
     end
 
     if not id then
-        return { success = false, message = 'Failed to save license' }
+        return { success = false, message = L('management.license_save_failed') }
     end
 
     return { success = true, id = id }
@@ -706,12 +691,12 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteCustomLicense', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('management.unauthorized') } end
 
     payload = payload or {}
     local id = tonumber(payload.id)
     if not id then
-        return { success = false, message = 'Invalid license ID' }
+        return { success = false, message = L('management.invalid_license') }
     end
 
     MySQL.query.await('DELETE FROM mdt_custom_licenses WHERE id = ?', { id })
@@ -720,12 +705,12 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteTag', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('management.unauthorized') } end
 
     payload = payload or {}
     local id = tonumber(payload.id)
     if not id then
-        return { success = false, message = 'Invalid tag ID' }
+        return { success = false, message = L('management.invalid_tag') }
     end
 
     -- Get name before deleting so we can clean up references

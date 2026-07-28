@@ -20,7 +20,7 @@ local resourceName = tostring(GetCurrentResourceName())
 --- @return string|nil error     Error message on failure
 function FiveManageUpload(base64Data, filename)
     if not FiveManageApiKey or FiveManageApiKey == '' then
-        local msg = 'FiveManage API key not configured. Add to server.cfg: set ps_mdt_fivemanage_key_images "YOUR_KEY"'
+        local msg = L('fivemanage.key_missing')
         ps.warn(msg)
         return nil, msg
     end
@@ -32,7 +32,7 @@ function FiveManageUpload(base64Data, filename)
     end
 
     if not rawBase64 or rawBase64 == '' then
-        local msg = 'Empty image data received'
+        local msg = L('fivemanage.empty_image')
         ps.warn('FiveManage upload: ' .. msg)
         return nil, msg
     end
@@ -48,16 +48,16 @@ function FiveManageUpload(base64Data, filename)
                 p:resolve({ url = data.url })
             else
                 ps.warn('FiveManage upload: unexpected response: ' .. tostring(responseText))
-                p:resolve({ url = nil, error = 'Unexpected API response' })
+                p:resolve({ url = nil, error = L('fivemanage.unexpected_response') })
             end
         else
             local errMsg = 'HTTP ' .. tostring(statusCode)
             if statusCode == 401 or statusCode == 403 then
-                errMsg = 'Invalid API key (HTTP ' .. tostring(statusCode) .. ')'
+                errMsg = L('fivemanage.invalid_key', { status = statusCode })
             elseif statusCode == 413 then
-                errMsg = 'Image too large for API (HTTP 413)'
+                errMsg = L('fivemanage.image_too_large')
             elseif statusCode == 0 or not statusCode then
-                errMsg = 'Could not connect to FiveManage API'
+                errMsg = L('fivemanage.connection_failed')
             end
             ps.warn('FiveManage upload failed: ' .. errMsg)
             p:resolve({ url = nil, error = errMsg })
@@ -77,9 +77,9 @@ end
 
 -- Server callback to upload a mugshot from base64 data (API key stays server-side)
 ps.registerCallback(resourceName .. ':server:uploadMugshotBase64', function(source, base64Data)
-    if not CheckAuth(source) then return { url = nil, error = 'Unauthorized' } end
+    if not CheckAuth(source) then return { url = nil, error = L('fivemanage.unauthorized') } end
     if not base64Data or base64Data == '' then
-        return { url = nil, error = 'No image data' }
+        return { url = nil, error = L('fivemanage.no_image') }
     end
     local url, err = FiveManageUpload(base64Data, 'mugshot_' .. source .. '.png')
     return { url = url, error = err }
@@ -113,7 +113,7 @@ AddEventHandler(resourceName .. ':server:mugshotUpload', function(citizenid, mug
     for _, url in ipairs(mugshotUrls) do
         if url and url ~= '' and url ~= 'invalid_url' then
             MySQL.insert.await('INSERT INTO mdt_profiles_gallery (profileId, image, label) VALUES (?, ?, ?)', {
-                profile.id, url, 'Mugshot'
+                profile.id, url, L('fivemanage.mugshot_label')
             })
         end
     end
@@ -123,31 +123,31 @@ end)
 
 -- Trigger mugshot on a suspect by citizenid (from MDT UI)
 ps.registerCallback(resourceName .. ':server:triggerSuspectMugshot', function(source, citizenid)
-    if not CheckAuth(source) then return { success = false, message = 'Unauthorized' } end
-    if not citizenid then return { success = false, message = 'Missing citizen id' } end
+    if not CheckAuth(source) then return { success = false, message = L('fivemanage.unauthorized') } end
+    if not citizenid then return { success = false, message = L('fivemanage.missing_citizen') } end
 
     local targetPlayer = ps.getPlayerByIdentifier(citizenid)
     if not targetPlayer then
-        return { success = false, message = 'Suspect is not online' }
+        return { success = false, message = L('fivemanage.suspect_offline') }
     end
 
     local targetSource = targetPlayer.source or (targetPlayer.PlayerData and targetPlayer.PlayerData.source)
     if not targetSource then
-        return { success = false, message = 'Could not find suspect source' }
+        return { success = false, message = L('fivemanage.suspect_source_missing') }
     end
 
     TriggerClientEvent(resourceName .. ':client:triggerMugshot', targetSource)
-    return { success = true, message = 'Mugshot triggered on suspect' }
+    return { success = true, message = L('fivemanage.mugshot_triggered') }
 end)
 
 -- Upload a profile photo for a suspect via base64 (from MDT UI)
 ps.registerCallback(resourceName .. ':server:uploadSuspectPhoto', function(source, citizenid, imageUrl)
-    if not CheckAuth(source) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(source) then return { success = false, message = L('fivemanage.unauthorized') } end
     if not CheckPermission(source, 'evidence_upload') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('fivemanage.insufficient_permissions') }
     end
     if not citizenid or not imageUrl then
-        return { success = false, message = 'Missing data' }
+        return { success = false, message = L('fivemanage.missing_data') }
     end
 
     -- local imageUrl, uploadError = FiveManageUpload(base64Image, 'suspect_' .. citizenid .. '.png')
@@ -157,12 +157,12 @@ ps.registerCallback(resourceName .. ':server:uploadSuspectPhoto', function(sourc
 
     -- Ensure profile exists
     if not EnsureProfileExists(citizenid) then
-        return { success = false, message = 'Failed to create profile' }
+        return { success = false, message = L('fivemanage.profile_create_failed') }
     end
 
     local profile = MySQL.single.await('SELECT id FROM mdt_profiles WHERE citizenid = ?', { citizenid })
     if not profile then
-        return { success = false, message = 'Failed to create profile' }
+        return { success = false, message = L('fivemanage.profile_create_failed') }
     end
 
     -- Set as profile picture
@@ -170,10 +170,10 @@ ps.registerCallback(resourceName .. ':server:uploadSuspectPhoto', function(sourc
 
     -- Add to gallery
     MySQL.insert.await('INSERT INTO mdt_profiles_gallery (profileId, image, label) VALUES (?, ?, ?)', {
-        profile.id, imageUrl, 'Profile Photo'
+        profile.id, imageUrl, L('fivemanage.profile_photo_label')
     })
 
-    return { success = true, message = 'Photo uploaded', imageUrl = imageUrl }
+    return { success = true, message = L('fivemanage.photo_uploaded'), imageUrl = imageUrl }
 end)
 
 -- FiveManage Activity Logging (batched)
@@ -219,7 +219,7 @@ function FiveManageQueueLog(entry)
         message  = entry.action,
         resource = resourceName,
         metadata = {
-            actorName      = entry.actorName or 'System',
+            actorName      = entry.actorName or L('server_common.system'),
             actorCitizenid = entry.actorCitizenid,
             entityType     = entry.entityType,
             entityId       = entry.entityId,

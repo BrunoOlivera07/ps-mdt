@@ -13,7 +13,7 @@ end
 
 local function getDisplayName(src)
     local callsign = ps.getMetadata(src, 'callsign')
-    local name = ps.getPlayerName(src) or 'Unknown'
+    local name = ps.getPlayerName(src) or L('doj.unknown')
     if callsign and callsign ~= '' then
         return callsign .. ' ' .. name
     end
@@ -119,10 +119,10 @@ end)
 
 ps.registerCallback(resourceName .. ':server:createCourtCase', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     payload = payload or {}
-    local title = payload.title or 'Untitled Court Case'
+    local title = payload.title or L('doj.untitled_case')
     local case_type = payload.case_type or 'criminal'
     local defendant_citizenid = payload.defendant_citizenid or nil
     local defendant_name = payload.defendant_name or nil
@@ -133,7 +133,7 @@ ps.registerCallback(resourceName .. ':server:createCourtCase', function(source, 
 
     local citizenid = ps.getIdentifier(src)
     if not citizenid then
-        return { success = false, error = 'Missing citizen id' }
+        return { success = false, error = L('doj.missing_citizen') }
     end
 
     local createdByName = getDisplayName(src)
@@ -149,7 +149,7 @@ ps.registerCallback(resourceName .. ':server:createCourtCase', function(source, 
     })
 
     if not id then
-        return { success = false, error = 'Failed to create court case' }
+        return { success = false, error = L('doj.court_case_create_failed') }
     end
 
     local caseNumber = buildCourtCaseNumber(id)
@@ -164,10 +164,10 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateCourtCase', function(source, caseId, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     caseId = tonumber(caseId)
-    if not caseId then return { success = false, error = 'Invalid case id' } end
+    if not caseId then return { success = false, error = L('doj.invalid_case') } end
 
     payload = payload or {}
     local updates = {}
@@ -191,7 +191,7 @@ ps.registerCallback(resourceName .. ':server:updateCourtCase', function(source, 
     end
 
     if #updates == 0 then
-        return { success = false, error = 'No updates provided' }
+        return { success = false, error = L('doj.no_updates') }
     end
 
     values[#values + 1] = caseId
@@ -201,7 +201,7 @@ ps.registerCallback(resourceName .. ':server:updateCourtCase', function(source, 
     )
 
     if not ok then
-        return { success = false, error = 'Failed to update court case' }
+        return { success = false, error = L('doj.court_case_update_failed') }
     end
 
     if ps.auditLog then
@@ -260,7 +260,7 @@ end)
 
 ps.registerCallback(resourceName .. ':server:createWarrantRequest', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     payload = payload or {}
     local citizenid = payload.citizenid
@@ -270,11 +270,11 @@ ps.registerCallback(resourceName .. ':server:createWarrantRequest', function(sou
     local linked_report_id = payload.linked_report_id and tonumber(payload.linked_report_id) or nil
 
     if not citizenid or citizenid == '' then
-        return { success = false, error = 'Missing citizen ID' }
+        return { success = false, error = L('doj.missing_citizen') }
     end
 
     if not reason or reason == '' then
-        return { success = false, error = 'A reason/justification is required' }
+        return { success = false, error = L('doj.reason_required') }
     end
 
     local requesting_officer = ps.getIdentifier(src)
@@ -284,10 +284,10 @@ ps.registerCallback(resourceName .. ':server:createWarrantRequest', function(sou
     -- or another open (pending/approved) request, regardless of citizen.
     if linked_report_id then
         if reportHasActiveWarrant(linked_report_id) then
-            return { success = false, error = 'This report already has an active warrant' }
+            return { success = false, error = L('doj.active_warrant_exists') }
         end
         if reportHasOpenWarrantRequest(linked_report_id) then
-            return { success = false, error = 'This report already has an open warrant request' }
+            return { success = false, error = L('doj.open_request_exists') }
         end
     end
 
@@ -298,7 +298,7 @@ ps.registerCallback(resourceName .. ':server:createWarrantRequest', function(sou
     ]], { citizenid, citizen_name, requesting_officer, officer_name, charges, reason, linked_report_id })
 
     if not id then
-        return { success = false, error = 'Failed to create warrant request' }
+        return { success = false, error = L('doj.request_create_failed') }
     end
 
     if ps.auditLog then
@@ -313,18 +313,18 @@ end)
 
 ps.registerCallback(resourceName .. ':server:reviewWarrantRequest', function(source, request_id, decision, reason)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     request_id = tonumber(request_id)
-    if not request_id then return { success = false, error = 'Invalid request id' } end
+    if not request_id then return { success = false, error = L('doj.invalid_request') } end
 
     if decision ~= 'approved' and decision ~= 'denied' then
-        return { success = false, error = 'Invalid decision' }
+        return { success = false, error = L('doj.invalid_decision') }
     end
 
     local request = MySQL.single.await('SELECT * FROM mdt_warrant_requests WHERE id = ? AND status = ?', { request_id, 'pending' })
     if not request then
-        return { success = false, error = 'Warrant request not found or already reviewed' }
+        return { success = false, error = L('doj.request_reviewed') }
     end
 
     local reviewerCitizenid = ps.getIdentifier(src)
@@ -334,7 +334,7 @@ ps.registerCallback(resourceName .. ':server:reviewWarrantRequest', function(sou
     -- active warrant, refuse before mutating anything so we never create a second.
     if decision == 'approved' and request.linked_report_id then
         if reportHasActiveWarrant(tonumber(request.linked_report_id)) then
-            return { success = false, error = 'This report already has an active warrant' }
+            return { success = false, error = L('doj.active_warrant_exists') }
         end
     end
 
@@ -399,35 +399,35 @@ end)
 -- Schedule a hearing for an already-approved warrant.
 ps.registerCallback(resourceName .. ':server:scheduleWarrantHearing', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
-    if not CreateWarrantHearingForReport then return { success = false, error = 'Court module unavailable' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
+    if not CreateWarrantHearingForReport then return { success = false, error = L('doj.court_unavailable') } end
 
     payload = payload or {}
     local reportId = tonumber(payload.reportId)
-    if not reportId then return { success = false, error = 'Missing report id' } end
+    if not reportId then return { success = false, error = L('doj.missing_report') } end
 
     -- One hearing per warrant — don't stack duplicates.
     local existing = MySQL.single.await('SELECT id FROM mdt_court_hearings WHERE warrant_reportid = ? LIMIT 1', { reportId })
-    if existing then return { success = false, error = 'A hearing already exists for this warrant' } end
+    if existing then return { success = false, error = L('doj.hearing_exists') } end
 
     local hearingId, scheduledAt = CreateWarrantHearingForReport(src, reportId, {
         scheduled_at = payload.scheduled_at,
         hearing_type = payload.hearing_type,
     })
-    if not hearingId then return { success = false, error = scheduledAt or 'Failed to schedule hearing' } end
+    if not hearingId then return { success = false, error = scheduledAt or L('doj.hearing_schedule_failed') } end
     return { success = true, scheduled_at = scheduledAt }
 end)
 
 -- Remove the hearing tied to a warrant's report (manual DOJ action).
 ps.registerCallback(resourceName .. ':server:removeWarrantHearing', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
-    if not CheckPermission(src, 'court_delete') then return { success = false, error = 'No permission' } end
-    if not RemoveWarrantHearingsForReport then return { success = false, error = 'Court module unavailable' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
+    if not CheckPermission(src, 'court_delete') then return { success = false, error = L('doj.no_permission') } end
+    if not RemoveWarrantHearingsForReport then return { success = false, error = L('doj.court_unavailable') } end
 
     payload = payload or {}
     local reportId = tonumber(payload.reportId)
-    if not reportId then return { success = false, error = 'Missing report id' } end
+    if not reportId then return { success = false, error = L('doj.missing_report') } end
 
     local removed = RemoveWarrantHearingsForReport(reportId)
     if ps.auditLog then
@@ -438,18 +438,18 @@ end)
 
 ps.registerCallback(resourceName .. ':server:closeWarrantRequest', function(source, request_id)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
     if not CheckPermission(src, 'warrants_close') then
-        return { success = false, error = 'Insufficient permissions' }
+        return { success = false, error = L('doj.insufficient_permissions') }
     end
 
     request_id = tonumber(request_id)
-    if not request_id then return { success = false, error = 'Invalid request id' } end
+    if not request_id then return { success = false, error = L('doj.invalid_request') } end
 
     -- Only an approved request can be closed.
     local request = MySQL.single.await('SELECT * FROM mdt_warrant_requests WHERE id = ? AND status = ?', { request_id, 'approved' })
     if not request then
-        return { success = false, error = 'Warrant request not found or not approved' }
+        return { success = false, error = L('doj.request_not_approved') }
     end
 
     -- Mark the request itself as closed so it leaves the approved list.
@@ -583,7 +583,7 @@ end)
 
 ps.registerCallback(resourceName .. ':server:createCourtOrder', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     payload = payload or {}
     local title = payload.title
@@ -591,12 +591,12 @@ ps.registerCallback(resourceName .. ':server:createCourtOrder', function(source,
     local content = payload.content
 
     if not title or not orderType or not content then
-        return { success = false, error = 'Missing required fields (title, type, content)' }
+        return { success = false, error = L('doj.order_fields_required') }
     end
 
     local citizenid = ps.getIdentifier(src)
     if not citizenid then
-        return { success = false, error = 'Missing citizen id' }
+        return { success = false, error = L('doj.missing_citizen') }
     end
 
     local issuedByName = getDisplayName(src)
@@ -617,7 +617,7 @@ ps.registerCallback(resourceName .. ':server:createCourtOrder', function(source,
     })
 
     if not id then
-        return { success = false, error = 'Failed to create court order' }
+        return { success = false, error = L('doj.order_create_failed') }
     end
 
     local orderNumber = buildOrderNumber(id)
@@ -632,10 +632,10 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateCourtOrder', function(source, orderId, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     orderId = tonumber(orderId)
-    if not orderId then return { success = false, error = 'Invalid order id' } end
+    if not orderId then return { success = false, error = L('doj.invalid_order') } end
 
     payload = payload or {}
     local updates = {}
@@ -655,7 +655,7 @@ ps.registerCallback(resourceName .. ':server:updateCourtOrder', function(source,
     end
 
     if #updates == 0 then
-        return { success = false, error = 'No updates provided' }
+        return { success = false, error = L('doj.no_updates') }
     end
 
     values[#values + 1] = orderId
@@ -665,7 +665,7 @@ ps.registerCallback(resourceName .. ':server:updateCourtOrder', function(source,
     )
 
     if not ok then
-        return { success = false, error = 'Failed to update court order' }
+        return { success = false, error = L('doj.order_update_failed') }
     end
 
     if ps.auditLog then
@@ -677,10 +677,10 @@ end)
 
 ps.registerCallback(resourceName .. ':server:revokeCourtOrder', function(source, orderId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     orderId = tonumber(orderId)
-    if not orderId then return { success = false, error = 'Invalid order id' } end
+    if not orderId then return { success = false, error = L('doj.invalid_order') } end
 
     local ok = MySQL.update.await(
         'UPDATE mdt_court_orders SET status = ? WHERE id = ?',
@@ -688,7 +688,7 @@ ps.registerCallback(resourceName .. ':server:revokeCourtOrder', function(source,
     )
 
     if not ok then
-        return { success = false, error = 'Failed to revoke court order' }
+        return { success = false, error = L('doj.order_revoke_failed') }
     end
 
     if ps.auditLog then
@@ -762,7 +762,7 @@ end)
 
 ps.registerCallback(resourceName .. ':server:createLegalDocument', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     payload = payload or {}
     local title = payload.title
@@ -770,12 +770,12 @@ ps.registerCallback(resourceName .. ':server:createLegalDocument', function(sour
     local content = payload.content or ''
 
     if not title or not docType then
-        return { success = false, error = 'Missing required fields (title, type)' }
+        return { success = false, error = L('doj.document_fields_required') }
     end
 
     local citizenid = ps.getIdentifier(src)
     if not citizenid then
-        return { success = false, error = 'Missing citizen id' }
+        return { success = false, error = L('doj.missing_citizen') }
     end
 
     local authorName = getDisplayName(src)
@@ -792,7 +792,7 @@ ps.registerCallback(resourceName .. ':server:createLegalDocument', function(sour
     })
 
     if not id then
-        return { success = false, error = 'Failed to create legal document' }
+        return { success = false, error = L('doj.document_create_failed') }
     end
 
     if ps.auditLog then
@@ -804,10 +804,10 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateLegalDocument', function(source, docId, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     docId = tonumber(docId)
-    if not docId then return { success = false, error = 'Invalid document id' } end
+    if not docId then return { success = false, error = L('doj.invalid_document') } end
 
     payload = payload or {}
     local updates = {}
@@ -823,7 +823,7 @@ ps.registerCallback(resourceName .. ':server:updateLegalDocument', function(sour
     end
 
     if #updates == 0 then
-        return { success = false, error = 'No updates provided' }
+        return { success = false, error = L('doj.no_updates') }
     end
 
     values[#values + 1] = docId
@@ -833,7 +833,7 @@ ps.registerCallback(resourceName .. ':server:updateLegalDocument', function(sour
     )
 
     if not ok then
-        return { success = false, error = 'Failed to update legal document' }
+        return { success = false, error = L('doj.document_update_failed') }
     end
 
     if ps.auditLog then
@@ -845,19 +845,19 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteLegalDocument', function(source, docId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('doj.unauthorized') } end
 
     docId = tonumber(docId)
-    if not docId then return { success = false, error = 'Invalid document id' } end
+    if not docId then return { success = false, error = L('doj.invalid_document') } end
 
     -- Only allow deleting drafts
     local doc = MySQL.single.await('SELECT status FROM mdt_legal_documents WHERE id = ?', { docId })
     if not doc then
-        return { success = false, error = 'Document not found' }
+        return { success = false, error = L('doj.document_not_found') }
     end
 
     if doc.status ~= 'draft' then
-        return { success = false, error = 'Only draft documents can be deleted' }
+        return { success = false, error = L('doj.draft_only_delete') }
     end
 
     MySQL.query.await('DELETE FROM mdt_legal_documents WHERE id = ?', { docId })

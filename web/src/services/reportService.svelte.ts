@@ -132,7 +132,17 @@ export function createReportService() {
 		startDate?: string;
 		endDate?: string;
 		author?: string;
-	}): Promise<{ incidents: number; arrests: number; warrants: number }> {
+	}): Promise<{
+		incidents: number;
+		arrests: number;
+		warrants: number;
+		medical: number;
+		trauma: number;
+		overdose: number;
+		courtFilings: number;
+		judicialOrders: number;
+		sentencing: number;
+	}> {
 		const response = await fetchNui(
 			NUI_EVENTS.REPORT.GET_REPORT_ANALYTICS,
 			{ filters },
@@ -140,17 +150,27 @@ export function createReportService() {
 		if (response && response.success && response.data) {
 			return response.data;
 		}
-		return { incidents: 0, arrests: 0, warrants: 0 };
+		return {
+			incidents: 0,
+			arrests: 0,
+			warrants: 0,
+			medical: 0,
+			trauma: 0,
+			overdose: 0,
+			courtFilings: 0,
+			judicialOrders: 0,
+			sentencing: 0,
+		};
 	}
 
 	async function issueWarrant(reportId: string, citizenid: string): Promise<void> {
 		try {
-			const result = await fetchNui<{ success: boolean; error?: string }>(
+			const result = await fetchNui<{ success: boolean; error?: string; message?: string }>(
 				NUI_EVENTS.WARRANT.ISSUE_WARRANT,
 				{ reportId, citizenid },
 			);
 			if (!result?.success) {
-				throw new Error(result?.error || t("pages.reportEditor.service.warrantIssueFailed"));
+				throw new Error(result?.error || result?.message || t("pages.reportEditor.service.warrantIssueFailed"));
 			}
 		} catch (error) {
 			console.error("Failed to issue warrant:", error);

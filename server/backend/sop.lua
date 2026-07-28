@@ -34,14 +34,14 @@ end)
 -- Create a new SOP category
 ps.registerCallback(resourceName .. ':server:createSOPCategory', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     data = data or {}
     local title = data.title or ''
-    if title == '' then return { success = false, error = 'Title is required' } end
+    if title == '' then return { success = false, error = L('sop.title_required') } end
 
     local jobName = ps.getJobName(src)
 
@@ -54,21 +54,21 @@ ps.registerCallback(resourceName .. ':server:createSOPCategory', function(source
         VALUES (?, ?, ?, ?)
     ]], { jobName, title, data.icon or 'description', nextSort })
 
-    if not id then return { success = false, error = 'Failed to create category' } end
+    if not id then return { success = false, error = L('sop.category_create_failed') } end
     return { success = true, id = id }
 end)
 
 -- Update a SOP category
 ps.registerCallback(resourceName .. ':server:updateSOPCategory', function(source, categoryId, updates)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     categoryId = tonumber(categoryId)
     updates = updates or {}
-    if not categoryId then return { success = false, error = 'Invalid category id' } end
+    if not categoryId then return { success = false, error = L('sop.invalid_category') } end
 
     local sets = {}
     local vals = {}
@@ -81,7 +81,7 @@ ps.registerCallback(resourceName .. ':server:updateSOPCategory', function(source
         end
     end
 
-    if #sets == 0 then return { success = false, error = 'No fields to update' } end
+    if #sets == 0 then return { success = false, error = L('sop.no_fields') } end
 
     vals[#vals + 1] = categoryId
     MySQL.update.await('UPDATE mdt_sop_categories SET ' .. table.concat(sets, ', ') .. ' WHERE id = ?', vals)
@@ -91,13 +91,13 @@ end)
 -- Delete a SOP category (cascades to sections)
 ps.registerCallback(resourceName .. ':server:deleteSOPCategory', function(source, categoryId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     categoryId = tonumber(categoryId)
-    if not categoryId then return { success = false, error = 'Invalid category id' } end
+    if not categoryId then return { success = false, error = L('sop.invalid_category') } end
 
     MySQL.query.await('DELETE FROM mdt_sop_categories WHERE id = ?', { categoryId })
     return { success = true }
@@ -106,16 +106,16 @@ end)
 -- Create a new SOP section within a category
 ps.registerCallback(resourceName .. ':server:createSOPSection', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     data = data or {}
     local categoryId = tonumber(data.category_id)
     local title = data.title or ''
     if not categoryId or title == '' then
-        return { success = false, error = 'Category and title are required' }
+        return { success = false, error = L('sop.category_title_required') }
     end
 
     -- Get next sort order within this category
@@ -127,21 +127,21 @@ ps.registerCallback(resourceName .. ':server:createSOPSection', function(source,
         VALUES (?, ?, ?, ?)
     ]], { categoryId, title, data.content or '', nextSort })
 
-    if not id then return { success = false, error = 'Failed to create section' } end
+    if not id then return { success = false, error = L('sop.section_create_failed') } end
     return { success = true, id = id }
 end)
 
 -- Update a SOP section
 ps.registerCallback(resourceName .. ':server:updateSOPSection', function(source, sectionId, updates)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     sectionId = tonumber(sectionId)
     updates = updates or {}
-    if not sectionId then return { success = false, error = 'Invalid section id' } end
+    if not sectionId then return { success = false, error = L('sop.invalid_section') } end
 
     local sets = {}
     local vals = {}
@@ -154,7 +154,7 @@ ps.registerCallback(resourceName .. ':server:updateSOPSection', function(source,
         end
     end
 
-    if #sets == 0 then return { success = false, error = 'No fields to update' } end
+    if #sets == 0 then return { success = false, error = L('sop.no_fields') } end
 
     vals[#vals + 1] = sectionId
     MySQL.update.await('UPDATE mdt_sop_sections SET ' .. table.concat(sets, ', ') .. ' WHERE id = ?', vals)
@@ -164,13 +164,13 @@ end)
 -- Delete a SOP section
 ps.registerCallback(resourceName .. ':server:deleteSOPSection', function(source, sectionId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     sectionId = tonumber(sectionId)
-    if not sectionId then return { success = false, error = 'Invalid section id' } end
+    if not sectionId then return { success = false, error = L('sop.invalid_section') } end
 
     MySQL.query.await('DELETE FROM mdt_sop_sections WHERE id = ?', { sectionId })
     return { success = true }
@@ -191,15 +191,15 @@ end)
 -- Update SOP mission statement
 ps.registerCallback(resourceName .. ':server:updateSOPMission', function(source, missionStatement)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     local jobName = ps.getJobName(src)
     local citizenId = ps.getIdentifier(src)
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { citizenId })
-    local updatedBy = profile and profile.fullname or 'Unknown'
+    local updatedBy = profile and profile.fullname or L('sop.unknown')
 
     MySQL.query.await([[
         INSERT INTO mdt_sop_settings (job, mission_statement, version, updated_by)
@@ -213,15 +213,15 @@ end)
 -- Update SOP introduction text
 ps.registerCallback(resourceName .. ':server:updateSOPIntro', function(source, introduction)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     local jobName = ps.getJobName(src)
     local citizenId = ps.getIdentifier(src)
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { citizenId })
-    local updatedBy = profile and profile.fullname or 'Unknown'
+    local updatedBy = profile and profile.fullname or L('sop.unknown')
 
     MySQL.query.await([[
         INSERT INTO mdt_sop_settings (job, introduction, version, updated_by)
@@ -235,15 +235,15 @@ end)
 -- Publish SOP (bump version, forcing all officers to re-acknowledge)
 ps.registerCallback(resourceName .. ':server:publishSOP', function(source)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('sop.unauthorized') } end
     if not CheckPermission(src, 'sop_manage') then
-        return { success = false, error = 'No permission to manage SOPs' }
+        return { success = false, error = L('sop.no_manage') }
     end
 
     local jobName = ps.getJobName(src)
     local citizenId = ps.getIdentifier(src)
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { citizenId })
-    local updatedBy = profile and profile.fullname or 'Unknown'
+    local updatedBy = profile and profile.fullname or L('sop.unknown')
 
     -- Upsert: create with version 1, or increment existing version
     MySQL.query.await([[
@@ -299,7 +299,7 @@ ps.registerCallback(resourceName .. ':server:acknowledgesSOP', function(source)
     -- Get current version
     local settings = MySQL.single.await('SELECT version FROM mdt_sop_settings WHERE job = ?', { jobName })
     if not settings or not settings.version then
-        return { success = false, error = 'No SOP published' }
+        return { success = false, error = L('sop.not_published') }
     end
 
     MySQL.query.await([[

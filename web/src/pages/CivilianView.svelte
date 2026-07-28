@@ -4,7 +4,7 @@
 	import { fetchNui } from "../utils/fetchNui";
 	import { NUI_EVENTS } from "../constants/nuiEvents";
 	import type { AuthService } from "../services/authService.svelte";
-	import { t } from "../lib/i18n";
+	import { t, translateReportType } from "../lib/i18n";
 
 	interface CivilianProfile {
 		citizenid: string;
@@ -235,7 +235,7 @@
 									<div class="list-item">
 										<span class="item-id">#{report.id}</span>
 										<span class="item-name">{report.title}</span>
-										<span class="item-tag">{report.type}</span>
+										<span class="item-tag">{translateReportType(report.type)}</span>
 									</div>
 								{/each}
 							</div>

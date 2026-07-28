@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from "svelte";
 	import type { SearchResult } from "../../interfaces/IReportEditor";
 	import { t } from "../../lib/i18n";
 
@@ -23,6 +24,7 @@
 	let localQuery = $state("");
 	let inputRef: HTMLInputElement | undefined = $state();
 	let prevShow = false;
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
 	// Only focus when modal first opens
 	$effect(() => {
@@ -33,13 +35,30 @@
 			requestAnimationFrame(() => {
 				inputRef?.focus();
 			});
+		} else if (!currentShow && prevShow && searchTimer) {
+			clearTimeout(searchTimer);
+			searchTimer = undefined;
 		}
 		prevShow = currentShow;
 	});
 
 	function handleInput() {
-		onSearch(localQuery);
+		if (searchTimer) clearTimeout(searchTimer);
+		if (!localQuery.trim()) {
+			onSearch("");
+			return;
+		}
+
+		const query = localQuery;
+		searchTimer = setTimeout(() => {
+			searchTimer = undefined;
+			onSearch(query);
+		}, 250);
 	}
+
+	onDestroy(() => {
+		if (searchTimer) clearTimeout(searchTimer);
+	});
 
 	function handleSelect(person: SearchResult) {
 		onSelect(person);

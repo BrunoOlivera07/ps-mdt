@@ -42,3 +42,8 @@ export function tf(path: string, fallbackValue: string, params?: Params): string
 	const value = getPath(active, path) ?? getPath(fallback, path);
 	return format(typeof value === "string" ? value : fallbackValue, params);
 }
+
+export function translateReportType(reportType: string): string {
+	const key = reportType.toLowerCase().replace(/\s+/g, "_");
+	return tf(`reportEditor.metadata.types.${key}`, reportType);
+}

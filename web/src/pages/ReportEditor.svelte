@@ -28,6 +28,7 @@
 	import { usePersistence } from "../hooks/usePersistence.svelte";
 	import type { ReportPageData } from "../schemas/persistenceSchema";
 	import { fetchNui } from "../utils/fetchNui";
+	import { isEnvBrowser } from "../utils/misc";
 	import { NUI_EVENTS } from "../constants/nuiEvents";
 	import { globalNotifications } from "../services/notificationService.svelte";
 	import { compressImage } from "../services/uploadService";
@@ -36,6 +37,7 @@
 
 	import type { createTabService } from "../services/tabService.svelte";
 	import { getReportTypesForJob, type MDTTab } from "../constants";
+	import { getDefaultReportTemplates, normalizeTemplateJobType } from "../utils/reportTemplates";
 
 	import type { JobType } from "../interfaces/IUser";
 	import { t } from "../lib/i18n";
@@ -93,7 +95,7 @@
 	// Initialize persistence hook
 	const persistence = usePersistence(instanceStateService, "report-page");
 
-	const defaultReportType = getReportTypesForJob(jobType)[0] || "Incident Report";
+	const defaultReportType = getReportTypesForJob(normalizeTemplateJobType(jobType))[0] || "Incident Report";
 	let report: Report = $state({ ...reportService.createEmptyReport(), type: defaultReportType });
 	let penalCodes = $state<Charge[]>([]);
 	let reductionOffers = $state<number[]>([]);
@@ -132,6 +134,7 @@
 	let showTemplateMenu = $state(false);
 
 	async function loadReportTemplates() {
+		if (isEnvBrowser()) return;
 		try {
 			const response = await fetchNui<ServerTemplate[]>(
 				NUI_EVENTS.SETTINGS.GET_REPORT_TEMPLATES,
@@ -175,6 +178,7 @@
 	let reportPromise = $state<Promise<Report>>();
 
 	onMount(() => {
+		if (isEnvBrowser()) reportTemplates = getDefaultReportTemplates(jobType);
 		// Create the loading promise
 		reportPromise = initializeReportData();
 		loadPenalCodes();

@@ -88,7 +88,7 @@ ps.registerCallback(resourceName .. ':server:joinReportSession', function(source
     local session = activeReportSessions[reportId]
     local citizenId = ps.getIdentifier(src)
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { citizenId })
-    local editorName = profile and profile.fullname or 'Unknown'
+    local editorName = profile and profile.fullname or L('collab.unknown_editor')
     local color = getNextColor(session)
 
     -- Register editor

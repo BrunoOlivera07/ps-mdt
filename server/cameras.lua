@@ -70,7 +70,7 @@ function Camera.new(camId, camType, camLabel, options)
     local newCameraInstance = {
         camId = camId,
         camType = camType,
-        camLabel = camLabel or 'Unnamed Camera',
+        camLabel = camLabel or L('client_cameras.unnamed'),
         isSpawned = false,
         activeViewers = {},
         createdAt = os.time()
@@ -257,7 +257,7 @@ function Camera:activate(playerId)
     if not self.activeViewers[playerId] then
         self.activeViewers[playerId] = {
             startTime = os.time(),
-            playerName = ps.getPlayerName(playerId) or 'Unknown'
+            playerName = ps.getPlayerName(playerId) or L('cameras.unknown')
         }
         ps.debug('Camera:activate - Player ' .. playerId .. ' started viewing camera ' .. self.camId)
 
@@ -388,7 +388,7 @@ function Camera:getData()
     if self.camType == Camera.types.bodycam then
         data.playerId = self.playerId
         data.note = self.note
-        data.playerName = self.playerId and (ps.getPlayerName(self.playerId) or GetPlayerName(self.playerId)) or 'Unknown'
+        data.playerName = self.playerId and (ps.getPlayerName(self.playerId) or GetPlayerName(self.playerId)) or L('cameras.unknown')
     elseif self.camType == Camera.types.static then
         data.model = self.model
         data.modelHash = self:getModelHash()
@@ -508,7 +508,7 @@ end
 ---@param model string? Camera model key (default: 'security_cam_03')
 ---@return table? Camera instance
 function Camera.createStatic(camId, coords, rotation, label, model)
-    return Camera.new(camId, Camera.types.static, label or 'Static Camera', {
+    return Camera.new(camId, Camera.types.static, label or L('client_cameras.static'), {
         coords = coords,
         rotation = rotation or vector3(0.0, 0.0, 0.0),
         model = model or 'security_cam_03',
@@ -697,7 +697,7 @@ RegisterNetEvent(resourceName .. ':server:createStaticCamera', function(cameraDa
     local playerId = source
     if not CheckAuth(playerId) then return end
     if not IsPlayerAceAllowed(playerId, placerAce) then
-        ps.notify(playerId, 'You are not allowed to place cameras', 'error')
+        ps.notify(playerId, L('cameras.no_place'), 'error')
         return
     end
 
@@ -786,7 +786,7 @@ RegisterNetEvent(resourceName .. ':server:requestCameraList', function()
     local playerId = source
     if not CheckAuth(playerId) then return end
     if not IsPlayerAceAllowed(playerId, placerAce) then
-        ps.notify(playerId, 'You are not allowed to manage cameras', 'error')
+        ps.notify(playerId, L('cameras.no_manage'), 'error')
         return
     end
     ps.debug('Sending camera list to player:', playerId)
@@ -933,7 +933,7 @@ RegisterNetEvent(resourceName .. ':server:deleteCamera', function(camId)
     local playerId = source
     if not CheckAuth(playerId) then return end
     if not IsPlayerAceAllowed(playerId, placerAce) then
-        ps.notify(playerId, 'You are not allowed to delete cameras', 'error')
+        ps.notify(playerId, L('cameras.no_delete'), 'error')
         return
     end
     ps.debug('Deleting camera for player:', playerId, 'Camera ID:', camId)
@@ -975,30 +975,30 @@ end)
 ps.registerCallback(resourceName .. ':server:updateCamera', function(source, updateData)
     local playerId = source
     if not CheckAuth(playerId, true) then
-        return { success = false, error = 'Not authorized' }
+        return { success = false, error = L('cameras.unauthorized') }
     end
     if not IsPlayerAceAllowed(playerId, placerAce) then
-        ps.notify(playerId, 'You are not allowed to edit cameras', 'error')
-        return { success = false, error = 'Not allowed' }
+        ps.notify(playerId, L('cameras.no_edit'), 'error')
+        return { success = false, error = L('cameras.not_allowed') }
     end
     ps.debug('Updating camera for player:', playerId, 'Data:', updateData)
 
     if not updateData or type(updateData) ~= 'table' then
         ps.error('Camera update failed - invalid data from player:', playerId)
-        return { success = false, error = 'Invalid update data' }
+        return { success = false, error = L('cameras.invalid_update') }
     end
 
     -- Validate required fields
     if not updateData.camId then
         ps.error('Camera update failed - missing camera ID for player:', playerId)
-        return { success = false, error = 'Missing camera ID' }
+        return { success = false, error = L('cameras.missing_id') }
     end
 
     -- Check if camera exists
     local camera = spawnedCameras[updateData.camId]
     if not camera then
         ps.error('Camera update failed - camera not found:', updateData.camId, 'for player:', playerId)
-        return { success = false, error = 'Camera not found' }
+        return { success = false, error = L('cameras.not_found') }
     end
 
     -- Store old position for comparison
@@ -1271,7 +1271,7 @@ end
 -- Start a dashcam view for a viewer (called from viewCamera for dashcam ids).
 local function startDashcamView(viewerSrc, dashcamId)
     if not CheckPermission(viewerSrc, 'dashcams_view') then
-        return { success = false, error = 'No permission to view dashcams' }
+        return { success = false, error = L('cameras.no_dashcam_permission') }
     end
 
     -- Resolve the requested dashcam against the live list (handles plate ids)
@@ -1280,18 +1280,18 @@ local function startDashcamView(viewerSrc, dashcamId)
         if dc.id == dashcamId then match = dc break end
     end
     if not match then
-        return { success = false, error = 'Dashcam unavailable' }
+        return { success = false, error = L('cameras.dashcam_unavailable') }
     end
 
     local veh = getDrivenVehicle(match.source)
     if not veh or veh == 0 then
-        return { success = false, error = 'Vehicle not available' }
+        return { success = false, error = L('cameras.vehicle_unavailable') }
     end
 
     -- A dashcam only works for vehicles configured in Config.Dashcam.Positions.
     local modelName = getDashcamModelName(veh)
     if not modelName then
-        return { success = false, error = 'No dashcam configured for this vehicle' }
+        return { success = false, error = L('cameras.no_vehicle_dashcam') }
     end
 
     local coords = GetEntityCoords(veh)
@@ -1317,7 +1317,7 @@ local function startDashcamView(viewerSrc, dashcamId)
 
     StartDashcamPushThread()
 
-    return { success = true, camera = { id = match.id, label = (match.officerName or 'Dashcam') .. ' Dashcam' } }
+    return { success = true, camera = { id = match.id, label = L('cameras.dashcam_label', { officer = match.officerName or L('cameras.dashcam') }) } }
 end
 
 RegisterNetEvent(resourceName .. ':server:deactivateDashcam', function(dashcamId)
@@ -1381,7 +1381,7 @@ ps.registerCallback(resourceName .. ':server:getCameras', function(source)
         for _, dc in ipairs(getActiveDashcams()) do
             cameraList[#cameraList + 1] = {
                 id = dc.id,
-                label = (dc.callsign and ('[' .. dc.callsign .. '] ') or '') .. (dc.officerName or 'Unit')
+                label = (dc.callsign and ('[' .. dc.callsign .. '] ') or '') .. (dc.officerName or L('cameras.unit'))
                     .. (dc.plate and (' - ' .. dc.plate) or ''),
                 type = 'Dashcam',
                 isOnline = true,
@@ -1398,7 +1398,7 @@ end)
 ps.registerCallback(resourceName .. ':server:viewCamera', function(source, cameraId)
     local src = source
     if not CheckAuth(src) then
-        return { success = false, error = "Unauthorized" }
+        return { success = false, error = L('cameras.unauthorized') }
     end
 
     -- Dashcams are virtual/live and routed separately. Since the id is just the
@@ -1411,7 +1411,7 @@ ps.registerCallback(resourceName .. ':server:viewCamera', function(source, camer
 
     local camera = spawnedCameras[cameraId]
     if not camera then
-        return { success = false, error = "Camera not found" }
+        return { success = false, error = L('cameras.not_found') }
     end
 
     local success = camera:activate(src)
@@ -1427,7 +1427,7 @@ ps.registerCallback(resourceName .. ':server:viewCamera', function(source, camer
             }
         }
     else
-        return { success = false, error = "Failed to activate camera" }
+        return { success = false, error = L('cameras.activation_failed') }
     end
 end)
 
@@ -1537,7 +1537,7 @@ end)
 -- (auto-creates the `command.<name>` ace), so no manual permission wiring is
 -- needed beyond mapping the group in server.cfg if you use a custom group.
 lib.addCommand(Config.CameraPlacer and Config.CameraPlacer.command or 'cameraplacer', {
-    help = 'Open the static camera placer (admin)',
+    help = L('client_cameras.command_help'),
     restricted = Config.CameraPlacer and Config.CameraPlacer.restricted or 'group.admin'
 }, function(source)
     TriggerClientEvent(resourceName .. ':client:openCameraPlacer', source)

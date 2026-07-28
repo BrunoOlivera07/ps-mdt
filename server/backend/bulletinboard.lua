@@ -42,9 +42,9 @@ end)
 
 ps.registerCallback(resourceName .. ':server:createBulletinPost', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('bulletins.unauthorized') } end
     if not CheckPermission(src, 'bulletin_post') then
-        return { success = false, error = 'No permission to create bulletin posts' }
+        return { success = false, error = L('bulletins.no_create') }
     end
 
     data = data or {}
@@ -55,11 +55,11 @@ ps.registerCallback(resourceName .. ':server:createBulletinPost', function(sourc
     local citizenId = ps.getIdentifier(src)
 
     local title = tostring(data.title or ''):gsub('^%s+', ''):gsub('%s+$', '')
-    if title == '' then return { success = false, error = 'Title is required' } end
+    if title == '' then return { success = false, error = L('bulletins.title_required') } end
 
     local VALID_PRIORITIES = { low = true, normal = true, high = true, urgent = true }
     if not VALID_PRIORITIES[data.priority] then
-        return { success = false, error = 'Invalid priority' }
+        return { success = false, error = L('bulletins.invalid_priority') }
     end
 
     -- Check category exists for job
@@ -68,14 +68,14 @@ ps.registerCallback(resourceName .. ':server:createBulletinPost', function(sourc
         { data.category, jobName }
     )
     if not catRow then
-        return { success = false, error = 'Invalid or unknown category' }
+        return { success = false, error = L('bulletins.invalid_category') }
     end
 
     local profile = MySQL.single.await(
         'SELECT fullname FROM mdt_profiles WHERE citizenid = ?',
         { citizenId }
     )
-    local author = (profile and profile.fullname) or tostring(GetPlayerName(src) or 'Unknown')
+    local author = (profile and profile.fullname) or tostring(GetPlayerName(src) or L('bulletins.unknown'))
 
     local canPin = CheckPermission(src, 'bulletin_pin')
     local pinned = (canPin and data.pinned == true) and 1 or 0
@@ -96,7 +96,7 @@ ps.registerCallback(resourceName .. ':server:createBulletinPost', function(sourc
         citizenId
     })
 
-    if not id then return { success = false, error = 'Database error' } end
+    if not id then return { success = false, error = L('bulletins.database_error') } end
     return { success = true, id = id }
 end)
 
@@ -104,17 +104,17 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateBulletinPost', function(source, postId, updates)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('bulletins.unauthorized') } end
 
     postId  = tonumber(postId)
     updates = updates or {}
-    if not postId then return { success = false, error = 'Invalid post id' } end
+    if not postId then return { success = false, error = L('bulletins.invalid_post_id') } end
 
     local existing = MySQL.single.await(
         'SELECT created_by, job FROM mdt_bulletin_posts WHERE id = ?',
         { postId }
     )
-    if not existing then return { success = false, error = 'Post not found' } end
+    if not existing then return { success = false, error = L('bulletins.post_not_found') } end
 
     local jobName      = ps.getJobName(src)
     local citizenId    = ps.getIdentifier(src)
@@ -122,10 +122,10 @@ ps.registerCallback(resourceName .. ':server:updateBulletinPost', function(sourc
     local isOwner      = existing.created_by == citizenId
 
     if not isOwner and not isSupervisor then
-        return { success = false, error = 'No permission to edit this post' }
+        return { success = false, error = L('bulletins.no_edit') }
     end
     if existing.job ~= jobName then
-        return { success = false, error = 'Post belongs to a different department' }
+        return { success = false, error = L('bulletins.wrong_department') }
     end
 
     local VALID_PRIORITIES = { low = true, normal = true, high = true, urgent = true }
@@ -164,7 +164,7 @@ ps.registerCallback(resourceName .. ':server:updateBulletinPost', function(sourc
         vals[#vals + 1] = updates.pinned and 1 or 0
     end
 
-    if #sets == 0 then return { success = false, error = 'No valid fields to update' } end
+    if #sets == 0 then return { success = false, error = L('bulletins.no_valid_fields') } end
 
     vals[#vals + 1] = postId
     MySQL.update.await(
@@ -178,16 +178,16 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteBulletinPost', function(source, postId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('bulletins.unauthorized') } end
 
     postId = tonumber(postId)
-    if not postId then return { success = false, error = 'Invalid post id' } end
+    if not postId then return { success = false, error = L('bulletins.invalid_post_id') } end
 
     local existing = MySQL.single.await(
         'SELECT created_by, job FROM mdt_bulletin_posts WHERE id = ?',
         { postId }
     )
-    if not existing then return { success = false, error = 'Post not found' } end
+    if not existing then return { success = false, error = L('bulletins.post_not_found') } end
 
     local jobName      = ps.getJobName(src)
     local citizenId    = ps.getIdentifier(src)
@@ -195,10 +195,10 @@ ps.registerCallback(resourceName .. ':server:deleteBulletinPost', function(sourc
     local isOwner      = existing.created_by == citizenId
 
     if not isOwner and not isSupervisor then
-        return { success = false, error = 'No permission to delete this post' }
+        return { success = false, error = L('bulletins.no_delete') }
     end
     if existing.job ~= jobName then
-        return { success = false, error = 'Post belongs to a different department' }
+        return { success = false, error = L('bulletins.wrong_department') }
     end
 
     MySQL.update.await('DELETE FROM mdt_bulletin_posts WHERE id = ?', { postId })
@@ -209,23 +209,23 @@ end)
 
 ps.registerCallback(resourceName .. ':server:toggleBulletinPin', function(source, postId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('bulletins.unauthorized') } end
     if not CheckPermission(src, 'bulletin_pin') then
-        return { success = false, error = 'No permission to pin posts' }
+        return { success = false, error = L('bulletins.no_pin') }
     end
 
     postId = tonumber(postId)
-    if not postId then return { success = false, error = 'Invalid post id' } end
+    if not postId then return { success = false, error = L('bulletins.invalid_post_id') } end
 
     local existing = MySQL.single.await(
         'SELECT pinned, job FROM mdt_bulletin_posts WHERE id = ?',
         { postId }
     )
-    if not existing then return { success = false, error = 'Post not found' } end
+    if not existing then return { success = false, error = L('bulletins.post_not_found') } end
 
     local jobName = ps.getJobName(src)
     if existing.job ~= jobName then
-        return { success = false, error = 'Post belongs to a different department' }
+        return { success = false, error = L('bulletins.wrong_department') }
     end
 
     local isPinned  = existing.pinned == 1 or existing.pinned == '1' or existing.pinned == true
@@ -263,10 +263,10 @@ local function ensureDefaultCategories(jobName)
     if (count or 0) > 0 then return end
 
     local defaults = {
-        { value = 'announcement', label = 'Announcements', icon = 'campaign',     color = '#3B82F6', sort_order = 1 },
-        { value = 'operations',   label = 'Operations',    icon = 'local_police', color = '#8B5CF6', sort_order = 2 },
-        { value = 'training',     label = 'Training',      icon = 'school',       color = '#10B981', sort_order = 3 },
-        { value = 'general',      label = 'General',       icon = 'forum',        color = '#6B7280', sort_order = 4 },
+        { value = 'announcement', label = L('bulletins.categories.announcements'), icon = 'campaign',     color = '#3B82F6', sort_order = 1 },
+        { value = 'operations',   label = L('bulletins.categories.operations'),    icon = 'local_police', color = '#8B5CF6', sort_order = 2 },
+        { value = 'training',     label = L('bulletins.categories.training'),      icon = 'school',       color = '#10B981', sort_order = 3 },
+        { value = 'general',      label = L('bulletins.categories.general'),       icon = 'forum',        color = '#6B7280', sort_order = 4 },
     }
 
     for _, cat in ipairs(defaults) do
@@ -309,20 +309,20 @@ end)
 
 ps.registerCallback(resourceName .. ':server:addBulletinCategory', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('bulletins.unauthorized') } end
     if not CheckPermission(src, 'bulletin_post') then
-        return { success = false, error = 'No permission to manage categories' }
+        return { success = false, error = L('bulletins.no_manage_categories') }
     end
 
     data = data or {}
     local jobName = ps.getJobName(src)
 
     local label = tostring(data.label or ''):gsub('^%s+', ''):gsub('%s+$', '')
-    if label == '' then return { success = false, error = 'Label is required' } end
+    if label == '' then return { success = false, error = L('bulletins.label_required') } end
 
     -- Build value from label if not provided
     local value = (data.value and data.value ~= '') and slugify(data.value) or slugify(label)
-    if value == '' then return { success = false, error = 'Could not generate a valid category key' } end
+    if value == '' then return { success = false, error = L('bulletins.invalid_category_key') } end
 
     -- Check for duplicate
     local existing = MySQL.scalar.await(
@@ -330,7 +330,7 @@ ps.registerCallback(resourceName .. ':server:addBulletinCategory', function(sour
         { jobName, value }
     )
     if (existing or 0) > 0 then
-        return { success = false, error = 'A category with that key already exists' }
+        return { success = false, error = L('bulletins.category_exists') }
     end
 
     -- Max 20 categories per job
@@ -339,7 +339,7 @@ ps.registerCallback(resourceName .. ':server:addBulletinCategory', function(sour
         { jobName }
     )
     if (total or 0) >= 20 then
-        return { success = false, error = 'Maximum of 20 categories per department reached' }
+        return { success = false, error = L('bulletins.category_limit') }
     end
 
     local nextOrder = MySQL.scalar.await(
@@ -359,7 +359,7 @@ ps.registerCallback(resourceName .. ':server:addBulletinCategory', function(sour
         nextOrder
     })
 
-    if not id then return { success = false, error = 'Database error' } end
+    if not id then return { success = false, error = L('bulletins.database_error') } end
     return { success = true, value = value, id = id }
 end)
 
@@ -367,9 +367,9 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateBulletinCategory', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('bulletins.unauthorized') } end
     if not CheckPermission(src, 'bulletin_post') then
-        return { success = false, error = 'No permission to manage categories' }
+        return { success = false, error = L('bulletins.no_manage_categories') }
     end
 
     data = data or {}
@@ -379,7 +379,7 @@ ps.registerCallback(resourceName .. ':server:updateBulletinCategory', function(s
         'SELECT id, is_default FROM mdt_bulletin_categories WHERE job = ? AND value = ?',
         { jobName, data.value }
     )
-    if not existing then return { success = false, error = 'Category not found' } end
+    if not existing then return { success = false, error = L('bulletins.category_not_found') } end
 
     local sets = {}
     local vals = {}
@@ -404,7 +404,7 @@ ps.registerCallback(resourceName .. ':server:updateBulletinCategory', function(s
         end
     end
 
-    if #sets == 0 then return { success = false, error = 'No valid fields to update' } end
+    if #sets == 0 then return { success = false, error = L('bulletins.no_valid_fields') } end
 
     vals[#vals + 1] = jobName
     vals[#vals + 1] = data.value
@@ -421,22 +421,22 @@ end)
 
 ps.registerCallback(resourceName .. ':server:removeBulletinCategory', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('bulletins.unauthorized') } end
     if not CheckPermission(src, 'bulletin_post') then
-        return { success = false, error = 'No permission to manage categories' }
+        return { success = false, error = L('bulletins.no_manage_categories') }
     end
 
     -- Accept either a table { value = '...' } or a plain string (backwards compat)
     local value = type(data) == 'table' and tostring(data.value or '') or tostring(data or '')
     local jobName = ps.getJobName(src)
 
-    if value == '' then return { success = false, error = 'Missing category value' } end
+    if value == '' then return { success = false, error = L('bulletins.missing_category') } end
 
     local existing = MySQL.single.await(
         'SELECT id, is_default FROM mdt_bulletin_categories WHERE job = ? AND value = ?',
         { jobName, value }
     )
-    if not existing then return { success = false, error = 'Category not found' } end
+    if not existing then return { success = false, error = L('bulletins.category_not_found') } end
 
     -- Count remaining categories — keep at least 1
     local total = MySQL.scalar.await(
@@ -444,7 +444,7 @@ ps.registerCallback(resourceName .. ':server:removeBulletinCategory', function(s
         { jobName }
     )
     if (total or 0) <= 1 then
-        return { success = false, error = 'Cannot remove the last category' }
+        return { success = false, error = L('bulletins.last_category') }
     end
 
     -- Reassign posts in this category to 'general' (or the first remaining category)
@@ -470,9 +470,9 @@ end)
 
 ps.registerCallback(resourceName .. ':server:reorderBulletinCategories', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('bulletins.unauthorized') } end
     if not CheckPermission(src, 'bulletin_post') then
-        return { success = false, error = 'No permission to manage categories' }
+        return { success = false, error = L('bulletins.no_manage_categories') }
     end
 
     local jobName = ps.getJobName(src)
@@ -484,7 +484,7 @@ ps.registerCallback(resourceName .. ':server:reorderBulletinCategories', functio
     end
 
     if type(order) ~= 'table' then
-        return { success = false, error = 'Invalid order data' }
+        return { success = false, error = L('bulletins.invalid_order') }
     end
 
     for i, item in ipairs(order) do

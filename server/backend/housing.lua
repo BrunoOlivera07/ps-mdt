@@ -50,7 +50,7 @@ local function qq(name)
 end
 
 local function disable(reason)
-    print(('[ps-mdt] [housing] %s — the properties feature is disabled. Check Config.Housing.'):format(reason))
+    print('[ps-mdt] [housing] ' .. L('housing.disabled', { reason = reason }))
     return nil
 end
 
@@ -79,22 +79,22 @@ local function getSchema()
         end
 
         if system == 'auto' then
-            return disable('No supported housing resource is currently running')
+            return disable(L('housing.no_resource'))
         end
     end
 
     local preset = cfg.Presets and cfg.Presets[system]
     if type(preset) ~= 'table' then
-        return disable(('Unknown housing system "%s"'):format(tostring(system)))
+        return disable(L('housing.unknown_system', { system = tostring(system) }))
     end
 
     if not validIdent(preset.table) then
-        return disable('The selected housing preset has a missing or invalid "table"')
+        return disable(L('housing.invalid_table'))
     end
 
     local cols = preset.columns
     if type(cols) ~= 'table' or not validIdent(cols.owner) then
-        return disable('The selected housing preset has a missing or invalid "columns.owner"')
+        return disable(L('housing.invalid_owner'))
     end
 
     -- Optional join (for two-table systems such as qb-houses).
@@ -111,12 +111,12 @@ local function getSchema()
             end
             join = { table = j.table, on = j.on, columns = jcols }
         else
-            print('[ps-mdt] [housing] Invalid "join" definition in housing preset — ignoring join.')
+            print('[ps-mdt] [housing] ' .. L('housing.invalid_join'))
         end
     end
 
     resolvedSchema = { table = preset.table, columns = cols, join = join }
-    print(('[ps-mdt] [housing] Using "%s" preset (%s).'):format(system, tostring(preset.resource or preset.table)))
+    print('[ps-mdt] [housing] ' .. L('housing.using_preset', { system = system, resource = tostring(preset.resource or preset.table) }))
     return resolvedSchema
 end
 
@@ -151,7 +151,7 @@ end
 local function safe(query, params)
     local ok, rows = pcall(MySQL.query.await, query, params)
     if not ok then
-        if ps and ps.warn then ps.warn('[housing] Query failed: ' .. tostring(rows)) end
+        if ps and ps.warn then ps.warn('[housing] ' .. L('housing.query_failed', { error = tostring(rows) })) end
         return nil
     end
     return rows
@@ -228,7 +228,7 @@ function Housing.GetById(propertyId)
 
     local ok, row = pcall(MySQL.single.await, sql, { propertyId })
     if not ok then
-        if ps and ps.warn then ps.warn('[housing] GetById failed: ' .. tostring(row)) end
+        if ps and ps.warn then ps.warn('[housing] ' .. L('housing.get_by_id_failed', { error = tostring(row) })) end
         return nil
     end
     return row

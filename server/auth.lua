@@ -164,11 +164,11 @@ local function SendDutyLog(officerName, citizenid, action, jobName)
     FiveManageQueueLog({
         action = action == 'login' and 'mdt_clock_in' or 'mdt_clock_out',
         category = 'duty',
-        message = (action == 'login' and 'Clock In' or 'Clock Out') .. ': ' .. (officerName or 'Unknown'),
+        message = (action == 'login' and L('auth.clock_in') or L('auth.clock_out')) .. ': ' .. (officerName or L('auth.unknown')),
         metadata = {
-            officer = officerName or 'Unknown',
+            officer = officerName or L('auth.unknown'),
             citizenid = citizenid or 'N/A',
-            department = jobName or 'Unknown',
+            department = jobName or L('auth.unknown'),
             time = os.date('%Y-%m-%d %H:%M:%S')
         }
     })
@@ -181,9 +181,9 @@ RegisterNetEvent('ps-mdt:server:trackLogin', function()
         ps.auditLog(src, 'mdt_login', 'profile', ps.getIdentifier(src), {})
     end
     -- FiveManage duty log
-    local officerName = ps.getPlayerName(src) or 'Unknown'
+    local officerName = ps.getPlayerName(src) or L('auth.unknown')
     local citizenid = ps.getIdentifier(src) or 'N/A'
-    local jobName = ps.getJobName(src) or 'Unknown'
+    local jobName = ps.getJobName(src) or L('auth.unknown')
     SendDutyLog(officerName, citizenid, 'login', jobName)
 end)
 
@@ -194,9 +194,9 @@ RegisterNetEvent('ps-mdt:server:trackLogout', function()
         ps.auditLog(src, 'mdt_logout', 'profile', ps.getIdentifier(src), {})
     end
     -- FiveManage duty log
-    local officerName = ps.getPlayerName(src) or 'Unknown'
+    local officerName = ps.getPlayerName(src) or L('auth.unknown')
     local citizenid = ps.getIdentifier(src) or 'N/A'
-    local jobName = ps.getJobName(src) or 'Unknown'
+    local jobName = ps.getJobName(src) or L('auth.unknown')
     SendDutyLog(officerName, citizenid, 'logout', jobName)
 end)
 

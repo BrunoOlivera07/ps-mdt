@@ -57,7 +57,7 @@ end)
 RegisterNUICallback('deleteFTODor', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     local dorId = data and (data.id or data.dor_id) or nil
-    if not dorId then cb({ success = false, error = 'Missing DOR id' }) return end
+    if not dorId then cb({ success = false, error = L('client.missing_dor') }) return end
     local result = ps.callback(resourceName .. ':server:deleteFTODor', dorId)
     cb(result or { success = false })
 end)
@@ -90,11 +90,11 @@ end)
 
 -- FTO phase progression + status (trainer tool)
 RegisterNUICallback('advanceFTOPhase', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     cb(ps.callback(resourceName .. ':server:advanceFTOPhase', data or {}) or { success = false })
 end)
 
 RegisterNUICallback('setFTOStatus', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     cb(ps.callback(resourceName .. ':server:setFTOStatus', data or {}) or { success = false })
 end)

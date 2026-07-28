@@ -5,9 +5,9 @@ if not ok then QBCore = nil end
 -- Send to Jail
 ps.registerCallback(resourceName .. ':server:sendToJail', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('sentencing.unauthorized') } end
     if not CheckPermission(src, 'charges_edit') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('sentencing.insufficient_permissions') }
     end
 
     payload = payload or {}
@@ -15,22 +15,22 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
     local sentence = tonumber(payload.sentence)
 
     if not citizenId or not sentence or sentence <= 0 then
-        return { success = false, message = 'Missing citizen ID or invalid sentence' }
+        return { success = false, message = L('sentencing.invalid_sentence') }
     end
 
     local maxSentence = (Config and Config.Fines and Config.Fines.MaxSentence) or 999
     if sentence > maxSentence then
-        return { success = false, message = 'Sentence exceeds maximum of ' .. maxSentence .. ' months' }
+        return { success = false, message = L('sentencing.above_maximum', { months = maxSentence }) }
     end
 
     local targetPlayer = ps.getPlayerByIdentifier(citizenId)
     if not targetPlayer then
-        return { success = false, message = 'Player must be online to send to jail' }
+        return { success = false, message = L('sentencing.player_must_be_online') }
     end
 
     local targetSource = targetPlayer.source or (targetPlayer.PlayerData and targetPlayer.PlayerData.source)
     if not targetSource then
-        return { success = false, message = 'Could not resolve player source' }
+        return { success = false, message = L('sentencing.source_unavailable') }
     end
 
     local sentencing = (Config and Config.Sentencing) or {}
@@ -44,7 +44,7 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
 
     if usePickle then
         if GetResourceState(pickleResource) ~= 'started' then
-            return { success = false, message = 'pickle_prisons is not running' }
+            return { success = false, message = L('sentencing.pickle_not_running') }
         end
 
         local prisonIndex = tostring(sentencing.picklePrison or 'default')
@@ -53,7 +53,7 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
         end)
         if not exportOk then
             ps.warn(('[Sentencing] pickle_prisons JailPlayer failed: %s'):format(tostring(exportErr)))
-            return { success = false, message = 'Failed to send player to pickle_prisons' }
+            return { success = false, message = L('sentencing.pickle_failed') }
         end
 
         if ps.auditLog then
@@ -64,7 +64,7 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
             })
         end
 
-        return { success = true, message = 'Sent to jail for ' .. sentence .. ' minutes' }
+        return { success = true, message = L('sentencing.sent_minutes', { minutes = sentence }) }
     end
 
     local usePPolice = jailSystem == 'p_policejob'
@@ -72,7 +72,7 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
 
     if usePPolice then
         if GetResourceState(pPoliceResource) ~= 'started' then
-            return { success = false, message = 'p_policejob is not running' }
+            return { success = false, message = L('sentencing.policejob_not_running') }
         end
 
         local exportOk, exportResult = pcall(function()
@@ -98,12 +98,12 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
             })
         end
 
-        return { success = true, message = 'Jail request sent for ' .. sentence .. ' minutes' }
+        return { success = true, message = L('sentencing.request_sent', { minutes = sentence }) }
     end
 
     local OtherPlayer = QBCore and QBCore.Functions.GetPlayer(targetSource)
     if not OtherPlayer then
-        return { success = false, message = 'Could not find target player' }
+        return { success = false, message = L('sentencing.target_not_found') }
     end
 
     local currentDate = os.date('*t')
@@ -117,7 +117,7 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
         ['date'] = currentDate
     })
     TriggerClientEvent('police:client:SendToJail', targetSource, sentence)
-    ps.notify(src, 'Sent to jail for ' .. sentence .. ' months', 'success')
+    ps.notify(src, L('sentencing.sent_months', { months = sentence }), 'success')
 
     if ps.auditLog then
         ps.auditLog(src, 'sent_to_jail', 'citizen', citizenId, {
@@ -125,14 +125,14 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
         })
     end
 
-    return { success = true, message = 'Sent to jail for ' .. sentence .. ' months' }
+    return { success = true, message = L('sentencing.sent_months', { months = sentence }) }
 end)
 
 ps.registerCallback(resourceName .. ':server:giveCitation', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('sentencing.unauthorized') } end
     if not CheckPermission(src, 'charges_edit') then
-        return { success = false, message = 'Insufficient permissions' }
+        return { success = false, message = L('sentencing.insufficient_permissions') }
     end
 
     payload = payload or {}
@@ -141,33 +141,33 @@ ps.registerCallback(resourceName .. ':server:giveCitation', function(source, pay
     local reportId = payload.reportId
 
     if not citizenId then
-        return { success = false, message = 'Missing citizen ID' }
+        return { success = false, message = L('sentencing.missing_citizen') }
     end
     if not fine or fine ~= fine or fine <= 0 then
-        return { success = false, message = 'Invalid fine amount' }
+        return { success = false, message = L('sentencing.invalid_fine') }
     end
     fine = math.floor(fine)
 
     local Player = ps.getPlayerByIdentifier(citizenId)
     if not Player then
-        return { success = false, message = 'Player must be online to issue a fine' }
+        return { success = false, message = L('sentencing.online_for_fine') }
     end
 
     local playerSrc = Player.source or (Player.PlayerData and Player.PlayerData.source)
     if not playerSrc then
-        return { success = false, message = 'Could not resolve player source' }
+        return { success = false, message = L('sentencing.source_unavailable') }
     end
 
     local removed = ps.removeMoney(playerSrc, 'bank', fine, 'mdt-fine')
     if not removed then
-        return { success = false, message = 'Could not deduct fine (insufficient funds)' }
+        return { success = false, message = L('sentencing.fine_deduction_failed') }
     end
 
-    ps.notify(playerSrc, '$' .. fine .. ' fine deducted from your bank account', 'error')
-    ps.notify(src, '$' .. fine .. ' fine issued successfully', 'success')
+    ps.notify(playerSrc, L('sentencing.fine_deducted', { amount = fine }), 'error')
+    ps.notify(src, L('sentencing.fine_issued_success', { amount = fine }), 'success')
 
     if ps.auditLog then
-        local officerName = ps.getPlayerName(src) or 'Unknown Officer'
+        local officerName = ps.getPlayerName(src) or L('sentencing.unknown_officer')
         ps.auditLog(src, 'fine_issued', 'citizen', citizenId, {
             fine = fine,
             reportId = reportId,
@@ -175,5 +175,5 @@ ps.registerCallback(resourceName .. ':server:giveCitation', function(source, pay
         })
     end
 
-    return { success = true, message = '$' .. fine .. ' fine issued' }
+    return { success = true, message = L('sentencing.fine_issued', { amount = fine }) }
 end)

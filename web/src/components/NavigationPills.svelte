@@ -15,7 +15,7 @@
 
 	function isTabHidden(tabName: string): boolean {
 		if (!authService) return false;
-		const key = `tab_hidden_${tabName.toLowerCase()}`;
+		const key = `tab_hidden_${tabName.toLowerCase().replace(/\s+/g, "_")}`;
 		return authService.hasRawPermission(key);
 	}
 

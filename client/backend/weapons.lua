@@ -43,33 +43,33 @@ end)
 -- Save/Edit Weapon Info
 RegisterNUICallback('saveWeaponInfo', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if type(data) ~= 'table' or not data.serial then
-        cb({ success = false, message = 'Missing serial number' })
+        cb({ success = false, message = L('client.missing_serial') })
         return
     end
 
     local result = ps.callback(resourceName .. ':server:saveWeaponInfo', data)
-    cb(result or { success = false, message = 'Failed to save weapon info' })
+    cb(result or { success = false, message = L('client.save_weapon_failed') })
 end)
 
 -- Delete Weapon Record
 RegisterNUICallback('deleteWeapon', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if type(data) ~= 'table' or (not data.id and not data.serial) then
-        cb({ success = false, message = 'Missing weapon ID or serial' })
+        cb({ success = false, message = L('client.missing_weapon_serial') })
         return
     end
 
     local result = ps.callback(resourceName .. ':server:deleteWeapon', data)
-    cb(result or { success = false, message = 'Failed to delete weapon' })
+    cb(result or { success = false, message = L('client.delete_weapon_failed') })
 end)
 
 -- Weapon Self-Register (3rd Eye integration)
@@ -87,6 +87,6 @@ RegisterNetEvent(resourceName .. ':client:selfregister', function()
             )
         end
     else
-        ps.notify('No weapons found to register', 'error')
+        ps.notify(L('client.no_weapons'), 'error')
     end
 end)

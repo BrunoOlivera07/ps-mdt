@@ -332,7 +332,7 @@
                 </div>
 				<div class="form-group form-full">
 					<span class="field-label">{t("pages.weapons.serialNumber")}</span>
-					<input class="form-input" bind:value={addWeaponForm.serial} placeholder="e.g. AB-123456" />
+					<input class="form-input" bind:value={addWeaponForm.serial} placeholder={t("pages.weapons.serialPlaceholder")} />
 					<span class="add-weapon-description" class:visible={addWeaponForm.serial.trim().length > 0}>
 						{t("pages.weapons.existingSerialHint")}
 					</span>

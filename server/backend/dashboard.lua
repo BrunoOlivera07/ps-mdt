@@ -17,8 +17,8 @@ end
 
 local function computeJobData(src)
     return {
-        rank    = ps.getJobGradeName(src) or 'Officer',
-        payRate = '$' .. (ps.getJobGradePay(src) or 300) .. '/hr',
+        rank    = ps.getJobGradeName(src) or L('dashboard.officer'),
+        payRate = L('dashboard.hourly_rate', { amount = ps.getJobGradePay(src) or 300 }),
     }
 end
 
@@ -76,7 +76,9 @@ local function computeTimeStatistics(src)
     for i = 6, 0, -1 do
         local dayTs  = os.time() - (i * 24 * 60 * 60)
         local dayKey = os.date('%Y-%m-%d', dayTs)
-        local label  = os.date('%a', dayTs)
+        local weekday = tonumber(os.date('%w', dayTs)) + 1
+        local localeData = MDTLocales[Config.Locale] or MDTLocales['en-US']
+        local label = localeData.dashboard.weekdays[weekday]
         result[#result + 1] = {
             day   = label,
             hours = math.floor(((secondsByDay[dayKey] or 0) / 3600) * 10) / 10,
@@ -97,7 +99,7 @@ end)
 local function computeBulletins()
     local rows = MySQL.query.await('SELECT id, content FROM mdt_bulletins ORDER BY id DESC')
     if not rows or #rows == 0 then
-        return { { content = 'No bulletins found..' } }
+        return { { content = L('dashboard.no_bulletins') } }
     end
     return rows
 end
@@ -112,17 +114,17 @@ end)
 ps.registerCallback(resourceName .. ':server:createBulletin', function(source, payload)
     local src = source
     assert(src, 'Player ID cannot be nil')
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('dashboard.unauthorized') } end
 
     payload = payload or {}
     local content = payload.content
     if not content or content == '' then
-        return { success = false, message = 'Bulletin content is required' }
+        return { success = false, message = L('dashboard.bulletin_required') }
     end
 
     local inserted = MySQL.insert.await('INSERT INTO mdt_bulletins (content) VALUES (?)', { content })
     if not inserted then
-        return { success = false, message = 'Failed to create bulletin' }
+        return { success = false, message = L('dashboard.bulletin_create_failed') }
     end
 
     Cache.invalidate('dashboard:bulletins')
@@ -132,12 +134,12 @@ end)
 ps.registerCallback(resourceName .. ':server:deleteBulletin', function(source, payload)
     local src = source
     assert(src, 'Player ID cannot be nil')
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('dashboard.unauthorized') } end
 
     payload = payload or {}
     local id = tonumber(payload.id)
     if not id then
-        return { success = false, message = 'Invalid bulletin ID' }
+        return { success = false, message = L('dashboard.invalid_bulletin') }
     end
 
     MySQL.query.await('DELETE FROM mdt_bulletins WHERE id = ?', { id })
@@ -186,7 +188,7 @@ local function computeActiveBolos(src)
         result[#result + 1] = {
             id       = v.id,
             reportId = v.reportId and tostring(v.reportId) or 'N/A',
-            name     = v.subject_name or ps.getPlayerNameByIdentifier(v.subject_id) or 'Unknown',
+            name     = v.subject_name or ps.getPlayerNameByIdentifier(v.subject_id) or L('dashboard.unknown'),
             type     = v.type,
             notes    = v.notes or '',
             status   = v.status,
@@ -232,9 +234,12 @@ local function sanitizeDispatch(call)
         heading     = call.heading,
         speed       = call.speed,
         callSign    = call.callSign,
-        description = call.description,
+        description = call.description or call.information,
+        information = call.information,
         camId       = call.camId,
         firstColor  = call.firstColor,
+        manual      = call.manual == true,
+        mdtCreated  = call.mdtCreated == true,
     }
     if call.coords then
         if type(call.coords) == 'vector3' or type(call.coords) == 'vector4' then
@@ -449,7 +454,7 @@ local function resolveProvider()
 
     if not dispatchWarned then
         dispatchWarned = true
-        print('^3[ps-mdt]^0 No supported dispatch resource detected (ps-dispatch, qs-dispatch or cd_dispatch). Dispatch calls will not appear on the map.')
+        print('^3[ps-mdt]^0 ' .. L('dashboard.dispatch_missing'))
     end
     return nil
 end
@@ -460,6 +465,35 @@ local function fetchDispatchCalls()
     if provider == 'cd' then return fetchCdDispatch() end
     if provider == 'ps' then return fetchPsDispatch() end
     return {}
+end
+
+local function psDispatchSyncEnabled()
+    return Config and Config.Dispatch and Config.Dispatch.SyncWithPsDispatch ~= false
+end
+
+local function createPsDispatchCall(call)
+    if not psDispatchSyncEnabled() or resolveProvider() ~= 'ps' then return nil end
+    local ok, id = pcall(function()
+        return exports['ps-dispatch']:CreateDispatchCall(call)
+    end)
+    if not ok or id == nil then return nil end
+    return id
+end
+
+local function updatePsDispatchCall(id, changes)
+    if not psDispatchSyncEnabled() or resolveProvider() ~= 'ps' then return false end
+    local ok, updated = pcall(function()
+        return exports['ps-dispatch']:UpdateDispatchCall(id, changes)
+    end)
+    return ok and updated == true
+end
+
+local function removePsDispatchCall(id)
+    if not psDispatchSyncEnabled() or resolveProvider() ~= 'ps' then return false end
+    local ok, removed = pcall(function()
+        return exports['ps-dispatch']:RemoveDispatchCall(id)
+    end)
+    return ok and removed == true
 end
 
 -- The heavy part of building the dispatch list (provider fetch, manual-call
@@ -480,6 +514,11 @@ local function invalidateDispatchCache()
     dispatchListCache.ts = 0
     dispatchListCache.list = nil
 end
+
+RegisterNetEvent(resourceName .. ':server:dispatchProviderChanged', function()
+    if not CheckAuth(source) then return end
+    invalidateDispatchCache()
+end)
 
 local function buildSanitizedDispatches()
     local now = GetGameTimer()
@@ -653,11 +692,11 @@ local function describeCall(id)
     id = tostring(id)
     local manual = ManualDispatches[id]
     if manual then
-        local code = manual.code or 'Call'
+        local code = manual.code or L('dashboard.call')
         local msg  = manual.message and manual.message ~= '' and manual.message or nil
         return msg and ('%s (%s)'):format(code, msg) or code
     end
-    return ('call #%s'):format(id)
+    return L('dashboard.call_id', { id = id })
 end
 
 -- Dispatcher: globally dismiss a call — it disappears from every MDT.
@@ -665,20 +704,25 @@ ps.registerCallback(resourceName .. ':server:dismissDispatch', function(source, 
     local src = source
     if not CheckAuth(src) then return { success = false } end
     if not CheckPermission(src, 'dispatch_assign') then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('dashboard.no_permission') }
     end
     data = data or {}
     local id = data.dispatch_id and tostring(data.dispatch_id) or nil
-    if not id then return { success = false, error = 'Invalid request' } end
+    if not id then return { success = false, error = L('dashboard.invalid_request') } end
 
     local label = describeCall(id)
-    DismissedDispatches[id] = os.time()
+    local removedFromProvider = removePsDispatchCall(id)
+    if removedFromProvider then
+        DismissedDispatches[id] = nil
+    else
+        DismissedDispatches[id] = os.time()
+    end
     DispatchNotes[id] = nil -- note dies with the call
     ManualDispatches[id] = nil -- MDT-created calls are removed outright
     if ps.auditLog then
         ps.auditLog(src, 'dispatch_dismiss', 'dispatch', id, {
             dispatch_id  = id,
-            action_label = ('Dismissed %s for all units'):format(label),
+            action_label = L('dashboard.dismissed', { call = label }),
         })
     end
     -- Nudge every open MDT to refresh its (now filtered) dispatch list.
@@ -728,15 +772,15 @@ ps.registerCallback(resourceName .. ':server:setDispatchNote', function(source, 
     local src = source
     if not CheckAuth(src) then return { success = false } end
     if not CheckPermission(src, 'dispatch_notes') then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('dashboard.no_permission') }
     end
 
     data = data or {}
     local id = data.dispatch_id and tostring(data.dispatch_id) or nil
     local text = type(data.text) == 'string' and data.text or ''
     text = text:gsub('^%s+', ''):gsub('%s+$', '')
-    if not id then return { success = false, error = 'Invalid request' } end
-    if text == '' then return { success = false, error = 'Note cannot be empty' } end
+    if not id then return { success = false, error = L('dashboard.invalid_request') } end
+    if text == '' then return { success = false, error = L('dashboard.note_empty') } end
     if #text > NOTE_MAX then text = text:sub(1, NOTE_MAX) end
 
     local existed = DispatchNotes[id] ~= nil
@@ -749,6 +793,7 @@ ps.registerCallback(resourceName .. ':server:setDispatchNote', function(source, 
     if not okName then author = nil end
     if author then author = author:gsub('^%s+', ''):gsub('%s+$', '') end
     DispatchNotes[id] = { text = text, author = (author ~= '' and author) or nil, updatedAt = os.time() }
+    updatePsDispatchCall(id, { information = text })
 
     if ps.auditLog then
         local label = describeCall(id)
@@ -756,8 +801,8 @@ ps.registerCallback(resourceName .. ':server:setDispatchNote', function(source, 
             dispatch_id  = id,
             note         = text,
             action_label = existed
-                and ('Edited the note on %s'):format(label)
-                or  ('Added a note to %s'):format(label),
+                and L('dashboard.note_edited', { call = label })
+                or  L('dashboard.note_added', { call = label }),
         })
     end
 
@@ -779,18 +824,19 @@ ps.registerCallback(resourceName .. ':server:deleteDispatchNote', function(sourc
     local src = source
     if not CheckAuth(src) then return { success = false } end
     if not CheckPermission(src, 'dispatch_notes') then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('dashboard.no_permission') }
     end
     data = data or {}
     local id = data.dispatch_id and tostring(data.dispatch_id) or nil
-    if not id then return { success = false, error = 'Invalid request' } end
+    if not id then return { success = false, error = L('dashboard.invalid_request') } end
 
     local label = describeCall(id)
     DispatchNotes[id] = nil
+    updatePsDispatchCall(id, { information = '' })
     if ps.auditLog then
         ps.auditLog(src, 'dispatch_note_delete', 'dispatch', id, {
             dispatch_id  = id,
-            action_label = ('Removed the note from %s'):format(label),
+            action_label = L('dashboard.note_removed', { call = label }),
         })
     end
     invalidateDispatchCache()
@@ -806,7 +852,7 @@ ps.registerCallback(resourceName .. ':server:selfDispatchAttach', function(sourc
     data = data or {}
     local id = data.dispatch_id and tostring(data.dispatch_id) or nil
     local call = id and ManualDispatches[id] or nil
-    if not call then return { success = false, error = 'Unknown call' } end
+    if not call then return { success = false, error = L('dashboard.unknown_call') } end
 
     local cid = ps.getIdentifier and ps.getIdentifier(src) or nil
     if not cid then return { success = false } end
@@ -848,7 +894,7 @@ ps.registerCallback(resourceName .. ':server:createManualDispatch', function(sou
     local src = source
     if not CheckAuth(src) then return { success = false } end
     if not CheckPermission(src, 'dispatch_assign') then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('dashboard.no_permission') }
     end
 
     data = data or {}
@@ -857,9 +903,9 @@ ps.registerCallback(resourceName .. ':server:createManualDispatch', function(sou
     local coords   = type(data.coords) == 'table' and data.coords or nil
     title = title:gsub('^%s+', ''):gsub('%s+$', '')
 
-    if code == '' then return { success = false, error = 'A 10-code is required' } end
+    if code == '' then return { success = false, error = L('dashboard.code_required') } end
     if not coords or not tonumber(coords.x) or not tonumber(coords.y) then
-        return { success = false, error = 'Pick a location on the map' }
+        return { success = false, error = L('dashboard.pick_location') }
     end
 
     -- Title falls back to the code's label (sent by the client from config).
@@ -885,29 +931,62 @@ ps.registerCallback(resourceName .. ':server:createManualDispatch', function(sou
     end
     local priority = derivePriority(code .. ' ' .. title)
 
-    manualSeq = manualSeq + 1
-    local id = 'mdt-' .. os.time() .. '-' .. manualSeq
-
     local jobs = nil
     if type(data.jobs) == 'table' and #data.jobs > 0 then
         jobs = data.jobs
     end
+    local note = type(data.note) == 'string' and data.note:gsub('^%s+', ''):gsub('%s+$', '') or ''
+    if #note > NOTE_MAX then note = note:sub(1, NOTE_MAX) end
+    if not jobs then jobs = { getEffectiveJobType(src) } end
 
-    ManualDispatches[id] = {
-        id       = id,
-        code     = code,
-        message  = title,
-        priority = priority,
-        time     = os.time() * 1000, -- ms, matches the ticker's age display
-        coords   = { x = tonumber(coords.x), y = tonumber(coords.y), z = tonumber(coords.z) or 0.0 },
-        street   = type(data.street) == 'string' and data.street or nil,
-        units    = {},
-        jobs     = jobs,
-        manual   = true,
+    local alertConfig = (Config and Config.Dispatch and Config.Dispatch.PsAlert) or {}
+    local callData = {
+        code        = code,
+        codeName    = 'mdt_manual',
+        message     = title,
+        information = note ~= '' and note or nil,
+        priority    = priority,
+        coords      = { x = tonumber(coords.x), y = tonumber(coords.y), z = tonumber(coords.z) or 0.0 },
+        street      = type(data.street) == 'string' and data.street or nil,
+        jobs        = jobs,
+        mdtCreated  = true,
+        radius      = 0,
+        sprite      = tonumber(alertConfig.Sprite) or 280,
+        color       = tonumber(alertConfig.Color) or 3,
+        scale       = tonumber(alertConfig.Scale) or 0.8,
+        length      = tonumber(alertConfig.Length) or 2,
+        sound       = 'Lose_1st',
+        sound2      = 'GTAO_FM_Events_Soundset',
+        offset      = false,
+        flash       = true,
+    }
+    callData.alert = {
+        radius = callData.radius,
+        sprite = callData.sprite,
+        color = callData.color,
+        scale = callData.scale,
+        length = callData.length,
+        sound = callData.sound,
+        sound2 = callData.sound2,
+        offset = callData.offset,
+        flash = callData.flash,
     }
 
+    local providerId = createPsDispatchCall(callData)
+    local id
+    if providerId ~= nil then
+        id = tostring(providerId)
+    else
+        manualSeq = manualSeq + 1
+        id = 'mdt-' .. os.time() .. '-' .. manualSeq
+        callData.id = id
+        callData.time = os.time() * 1000
+        callData.units = {}
+        callData.manual = true
+        ManualDispatches[id] = callData
+    end
+
     -- Optional note straight from the modal.
-    local note = type(data.note) == 'string' and data.note:gsub('^%s+', ''):gsub('%s+$', '') or ''
     if note ~= '' then
         local okName, author = pcall(function()
             if ps.getCharInfo then
@@ -917,17 +996,17 @@ ps.registerCallback(resourceName .. ':server:createManualDispatch', function(sou
         end)
         if not okName then author = nil end
         if author then author = author:gsub('^%s+', ''):gsub('%s+$', '') end
-        DispatchNotes[id] = { text = note:sub(1, 300), author = (author ~= '' and author) or nil, updatedAt = os.time() }
+        DispatchNotes[id] = { text = note, author = (author ~= '' and author) or nil, updatedAt = os.time() }
     end
 
     if ps.auditLog then
         local label = (title and title ~= '' and title ~= code) and ('%s (%s)'):format(code, title) or code
-        local streetPart = (type(data.street) == 'string' and data.street ~= '') and (' at %s'):format(data.street) or ''
+        local streetPart = (type(data.street) == 'string' and data.street ~= '') and L('dashboard.at_location', { street = data.street }) or ''
         ps.auditLog(src, 'dispatch_create', 'dispatch', id, {
             dispatch_id  = id,
             code         = code,
             title        = title,
-            action_label = ('Created %s%s'):format(label, streetPart),
+            action_label = L('dashboard.created', { call = label, location = streetPart }),
         })
     end
 
@@ -947,7 +1026,7 @@ ps.registerCallback(resourceName .. ':server:assignToDispatch', function(source,
     local src = source
     if not CheckAuth(src) then return { success = false } end
     if not CheckPermission(src, 'dispatch_assign') then
-        return { success = false, error = 'No permission' }
+        return { success = false, error = L('dashboard.no_permission') }
     end
 
     data = data or {}
@@ -955,7 +1034,7 @@ ps.registerCallback(resourceName .. ':server:assignToDispatch', function(source,
     local action = data.action == 'detach' and 'detach' or 'attach'
     local citizenids = type(data.citizenids) == 'table' and data.citizenids or {}
     if not dispatchId or #citizenids == 0 then
-        return { success = false, error = 'Invalid request' }
+        return { success = false, error = L('dashboard.invalid_request') }
     end
 
     local okCore, QBCore = pcall(function() return exports['qb-core']:GetCoreObject() end)
@@ -1036,17 +1115,17 @@ ps.registerCallback(resourceName .. ':server:assignToDispatch', function(source,
         if #assignedNames == 1 then
             who = assignedNames[1]
         elseif #assignedNames == 2 then
-            who = assignedNames[1] .. ' and ' .. assignedNames[2]
+            who = L('dashboard.two_officers', { first = assignedNames[1], second = assignedNames[2] })
         else
-            who = ('%d officers'):format(#assignedNames)
+            who = L('dashboard.officer_count', { count = #assignedNames })
         end
         ps.auditLog(src, 'dispatch_' .. action .. '_units', 'dispatch', tostring(dispatchId), {
             dispatch_id  = tostring(dispatchId),
             officers     = assignedNames,
             count        = hit,
             action_label = action == 'detach'
-                and ('Removed %s from %s'):format(who, label)
-                or  ('Assigned %s to %s'):format(who, label),
+                and L('dashboard.removed_from', { officers = who, call = label })
+                or  L('dashboard.assigned_to', { officers = who, call = label }),
         })
     end
     return { success = hit > 0, assigned = hit, offline = miss }

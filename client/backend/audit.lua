@@ -2,7 +2,7 @@ local resourceName = tostring(GetCurrentResourceName())
 
 RegisterNUICallback('getAuditLogs', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -12,7 +12,7 @@ end)
 
 RegisterNUICallback('getAuditLogsByCase', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 

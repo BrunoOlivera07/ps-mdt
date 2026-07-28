@@ -352,6 +352,16 @@
 		return translated === key ? value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : translated;
 	}
 
+	function formatDorCount(count: number): string {
+		if (count === 1) return t("pages.fto.dorCountOne", { count });
+		return t("pages.fto.dorCountMany", { count });
+	}
+
+	function formatDayCount(count: number): string {
+		if (count === 1) return t("pages.fto.dayCountOne", { count });
+		return t("pages.fto.dayCountMany", { count });
+	}
+
 	// Phase progress
 	let phaseProgress = $derived.by(() => {
 		if (!selectedDetail || phases.length === 0) return { current: 0, total: 0, percent: 0 };
@@ -584,7 +594,7 @@
 		<div class="topbar">
 			<button class="back-btn" onclick={goBack}>
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-				Back to FTO List
+				{t("pages.fto.backToList")}
 			</button>
 			<span class="topbar-case-number">{selectedDetail.assignment.fto_number}</span>
 			<span class="pill {getStatusPillClass(selectedDetail.assignment.status)}">{formatLabel(selectedDetail.assignment.status)}</span>
@@ -647,8 +657,8 @@
 						<!-- Overall program progress -->
 						<div class="overall-progress">
 							<div class="overall-progress-head">
-								<span class="overall-progress-phase">Phase {phaseProgress.current} of {phaseProgress.total}</span>
-								<span class="overall-progress-pct">{overallProgress}% complete</span>
+								<span class="overall-progress-phase">{t("pages.fto.phaseProgress", { current: phaseProgress.current, total: phaseProgress.total })}</span>
+								<span class="overall-progress-pct">{t("pages.fto.progressComplete", { percent: overallProgress })}</span>
 							</div>
 							<div class="overall-progress-track">
 								<div class="overall-progress-fill" style="width:{overallProgress}%"></div>
@@ -669,7 +679,7 @@
 									<div class="phase-step-body">
 										<span class="phase-step-name">{p.name}</span>
 										{#if (phaseDorCounts.get(p.id) ?? 0) > 0}
-											<span class="phase-step-dors">{phaseDorCounts.get(p.id)} DOR{phaseDorCounts.get(p.id) === 1 ? "" : "s"}</span>
+											<span class="phase-step-dors">{formatDorCount(phaseDorCounts.get(p.id) ?? 0)}</span>
 										{/if}
 									</div>
 								</div>
@@ -684,11 +694,11 @@
 							</div>
 							<div class="phase-stat">
 								<span class="phase-stat-value" style="color:{ratingColor(isCompleted ? overallAvgAll : avgOverall)}">{(isCompleted ? overallAvgAll : avgOverall) ? (isCompleted ? overallAvgAll : avgOverall).toFixed(1) : "—"}</span>
-								<span class="phase-stat-label">{isCompleted ? "Final avg" : "Avg rating"}</span>
+								<span class="phase-stat-label">{isCompleted ? t("pages.fto.finalAverage") : t("pages.fto.averageRating")}</span>
 							</div>
 							<div class="phase-stat">
 								<span class="phase-stat-value">{isCompleted ? selectedDetail.dors.length : currentPhaseDors.length}</span>
-								<span class="phase-stat-label">{isCompleted ? "Total DORs" : "DORs this phase"}</span>
+								<span class="phase-stat-label">{isCompleted ? t("pages.fto.totalDors") : t("pages.fto.dorsThisPhase")}</span>
 							</div>
 							<div class="phase-stat">
 								<span class="phase-stat-value">{daysInProgram ?? "—"}</span>
@@ -701,27 +711,27 @@
 							{#if isActive}
 								<div class="phase-readiness">
 									{#if phaseReady}
-										<span class="readiness-badge readiness-ok">✓ Meets advancement criteria — avg {avgOverall.toFixed(1)}/5 over {currentPhaseDors.length} DOR{currentPhaseDors.length === 1 ? "" : "s"} this phase</span>
+										<span class="readiness-badge readiness-ok">✓ {t("pages.fto.criteriaMet", { average: avgOverall.toFixed(1), count: currentPhaseDors.length })}</span>
 									{:else}
-										<span class="readiness-badge readiness-warn">Not yet recommended — needs avg ≥ {ADVANCE_MIN_AVG.toFixed(1)}/5 over ≥ {ADVANCE_MIN_DORS} DORs (now {avgOverall ? avgOverall.toFixed(1) : "0.0"}/5 over {currentPhaseDors.length})</span>
+										<span class="readiness-badge readiness-warn">{t("pages.fto.criteriaPending", { minimumAverage: ADVANCE_MIN_AVG.toFixed(1), minimumDors: ADVANCE_MIN_DORS, average: avgOverall ? avgOverall.toFixed(1) : "0.0", count: currentPhaseDors.length })}</span>
 									{/if}
 								</div>
 								<div class="phase-actions">
 									{#if isLastPhase}
 										<button class="phase-btn {phaseReady ? 'phase-btn-complete' : 'phase-btn-warn'}" onclick={() => askPhaseAction("complete")}>
 											<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-											Complete Training
+											{t("pages.fto.completeTraining")}
 										</button>
 									{:else if nextPhase}
 										<button class="phase-btn {phaseReady ? 'phase-btn-advance' : 'phase-btn-warn'}" onclick={() => askPhaseAction("advance")}>
-											Advance to {nextPhase.name}
+											{t("pages.fto.advanceTo", { phase: nextPhase.name })}
 											<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
 										</button>
 									{/if}
 									{#if prevPhase}
 					<button class="phase-btn phase-btn-ghost" onclick={() => askPhaseAction("back")} title={t("pages.fto.moveBackPhase")}>
 											<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-											Back
+											{t("common.actions.back")}
 										</button>
 									{/if}
 									<span class="phase-actions-spacer"></span>
@@ -757,11 +767,11 @@
 					<!-- DOR History -->
 					<div class="section">
 						<div class="section-header">
-							<div class="section-title" style="margin-bottom:0;">Daily Observation Reports ({selectedDetail.dors.length})</div>
+							<div class="section-title" style="margin-bottom:0;">{t("pages.fto.dailyObservationReports", { count: selectedDetail.dors.length })}</div>
 							{#if canEdit && !showDorForm}
 								<button class="action-btn" onclick={initDorForm}>
 									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-									New DOR
+									{t("pages.fto.newDor")}
 								</button>
 							{/if}
 						</div>
@@ -873,10 +883,10 @@
 									<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
 								{/if}
 							</div>
-							<div class="outcome-title">{isCompleted ? "Training Completed" : "Training Failed"}</div>
+							<div class="outcome-title">{isCompleted ? t("pages.fto.trainingCompleted") : t("pages.fto.trainingFailed")}</div>
 							<div class="outcome-sub">
-								{#if selectedDetail.assignment.end_date}Closed {formatDateValue(selectedDetail.assignment.end_date)}{/if}
-								{#if daysInProgram != null} · {daysInProgram} day{daysInProgram === 1 ? "" : "s"}{/if}
+								{#if selectedDetail.assignment.end_date}{t("pages.fto.closedOn", { date: formatDateValue(selectedDetail.assignment.end_date) })}{/if}
+								{#if daysInProgram != null} · {formatDayCount(daysInProgram)}{/if}
 							</div>
 						</div>
 					{/if}
@@ -937,7 +947,7 @@
 								{#each phaseBreakdown as pb}
 									<div class="pb-row">
 										<span class="pb-name">{pb.name}</span>
-										<span class="pb-count">{pb.count} DOR{pb.count === 1 ? "" : "s"}</span>
+									<span class="pb-count">{formatDorCount(pb.count)}</span>
 										<span class="pb-avg" style="color:{ratingColor(pb.avg)}">{pb.avg ? pb.avg.toFixed(1) : "—"}</span>
 									</div>
 								{/each}
@@ -994,7 +1004,7 @@
 							{:else}{t("pages.fto.suspendDescription")}{/if}
 						</p>
 						{#if (phaseAction.kind === "advance" || phaseAction.kind === "complete") && !phaseReady}
-							<p class="confirm-warn">⚠ {selectedDetail.assignment.trainee_name} hasn't met the recommended criteria yet (avg ≥ {ADVANCE_MIN_AVG.toFixed(1)}/5 over ≥ {ADVANCE_MIN_DORS} DORs this phase). Proceed only if you have grounds to.</p>
+							<p class="confirm-warn">⚠ {t("pages.fto.criteriaWarning", { trainee: selectedDetail.assignment.trainee_name, minimumAverage: ADVANCE_MIN_AVG.toFixed(1), minimumDors: ADVANCE_MIN_DORS })}</p>
 						{/if}
 						{#if phaseAction.kind === "advance" || phaseAction.kind === "complete"}
 				<textarea class="confirm-note" rows="2" placeholder={t("pages.fto.optionalRecordNote")} bind:value={phaseAction.note}></textarea>
@@ -1007,7 +1017,12 @@
 							disabled={phaseActionBusy}
 							onclick={confirmPhaseAction}
 						>
-							{phaseActionBusy ? "Working…" : phaseAction.kind === "advance" ? "Advance" : phaseAction.kind === "complete" ? "Complete" : phaseAction.kind === "back" ? "Move back" : phaseAction.kind === "fail" ? "Fail" : "Suspend"}
+							{#if phaseActionBusy}{t("pages.fto.working")}
+							{:else if phaseAction.kind === "advance"}{t("pages.fto.advance")}
+							{:else if phaseAction.kind === "complete"}{t("pages.fto.completeAction")}
+							{:else if phaseAction.kind === "back"}{t("pages.fto.moveBack")}
+							{:else if phaseAction.kind === "fail"}{t("pages.fto.fail")}
+							{:else}{t("pages.fto.suspend")}{/if}
 						</button>
 					</div>
 				</div>
@@ -1085,7 +1100,7 @@
 						class:active={statusFilter === opt}
 						onclick={() => { statusFilter = opt; }}
 					>
-						{opt === 'all' ? 'All' : formatLabel(opt)}
+						{opt === 'all' ? t("pages.fto.statuses.all") : formatLabel(opt)}
 					</button>
 				{/each}
 			</div>
@@ -1100,12 +1115,12 @@
 			{#if canManage}
 				<button class="primary-btn" onclick={() => { showCreateForm = true; }}>
 					<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-					New Assignment
+					{t("pages.fto.newAssignment")}
 				</button>
 			{/if}
 			<button class="back-btn" onclick={loadAssignments} disabled={loading}>
 				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-				Refresh
+				{t("pages.fto.refresh")}
 			</button>
 		</div>
 

@@ -268,7 +268,7 @@
 							<div class="mock-stat">
 								<span class="material-icons mock-icon" style="color: rgba({config.accent}, 0.7)">military_tech</span>
 								<div class="mock-stat-text">
-									<span class="mock-stat-value" style="color: rgb({config.accentText})">Sergeant</span>
+									<span class="mock-stat-value" style="color: rgb({config.accentText})">{t("management.colors.labels.rank")}</span>
 									<span class="mock-stat-sub">$450/HR</span>
 								</div>
 							</div>
@@ -298,11 +298,11 @@
 								</div>
 								<div class="mock-list-item" style="border-left: 2px solid rgba({config.accent}, 0.5)">
 									<span class="mock-item-name">Marcus Johnson</span>
-									<span class="mock-item-sub">Exp. Invalid Date</span>
+									<span class="mock-item-sub">{t("management.colors.labels.expiresInvalid")}</span>
 								</div>
 								<div class="mock-list-item" style="border-left: 2px solid rgba({config.accent}, 0.5)">
 									<span class="mock-item-name">James Miller</span>
-									<span class="mock-item-sub">Exp. Invalid Date</span>
+									<span class="mock-item-sub">{t("management.colors.labels.expiresInvalid")}</span>
 								</div>
 							</div>
 							<div class="mock-col" style="border-left: 1px solid rgba(255,255,255,0.04); border-right: 1px solid rgba(255,255,255,0.04)">
@@ -311,11 +311,11 @@
 									<span class="mock-count" style="color: rgb({config.accentText})">3</span>
 								</div>
 								<div class="mock-list-item">
-									<span class="mock-item-name">Armed Robbery at Fleeca</span>
+									<span class="mock-item-name">{t("management.colors.labels.armedRobbery")}</span>
 									<span class="mock-item-sub">1 · Ofc. Smith · 3/21/2026</span>
 								</div>
 								<div class="mock-list-item">
-									<span class="mock-item-name">Traffic Stop - Suspended</span>
+									<span class="mock-item-name">{t("management.colors.labels.trafficStopSuspended")}</span>
 									<span class="mock-item-sub">2 · Ofc. Johnson · 3/20/2026</span>
 								</div>
 							</div>
@@ -326,15 +326,15 @@
 								</div>
 								<div class="mock-dispatch">
 									<span class="mock-dispatch-dot" style="background: #ef4444"></span>
-									<span class="mock-item-sub">· 1 hour ago</span>
+									<span class="mock-item-sub">· {t("management.colors.labels.hourAgo")}</span>
 								</div>
 								<div class="mock-dispatch">
 									<span class="mock-dispatch-dot" style="background: rgb({config.buttonPrimary})"></span>
-									<span class="mock-item-sub">· 30 minutes ago</span>
+									<span class="mock-item-sub">· {t("management.colors.labels.minutesAgo", { minutes: 30 })}</span>
 								</div>
 								<div class="mock-dispatch">
 									<span class="mock-dispatch-dot" style="background: #ef4444"></span>
-									<span class="mock-item-sub">· 5 minutes ago</span>
+									<span class="mock-item-sub">· {t("management.colors.labels.minutesAgo", { minutes: 5 })}</span>
 								</div>
 							</div>
 						</div>

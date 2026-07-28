@@ -4,8 +4,9 @@
 	import { isEnvBrowser } from "../../utils/misc";
 	import { NUI_EVENTS } from "../../constants/nuiEvents";
 	import { getReportTypesForJob } from "../../constants/index";
-	import { t } from "../../lib/i18n";
+	import { t, translateReportType } from "../../lib/i18n";
 	import type { JobType } from "../../interfaces/IUser";
+	import { getDefaultReportTemplates, normalizeTemplateJobType } from "../../utils/reportTemplates";
 
 	interface ReportTemplate {
 		id: number;
@@ -17,7 +18,7 @@
 
 	let { jobType = 'leo' as JobType }: { jobType?: JobType } = $props();
 
-	let REPORT_TYPES = $derived(getReportTypesForJob(jobType));
+	let REPORT_TYPES = $derived(getReportTypesForJob(normalizeTemplateJobType(jobType)));
 
 	let templates: ReportTemplate[] = $state([]);
 	let isLoading = $state(false);
@@ -163,17 +164,8 @@
 		return templates.filter((t) => t.type === type).length;
 	}
 
-	if (isEnvBrowser()) {
-		templates = [
-			{ id: 1, name: t("management.templates.examples.standardIncident"), type: "Incident Report", content: "<h2>Incident Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
-			{ id: 2, name: t("management.templates.examples.trafficStop"), type: "Traffic Report", content: "<h2>Traffic Incident Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
-			{ id: 3, name: t("management.templates.examples.fullInvestigation"), type: "Investigation Report", content: "<h2>Case Overview</h2>\n<p><strong>Case Number:</strong> [CASE #]</p>" },
-			{ id: 4, name: t("management.templates.examples.standardArrest"), type: "Arrest Report", content: "<h2>Arrest Summary</h2>\n<p>On [DATE] at approximately [TIME]...</p>" },
-			{ id: 5, name: t("management.templates.examples.evidenceCollection"), type: "Evidence Report", content: "<h2>Evidence Report Summary</h2>\n<p><strong>Related Case:</strong> [CASE #]</p>" },
-		];
-	}
-
 	onMount(() => {
+		if (isEnvBrowser()) templates = getDefaultReportTemplates(jobType);
 		loadTemplates();
 	});
 </script>
@@ -209,7 +201,7 @@
 						<label class="form-label" for="tmpl-type">{t("management.templates.form.type")}</label>
 						<select id="tmpl-type" class="form-select" bind:value={formType}>
 							{#each REPORT_TYPES as rt}
-								<option value={rt}>{rt}</option>
+								<option value={rt}>{translateReportType(rt)}</option>
 							{/each}
 						</select>
 					</div>
@@ -242,7 +234,7 @@
 							<div class="template-row">
 								<div class="template-info">
 									<span class="template-name">{template.name}</span>
-									<span class="template-type">{template.type}</span>
+									<span class="template-type">{translateReportType(template.type)}</span>
 								</div>
 								<div class="template-row-actions">
 									<button class="row-btn edit-btn" onclick={() => startEdit(template)} aria-label={t("common.actions.edit")}>

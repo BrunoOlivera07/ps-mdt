@@ -184,7 +184,7 @@ function EnsureProfileExists(citizenid)
     local success = MySQL.insert.await([[
         INSERT INTO mdt_profiles (citizenid, fullname, callsign)
         VALUES(?, ?, ?)
-    ]], { citizenid, fullname ~= '' and fullname or 'Unknown', callsign })
+    ]], { citizenid, fullname ~= '' and fullname or L('server_common.unknown'), callsign })
 
     if success then
         ps.debug('Auto-created MDT profile for: ' .. citizenid)
@@ -234,7 +234,7 @@ function EnsureProfileData(citizenid, fullname, callsign, badgeNumber, rank, dep
     local okInsert, result = pcall(MySQL.insert.await, [[INSERT INTO mdt_profiles
         (citizenid, fullname, callsign, badge_number, rank, department)
         VALUES (?, ?, ?, ?, ?, ?)
-    ]], { citizenid, fullname or 'Unknown', callsign, badgeNumber, rank, department })
+    ]], { citizenid, fullname or L('server_common.unknown'), callsign, badgeNumber, rank, department })
 
     if not okInsert then
         -- Insert failed (most likely the callsign clash). Retry without callsign.
@@ -242,7 +242,7 @@ function EnsureProfileData(citizenid, fullname, callsign, badgeNumber, rank, dep
         okInsert, result = pcall(MySQL.insert.await, [[INSERT INTO mdt_profiles
             (citizenid, fullname, badge_number, rank, department)
             VALUES (?, ?, ?, ?, ?)
-        ]], { citizenid, fullname or 'Unknown', badgeNumber, rank, department })
+        ]], { citizenid, fullname or L('server_common.unknown'), badgeNumber, rank, department })
     end
 
     if not okInsert then
@@ -258,7 +258,7 @@ end
 ---@return string -- The name of the vehicle owner or "Unknown Owner" if not found
 function GetVehicleOwner(plate)
     if not plate then
-        return "Unknown Owner"
+        return L('server_common.unknown_owner')
     end
 
     -- Sanitise plate input
@@ -281,7 +281,7 @@ function GetVehicleOwner(plate)
 
     -- If no owner or player name is found, return "Unknown Owner"
     ps.debug('No owner found for plate: ' .. plate)
-    return "Unknown Owner"
+    return L('server_common.unknown_owner')
 end
 
 function GetBoloStatus(plate)
@@ -309,12 +309,12 @@ end
 ---@return boolean, string -- Returns true if a warrant is active, false otherwise, along with a status message
 function GetWarrantStatusByReport(reportId)
     if not reportId then
-        return false, "No report ID provided"
+        return false, L('server_common.no_report_id')
     end
 
     local reportIdNumber = tonumber(reportId)
     if not reportIdNumber then
-        return false, "Invalid report ID type"
+        return false, L('server_common.invalid_report_id')
     end
 
     local warrantRow = MySQL.single.await([[
@@ -326,10 +326,10 @@ function GetWarrantStatusByReport(reportId)
     ]], { reportIdNumber })
 
     if not warrantRow then
-        return false, "No active warrant"
+        return false, L('server_common.no_active_warrant')
     end
 
-    return true, "Warrant is active"
+    return true, L('server_common.warrant_active')
 end
 
 -- Returns the warrant status for a vehicle plate (used by plate reader).

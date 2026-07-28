@@ -132,7 +132,7 @@ end)
 -- Save tracking config callback
 ps.registerCallback(resourceName .. ':server:saveAuditTrackingConfig', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('settings.unauthorized') } end
 
     -- Payload arrives as JSON string to preserve boolean false values through msgpack
     if type(payload) == 'string' then
@@ -140,12 +140,12 @@ ps.registerCallback(resourceName .. ':server:saveAuditTrackingConfig', function(
         if ok and type(decoded) == 'table' then
             payload = decoded
         else
-            return { success = false, message = 'Invalid payload' }
+            return { success = false, message = L('settings.invalid_payload') }
         end
     end
 
     if type(payload) ~= 'table' then
-        return { success = false, message = 'Invalid payload' }
+        return { success = false, message = L('settings.invalid_payload') }
     end
 
     -- Validate: only allow known category keys with boolean values
@@ -216,13 +216,13 @@ end)
 
 ps.registerCallback(resourceName .. ':server:saveJailFinesConfig', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('settings.unauthorized') } end
     if not CheckPermission(src, 'management_settings') then
-        return { success = false, message = 'You do not have permission to change these settings' }
+        return { success = false, message = L('settings.no_settings_permission') }
     end
 
     if type(payload) ~= 'table' then
-        return { success = false, message = 'Invalid payload' }
+        return { success = false, message = L('settings.invalid_payload') }
     end
 
     -- Validate reductionOffers: must be array of numbers 1-100
@@ -267,28 +267,146 @@ end)
 
 -- Report Templates Configuration
 
+local legacyReportTemplateTypes = {
+    ['Relatório de incidente'] = 'Incident Report',
+    ['Relatório de tráfego'] = 'Traffic Report',
+    ['Relatório de Investigação'] = 'Investigation Report',
+    ['Relatório de prisão'] = 'Arrest Report',
+    ['Relatório de evidências'] = 'Evidence Report',
+}
+
+local reportTemplateTypesByJob = {
+    leo = {
+        ['Incident Report'] = true,
+        ['Traffic Report'] = true,
+        ['Investigation Report'] = true,
+        ['Arrest Report'] = true,
+        ['Evidence Report'] = true,
+    },
+    ems = {
+        ['Medical Report'] = true,
+        ['Trauma Report'] = true,
+        ['Overdose Report'] = true,
+        ['Psychiatric Report'] = true,
+        ['Mass Casualty Report'] = true,
+    },
+    doj = {
+        ['Court Filing'] = true,
+        ['Legal Brief'] = true,
+        ['Judicial Order'] = true,
+        ['Plea Agreement'] = true,
+        ['Sentencing Report'] = true,
+    },
+}
+
+local defaultDomainReportTemplates = {
+    { jobType = 'ems', type = 'Medical Report', name = 'Avaliação Médica Geral', content = [[<h2>Avaliação do paciente</h2><p><strong>Queixa principal:</strong> [QUEIXA]</p><p><strong>Sinais vitais:</strong> [SINAIS VITAIS]</p><h2>Tratamento e Destino</h2><p>[TRATAMENTO / TRANSPORTE]</p>]] },
+    { jobType = 'ems', type = 'Trauma Report', name = 'Atendimento de Trauma', content = [[<h2>Avaliação do trauma</h2><p><strong>Mecanismo da lesão:</strong> [MECANISMO]</p><p><strong>Lesões:</strong> [LESÕES]</p><h2>Intervenções</h2><p>[INTERVENÇÕES / TRANSPORTE]</p>]] },
+    { jobType = 'ems', type = 'Overdose Report', name = 'Atendimento de Overdose', content = [[<h2>Avaliação da overdose</h2><p><strong>Substância suspeita:</strong> [SUBSTÂNCIA]</p><p><strong>Condição inicial:</strong> [CONDIÇÃO]</p><h2>Tratamento e Resultado</h2><p>[TRATAMENTO / RESPOSTA / TRANSPORTE]</p>]] },
+    { jobType = 'ems', type = 'Psychiatric Report', name = 'Avaliação Psiquiátrica', content = [[<h2>Avaliação de saúde mental</h2><p><strong>Apresentação:</strong> [APRESENTAÇÃO]</p><p><strong>Avaliação de risco:</strong> [RISCO]</p><h2>Intervenção e Destino</h2><p>[INTERVENÇÃO / DESTINO]</p>]] },
+    { jobType = 'ems', type = 'Mass Casualty Report', name = 'Atendimento com Múltiplas Vítimas', content = [[<h2>Visão geral do incidente</h2><p><strong>Local:</strong> [LOCAL]</p><p><strong>Resumo da triagem:</strong> [QUANTIDADES POR TRIAGEM]</p><h2>Recursos e Transporte</h2><p>[RECURSOS / DESTINOS]</p>]] },
+    { jobType = 'doj', type = 'Court Filing', name = 'Petição Judicial Padrão', content = [[<h2>Petição judicial</h2><p><strong>Processo:</strong> [PROCESSO Nº]</p><p>[DETALHES DA PETIÇÃO]</p>]] },
+    { jobType = 'doj', type = 'Legal Brief', name = 'Memorial Jurídico Padrão', content = [[<h2>Memorial jurídico</h2><p><strong>Matéria:</strong> [MATÉRIA]</p><p>[ARGUMENTOS E FUNDAMENTOS]</p>]] },
+    { jobType = 'doj', type = 'Judicial Order', name = 'Ordem Judicial Padrão', content = [[<h2>Ordem judicial</h2><p><strong>Processo:</strong> [PROCESSO Nº]</p><p>[ORDEM]</p>]] },
+    { jobType = 'doj', type = 'Plea Agreement', name = 'Acordo Judicial Padrão', content = [[<h2>Acordo judicial</h2><p><strong>Réu:</strong> [NOME]</p><p>[TERMOS]</p>]] },
+    { jobType = 'doj', type = 'Sentencing Report', name = 'Relatório de Sentença Padrão', content = [[<h2>Relatório de sentença</h2><p><strong>Réu:</strong> [NOME]</p><p>[FUNDAMENTAÇÃO E SENTENÇA]</p>]] },
+}
+
+local reportTemplateDomainsEnsured = false
+
+local function normalizeReportTemplateJobType(jobType)
+    if jobType == 'ems' or jobType == 'doj' then return jobType end
+    return 'leo'
+end
+
+local function getReportTemplateJobType(src, requestedJobType)
+    local jobName = ps.getJobName(src)
+    if Config.DojJobs then
+        for _, name in ipairs(Config.DojJobs) do
+            if name == jobName then return 'doj' end
+        end
+    end
+
+    local sourceJobType = ps.getJobType(src)
+    if Config.DojJobType and sourceJobType == Config.DojJobType then return 'doj' end
+    if sourceJobType == 'leo' or sourceJobType == 'ems' or sourceJobType == 'doj' then
+        return sourceJobType
+    end
+
+    return normalizeReportTemplateJobType(requestedJobType)
+end
+
+local function ensureReportTemplateDomains()
+    if reportTemplateDomainsEnsured then return end
+    reportTemplateDomainsEnsured = true
+
+    local migrationKey = 'report_template_domains_v1'
+    if MySQL.scalar.await('SELECT 1 FROM mdt_settings WHERE `key` = ? LIMIT 1', { migrationKey }) then
+        return
+    end
+
+    MySQL.update.await([[
+        UPDATE mdt_report_templates
+        SET `job_type` = 'leo'
+        WHERE (`job_type` IS NULL OR `job_type` = 'all')
+          AND `type` IN (
+              'Incident Report', 'Traffic Report', 'Investigation Report', 'Arrest Report', 'Evidence Report',
+              'Relatório de incidente', 'Relatório de tráfego', 'Relatório de Investigação', 'Relatório de prisão', 'Relatório de evidências'
+          )
+    ]])
+
+    for _, template in ipairs(defaultDomainReportTemplates) do
+        local exists = MySQL.scalar.await(
+            'SELECT 1 FROM mdt_report_templates WHERE `job_type` = ? AND `type` = ? LIMIT 1',
+            { template.jobType, template.type }
+        )
+        if not exists then
+            MySQL.insert.await(
+                'INSERT INTO mdt_report_templates (`name`, `type`, `content`, `job_type`) VALUES (?, ?, ?, ?)',
+                { template.name, template.type, template.content, template.jobType }
+            )
+        end
+    end
+
+    MySQL.update.await([[
+        INSERT INTO mdt_settings (`key`, `value`)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)
+    ]], { migrationKey, '1' })
+end
+
 ps.registerCallback(resourceName .. ':server:getReportTemplates', function(source, data)
     local src = source
     if not CheckAuth(src) then return {} end
 
-    local jobType = (type(data) == 'table' and data.jobType) or 'all'
+    ensureReportTemplateDomains()
+
+    local jobType = getReportTemplateJobType(src, type(data) == 'table' and data.jobType or nil)
+    local allowedTypes = reportTemplateTypesByJob[jobType]
     -- Return templates matching the job type or 'all'
     local rows = MySQL.query.await(
         'SELECT `id`, `name`, `type`, `content`, `job_type` FROM mdt_report_templates WHERE `job_type` = ? OR `job_type` = ? ORDER BY `type`, `name`',
         { jobType, 'all' }
     )
-    return rows or {}
+    local filteredRows = {}
+    for _, row in ipairs(rows or {}) do
+        row.type = legacyReportTemplateTypes[row.type] or row.type
+        if allowedTypes[row.type] then
+            filteredRows[#filteredRows + 1] = row
+        end
+    end
+    return filteredRows
 end)
 
 ps.registerCallback(resourceName .. ':server:saveReportTemplate', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('settings.unauthorized') } end
     if not CheckPermission(src, 'management_settings') then
-        return { success = false, message = 'You do not have permission to change templates' }
+        return { success = false, message = L('settings.no_template_change_permission') }
     end
 
     if type(payload) ~= 'table' then
-        return { success = false, message = 'Invalid payload' }
+        return { success = false, message = L('settings.invalid_payload') }
     end
 
     local name = tostring(payload.name or ''):sub(1, 100)
@@ -296,13 +414,12 @@ ps.registerCallback(resourceName .. ':server:saveReportTemplate', function(sourc
     local content = tostring(payload.content or '')
 
     if name == '' or tmplType == '' or content == '' then
-        return { success = false, message = 'Name, type, and content are required' }
+        return { success = false, message = L('settings.template_fields_required') }
     end
 
-    local jobType = tostring(payload.jobType or 'all'):sub(1, 10)
-    -- Validate job_type
-    if jobType ~= 'leo' and jobType ~= 'ems' and jobType ~= 'all' then
-        jobType = 'all'
+    local jobType = getReportTemplateJobType(src, tostring(payload.jobType or ''):sub(1, 10))
+    if not reportTemplateTypesByJob[jobType][tmplType] then
+        return { success = false, message = L('settings.invalid_payload') }
     end
 
     local templateId = payload.id and tonumber(payload.id) or nil
@@ -328,18 +445,18 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteReportTemplate', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('settings.unauthorized') } end
     if not CheckPermission(src, 'management_settings') then
-        return { success = false, message = 'You do not have permission to delete templates' }
+        return { success = false, message = L('settings.no_template_delete_permission') }
     end
 
     if type(payload) ~= 'table' or not payload.id then
-        return { success = false, message = 'Invalid payload' }
+        return { success = false, message = L('settings.invalid_payload') }
     end
 
     local id = tonumber(payload.id)
     if not id then
-        return { success = false, message = 'Invalid template ID' }
+        return { success = false, message = L('settings.invalid_template') }
     end
 
     MySQL.update.await('DELETE FROM mdt_report_templates WHERE `id` = ?', { id })
@@ -387,13 +504,13 @@ end)
 
 ps.registerCallback(resourceName .. ':server:saveColorConfig', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('settings.unauthorized') } end
     if not CheckPermission(src, 'management_settings') then
-        return { success = false, message = 'You do not have permission to change color settings' }
+        return { success = false, message = L('settings.no_color_permission') }
     end
 
     if type(payload) ~= 'table' then
-        return { success = false, message = 'Invalid payload' }
+        return { success = false, message = L('settings.invalid_payload') }
     end
 
     local config = {
@@ -405,7 +522,7 @@ ps.registerCallback(resourceName .. ':server:saveColorConfig', function(source, 
     }
 
     if not config.accent then
-        return { success = false, message = 'Accent color is required' }
+        return { success = false, message = L('settings.accent_required') }
     end
 
     local settingsKey = getColorSettingsKey(src)

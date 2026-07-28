@@ -8,6 +8,20 @@
 - [x] Documentar processo de atualização futura.
 - [x] Continuar migração dos arquivos restantes apontados pela auditoria.
 - [x] Adicionar seletor de idioma nas preferências.
+- [x] Reabrir a auditoria completa e identificar falsos negativos do scanner do frontend.
+- [x] Migrar rótulos e mensagens visíveis de `config.lua`, `client` e `server` para locales Lua.
+- [x] Traduzir as seeds administrativas dos SQLs `qbx.sql` e `qbcore.sql` para pt-BR.
+- [x] Criar migração pt-BR não destrutiva para bancos já instalados.
+- [x] Executar auditoria final conjunta de frontend, Lua e SQL.
+- [x] Executar auditoria profunda de integridade, navegação, APIs, schema ativo e regressões de visibilidade.
+- [x] Comparar a versão localizada com a base `3.1.4` e reparar funcionalidades ocultadas por identificadores SQL traduzidos.
+- [x] Executar segunda auditoria semântica dos textos Lua visíveis e ampliar o scanner contra novos hardcodes.
+- [x] Validar o botão de inserir modelos no editor, o registro de prisões e as integrações automáticas de housing/sentenciamento.
+- [x] Corrigir os namespaces do pátio e ampliar a auditoria para rejeitar referências estáticas a chaves inexistentes.
+- [x] Remover os hardcodes residuais da tela de Treinamento/FTO e cobri-los pela auditoria automatizada.
+- [x] Integrar criação, notas, atribuição e encerramento de chamados do MDT ao `ps-dispatch`, com fallback interno.
+- [x] Corrigir os falsos negativos de tradução nas abas, categorias de rastreamento e dados de demonstração da tela de Configurações.
+- [x] Corrigir a renderização das metas de condecorações que exibia o código da função de tradução no seletor.
 
 ## Concluído
 - [x] Base inicial de i18n e documentação criada.
@@ -63,3 +77,6 @@
 - [x] Auditoria de locales concluída sem chaves ausentes, extras ou arquivos com hardcodes detectados.
 - [x] Auditoria ampliada concluída, incluindo textos não cobertos pelo scanner e atributos de acessibilidade.
 - [x] Build final do frontend concluído e `web/dist` atualizado localmente.
+- [x] Integridade funcional revisada: nenhum arquivo/API removido e regressões confirmadas de navegação, abas ocultas e edição de permissões corrigidas.
+- [x] Rótulos dos tipos de relatório centralizados nos locales sem alterar os identificadores internos persistidos no banco.
+- [x] Modelos, filtros e indicadores de relatórios isolados por Polícia, EMS e DOJ, com padrões médicos disponíveis no banco e no `npm run dev`.

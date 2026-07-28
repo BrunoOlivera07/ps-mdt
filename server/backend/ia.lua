@@ -22,13 +22,8 @@ end
 
 -- What each status means to somebody who doesn't work at IA.
 local STATUS_TEXT = {
-    open          = 'has been received and is awaiting review',
-    under_review  = 'is now under investigation',
-    investigated  = 'has been investigated and is awaiting a decision',
-    sustained     = 'has been upheld — the complaint was found to be justified',
-    exonerated    = 'has been closed — the officer was found to have acted correctly',
-    unfounded     = 'has been closed — no evidence was found to support it',
-    closed        = 'has been closed',
+    open = 'ia.status.open', under_review = 'ia.status.under_review', investigated = 'ia.status.investigated',
+    sustained = 'ia.status.sustained', exonerated = 'ia.status.exonerated', unfounded = 'ia.status.unfounded', closed = 'ia.status.closed',
 }
 
 --- Let the complainant know their complaint moved on. The success screen tells them
@@ -43,17 +38,17 @@ local function mailComplainantStatus(complaintId, status)
     ]], { complaintId })
     if not row or not row.complainant_citizenid then return end
 
-    local what = STATUS_TEXT[status] or ('is now marked "' .. tostring(status) .. '"')
-    local body = ('Your complaint %s %s.'):format(row.complaint_number or '', what)
+    local what = STATUS_TEXT[status] and L(STATUS_TEXT[status]) or L('ia.status.unknown', { status = tostring(status) })
+    local body = L('ia.mail_body', { number = row.complaint_number or '', status = what })
     if row.officer_name and row.officer_name ~= '' then
-        body = body .. ('\n\nOfficer named in the complaint: %s'):format(row.officer_name)
+        body = body .. '\n\n' .. L('ia.named_officer', { officer = row.officer_name })
     end
-    body = body .. '\n\nYou do not need to reply to this message. If we need anything further from you, we will be in touch.'
+    body = body .. '\n\n' .. L('ia.no_reply')
 
     SendCitizenMail(
         row.complainant_citizenid,
-        iaCfg().MailSender or 'Internal Affairs',
-        ('Complaint %s — update'):format(row.complaint_number or ''),
+        iaCfg().MailSender or L('ia.sender'),
+        L('ia.subject', { number = row.complaint_number or '' }),
         body
     )
 end
@@ -109,7 +104,7 @@ ps.registerCallback(resourceName .. ':server:submitComplaint', function(source, 
 
     local citizenid = ps.getIdentifier(src)
     if not citizenid then
-        return { success = false, error = 'Missing citizen id' }
+        return { success = false, error = L('ia.missing_citizen') }
     end
 
     -- Anti-spam.
@@ -121,7 +116,7 @@ ps.registerCallback(resourceName .. ':server:submitComplaint', function(source, 
             local wait = math.ceil((cooldownMs - (now - last)) / 60000)
             return {
                 success = false,
-                error = ('You have already filed a complaint recently. Try again in about %d minute(s).'):format(math.max(1, wait)),
+                error = L('ia.cooldown', { minutes = math.max(1, wait) }),
             }
         end
     end
@@ -132,9 +127,9 @@ ps.registerCallback(resourceName .. ':server:submitComplaint', function(source, 
         FROM players WHERE citizenid = ?
     ]], { citizenid })
 
-    local complainantName = 'Unknown'
+    local complainantName = L('ia.unknown')
     if player then
-        complainantName = (player.firstname or 'Unknown') .. ' ' .. (player.lastname or '')
+        complainantName = (player.firstname or L('ia.unknown')) .. ' ' .. (player.lastname or '')
     end
 
     local witnesses = data.witnesses
@@ -186,7 +181,7 @@ ps.registerCallback(resourceName .. ':server:submitComplaint', function(source, 
     })
 
     if not complaintId then
-        return { success = false, error = 'Failed to submit complaint' }
+        return { success = false, error = L('ia.submit_failed') }
     end
 
     local complaintNumber = buildComplaintNumber(complaintId)
@@ -267,16 +262,16 @@ end)
 -- Get single IA complaint with notes
 ps.registerCallback(resourceName .. ':server:getIAComplaint', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ia.unauthorized') } end
 
     local complaintId = tonumber(data)
     if not complaintId then
-        return { success = false, error = 'Invalid complaint id' }
+        return { success = false, error = L('ia.invalid_complaint') }
     end
 
     local complaint = MySQL.single.await('SELECT * FROM mdt_ia_complaints WHERE id = ?', { complaintId })
     if not complaint then
-        return { success = false, error = 'Complaint not found' }
+        return { success = false, error = L('ia.not_found') }
     end
 
     local nOk, notes = pcall(MySQL.query.await, [[
@@ -332,12 +327,12 @@ end)
 -- Update IA complaint details (officer, badge, date, location)
 ps.registerCallback(resourceName .. ':server:updateIAComplaintInfo', function(source, complaintId, updates)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ia.unauthorized') } end
 
     complaintId = tonumber(complaintId)
     updates = updates or {}
     if not complaintId then
-        return { success = false, error = 'Invalid complaint id' }
+        return { success = false, error = L('ia.invalid_complaint') }
     end
 
     local sets = {}
@@ -372,7 +367,7 @@ ps.registerCallback(resourceName .. ':server:updateIAComplaintInfo', function(so
     end
 
     if #sets == 0 then
-        return { success = false, error = 'No fields to update' }
+        return { success = false, error = L('ia.no_fields') }
     end
 
     vals[#vals + 1] = complaintId
@@ -383,17 +378,17 @@ end)
 -- Update IA complaint status
 ps.registerCallback(resourceName .. ':server:updateIAStatus', function(source, complaintId, status)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ia.unauthorized') } end
 
     complaintId = tonumber(complaintId)
     if not complaintId or not status then
-        return { success = false, error = 'Invalid complaint id or status' }
+        return { success = false, error = L('ia.invalid_status') }
     end
 
     local ok, err = pcall(MySQL.update.await, 'UPDATE mdt_ia_complaints SET status = ? WHERE id = ?', { status, complaintId })
     if not ok then
         ps.warn('[updateIAStatus] Failed: ' .. tostring(err))
-        return { success = false, error = 'Failed to update status: ' .. tostring(err) }
+        return { success = false, error = L('ia.status_failed', { error = tostring(err) }) }
     end
 
     mailComplainantStatus(complaintId, status)
@@ -404,11 +399,11 @@ end)
 -- Assign an investigator to an IA complaint (or unassign with '__unassign__')
 ps.registerCallback(resourceName .. ':server:assignIAComplaint', function(source, complaintId, assigneeCitizenId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ia.unauthorized') } end
 
     complaintId = tonumber(complaintId)
     if not complaintId or not assigneeCitizenId then
-        return { success = false, error = 'Invalid complaint or assignee' }
+        return { success = false, error = L('ia.invalid_assignee') }
     end
 
     -- Handle unassign
@@ -418,7 +413,7 @@ ps.registerCallback(resourceName .. ':server:assignIAComplaint', function(source
     end
 
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { assigneeCitizenId })
-    local assigneeName = profile and profile.fullname or 'Unknown'
+    local assigneeName = profile and profile.fullname or L('ia.unknown')
 
     MySQL.update.await('UPDATE mdt_ia_complaints SET assigned_to = ?, assigned_to_name = ? WHERE id = ?', {
         assigneeCitizenId,
@@ -432,16 +427,16 @@ end)
 -- Add a note to an IA complaint
 ps.registerCallback(resourceName .. ':server:addIANote', function(source, complaintId, content)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ia.unauthorized') } end
 
     complaintId = tonumber(complaintId)
     if not complaintId or not content or content == '' then
-        return { success = false, error = 'Invalid complaint or empty note' }
+        return { success = false, error = L('ia.invalid_note') }
     end
 
     local citizenId = ps.getIdentifier(src)
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { citizenId })
-    local authorName = profile and profile.fullname or 'Unknown'
+    local authorName = profile and profile.fullname or L('ia.unknown')
 
     MySQL.insert.await([[
         INSERT INTO mdt_ia_notes (complaint_id, content, author_citizenid, author_name)
@@ -454,12 +449,12 @@ end)
 -- Delete a note from an IA complaint
 ps.registerCallback(resourceName .. ':server:deleteIANote', function(source, noteId, complaintId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('ia.unauthorized') } end
 
     noteId = tonumber(noteId)
     complaintId = tonumber(complaintId)
     if not noteId or not complaintId then
-        return { success = false, error = 'Invalid note or complaint' }
+        return { success = false, error = L('ia.invalid_note_complaint') }
     end
 
     MySQL.query.await('DELETE FROM mdt_ia_notes WHERE id = ? AND complaint_id = ?', { noteId, complaintId })

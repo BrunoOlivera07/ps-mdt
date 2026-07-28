@@ -185,7 +185,7 @@
 			<input class="form-input" type="text" placeholder={t("management.awards.placeholders.category")} bind:value={formCategory} maxlength="25" />
 			<select class="form-select" bind:value={formGoalType}>
 				{#each GOAL_TYPES as gt}
-					<option value={gt.value}>{gt.label}</option>
+					<option value={gt.value}>{gt.label()}</option>
 				{/each}
 			</select>
 			<input class="form-input goal-input" type="number" min="1" bind:value={formGoalAmount} placeholder={t("management.awards.placeholders.goal")} />

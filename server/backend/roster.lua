@@ -76,7 +76,7 @@ local function buildRosterFromQbx(jobList, matchFn, defaultDept)
             local data = player.PlayerData
             local job = data.job or {}
             local callsign = data.metadata and data.metadata.callsign or 'N/A'
-            local fullname = data.charinfo and (data.charinfo.firstname .. ' ' .. data.charinfo.lastname) or 'Unknown'
+            local fullname = data.charinfo and (data.charinfo.firstname .. ' ' .. data.charinfo.lastname) or L('roster.unknown')
             local rank = job.grade and job.grade.name or 'Officer'
             local department = job.name or defaultDept
             local departmentLabel = deptLabel(job.name, job) or department
@@ -244,9 +244,9 @@ end)
 -- Update officer certifications
 ps.registerCallback('ps-mdt:server:updateOfficerCertifications', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('roster.unauthorized') } end
     if not CheckPermission(src, 'roster_manage_certifications') then
-        return { success = false, message = 'No permission to manage certifications' }
+        return { success = false, message = L('roster.no_certification_permission') }
     end
 
     payload = payload or {}
@@ -254,7 +254,7 @@ ps.registerCallback('ps-mdt:server:updateOfficerCertifications', function(source
     local certifications = payload.certifications
 
     if not citizenid or type(certifications) ~= 'table' then
-        return { success = false, message = 'Invalid payload' }
+        return { success = false, message = L('roster.invalid_payload') }
     end
 
     EnsureProfileExists(citizenid)
@@ -321,9 +321,9 @@ end
 
 ps.registerCallback('ps-mdt:server:promoteOfficer', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('roster.unauthorized') } end
     if not CheckPermission(src, 'roster_manage_officers') then
-        return { success = false, message = 'No permission to manage officers' }
+        return { success = false, message = L('roster.no_manage_permission') }
     end
 
     payload = payload or {}
@@ -332,33 +332,33 @@ ps.registerCallback('ps-mdt:server:promoteOfficer', function(source, payload)
     local newGrade = tonumber(payload.grade)
 
     if not citizenid or not jobName or not newGrade then
-        return { success = false, message = 'Missing required fields' }
+        return { success = false, message = L('roster.missing_fields') }
     end
 
     -- Validate the grade exists
     local gradeData = ps.getSharedJobGrade(jobName, newGrade)
     if not gradeData then
-        return { success = false, message = 'Invalid grade for this job' }
+        return { success = false, message = L('roster.invalid_grade') }
     end
 
     -- Find the target player (must be online for QBCore SetJob)
     local targetPlayer = ps.getPlayerByIdentifier(citizenid)
     if not targetPlayer then
-        return { success = false, message = 'Officer must be online to change rank' }
+        return { success = false, message = L('roster.online_for_rank') }
     end
 
     local targetSrc = targetPlayer.source or (targetPlayer.PlayerData and targetPlayer.PlayerData.source)
     if not targetSrc then
-        return { success = false, message = 'Could not resolve officer source' }
+        return { success = false, message = L('roster.source_unavailable') }
     end
 
     -- Don't allow changing your own rank
     if targetSrc == src then
-        return { success = false, message = 'You cannot change your own rank' }
+        return { success = false, message = L('roster.cannot_change_own_rank') }
     end
 
     if not setOfficerJob(targetSrc, jobName, newGrade) then
-        return { success = false, message = 'Failed to update rank (framework error)' }
+        return { success = false, message = L('roster.rank_update_failed') }
     end
 
     local gradeName = gradeData.name or ('Grade ' .. newGrade)
@@ -371,41 +371,41 @@ ps.registerCallback('ps-mdt:server:promoteOfficer', function(source, payload)
         })
     end
 
-    return { success = true, message = 'Officer rank updated to ' .. gradeName }
+    return { success = true, message = L('roster.rank_updated', { grade = gradeName }) }
 end)
 
 -- Fire an officer (set their job to unemployed)
 ps.registerCallback('ps-mdt:server:fireOfficer', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('roster.unauthorized') } end
     if not CheckPermission(src, 'roster_manage_officers') then
-        return { success = false, message = 'No permission to manage officers' }
+        return { success = false, message = L('roster.no_manage_permission') }
     end
 
     payload = payload or {}
     local citizenid = payload.citizenid
 
     if not citizenid then
-        return { success = false, message = 'Missing citizen ID' }
+        return { success = false, message = L('roster.missing_citizen') }
     end
 
     local targetPlayer = ps.getPlayerByIdentifier(citizenid)
     if not targetPlayer then
-        return { success = false, message = 'Officer must be online to be terminated' }
+        return { success = false, message = L('roster.online_for_termination') }
     end
 
     local targetSrc = targetPlayer.source or (targetPlayer.PlayerData and targetPlayer.PlayerData.source)
     if not targetSrc then
-        return { success = false, message = 'Could not resolve officer source' }
+        return { success = false, message = L('roster.source_unavailable') }
     end
 
     -- Don't allow firing yourself
     if targetSrc == src then
-        return { success = false, message = 'You cannot fire yourself' }
+        return { success = false, message = L('roster.cannot_fire_self') }
     end
 
     if not setOfficerJob(targetSrc, 'unemployed', 0) then
-        return { success = false, message = 'Failed to terminate officer (framework error)' }
+        return { success = false, message = L('roster.termination_failed') }
     end
 
     -- Optional full personal-data wipe (boss panel toggle). Runs after the job
@@ -423,12 +423,12 @@ ps.registerCallback('ps-mdt:server:fireOfficer', function(source, payload)
         })
     end
 
-    local message = 'Officer has been terminated'
+    local message = L('roster.terminated')
     if payload.deleteData then
         if cleanup and cleanup.ok then
-            message = 'Officer terminated and MDT data removed'
+            message = L('roster.terminated_and_cleaned')
         elseif cleanup then
-            message = 'Officer terminated, but data cleanup failed: ' .. tostring(cleanup.error)
+            message = L('roster.terminated_cleanup_failed', { error = tostring(cleanup.error) })
         end
     end
 
@@ -438,9 +438,9 @@ end)
 -- Update officer callsign (wrapper around existing setCallsign for NUI)
 ps.registerCallback('ps-mdt:server:updateOfficerCallsign', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('roster.unauthorized') } end
     if not CheckPermission(src, 'roster_manage_officers') then
-        return { success = false, message = 'No permission to manage officers' }
+        return { success = false, message = L('roster.no_manage_permission') }
     end
 
     payload = payload or {}
@@ -448,18 +448,18 @@ ps.registerCallback('ps-mdt:server:updateOfficerCallsign', function(source, payl
     local newCallsign = payload.callsign
 
     if not citizenid or not newCallsign or newCallsign == '' then
-        return { success = false, message = 'Missing citizen ID or callsign' }
+        return { success = false, message = L('roster.missing_citizen_or_callsign') }
     end
 
     -- Use the existing setCallsign callback logic
     local ok, QBCore = pcall(function() return exports['qb-core']:GetCoreObject() end)
     if not ok or not QBCore then
-        return { success = false, message = 'Core framework not available' }
+        return { success = false, message = L('roster.core_unavailable') }
     end
 
     local Player = QBCore.Functions.GetPlayerByCitizenId(citizenid)
     if not Player then
-        return { success = false, message = 'Officer must be online to update callsign' }
+        return { success = false, message = L('roster.online_for_callsign') }
     end
 
     Player.Functions.SetMetaData('callsign', newCallsign)
@@ -473,5 +473,5 @@ ps.registerCallback('ps-mdt:server:updateOfficerCallsign', function(source, payl
         ps.auditLog(src, 'callsign_changed', 'officers', citizenid, { callsign = newCallsign })
     end
 
-    return { success = true, message = 'Callsign updated to ' .. newCallsign }
+    return { success = true, message = L('roster.callsign_updated', { callsign = newCallsign }) }
 end)

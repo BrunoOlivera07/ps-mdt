@@ -7,7 +7,7 @@ ps.registerCallback(resourceName .. ':server:GetPlayerSourceId', function(source
     if not targetCitizenId then return nil end
     local targetPlayer = ps.getPlayerByIdentifier(targetCitizenId)
     if not targetPlayer then
-        ps.notify(source, 'Citizen seems asleep / missing', 'error')
+        ps.notify(source, L('officers.citizen_unavailable'), 'error')
         return nil
     end
     return targetPlayer.source or targetPlayer.PlayerData.source
@@ -16,15 +16,15 @@ end)
 -- Set Callsign
 ps.registerCallback(resourceName .. ':server:setCallsign', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('officers.unauthorized') } end
     payload = payload or {}
     local cid = payload.citizenid or payload.cid
     local newCallsign = payload.callsign or payload.newcallsign
  
     if not cid or not newCallsign then
-        return { success = false, message = 'Missing citizen ID or callsign' }
+        return { success = false, message = L('officers.missing_citizen_or_callsign') }
     end
-    if not QBCore then return { success = false, message = 'Core framework not available' } end
+    if not QBCore then return { success = false, message = L('officers.core_unavailable') } end
 
     -- Reject a callsign already owned by a different profile (UNIQUE index).
     local taken = MySQL.scalar.await(
@@ -32,7 +32,7 @@ ps.registerCallback(resourceName .. ':server:setCallsign', function(source, payl
         { newCallsign, cid }
     )
     if taken then
-        return { success = false, message = 'Callsign "' .. tostring(newCallsign) .. '" is already in use' }
+        return { success = false, message = L('officers.callsign_in_use', { callsign = tostring(newCallsign) }) }
     end
 
     local Player = QBCore.Functions.GetPlayerByCitizenId(cid)
@@ -46,9 +46,9 @@ ps.registerCallback(resourceName .. ':server:setCallsign', function(source, payl
             ps.auditLog(src, 'callsign_changed', 'officer', cid, { callsign = newCallsign })
         end
  
-        return { success = true, message = 'Callsign updated to ' .. newCallsign }
+        return { success = true, message = L('officers.callsign_updated', { callsign = newCallsign }) }
     end
-    return { success = false, message = 'Player must be online to update callsign' }
+    return { success = false, message = L('officers.online_for_callsign') }
 end)
  
 ps.registerCallback(resourceName .. ':server:getCallsign', function(source, payload)
@@ -56,7 +56,7 @@ ps.registerCallback(resourceName .. ':server:getCallsign', function(source, payl
     local cid = payload.citizenid
     if not cid then return { callsign = '' } end
  
-    if not QBCore then return { success = false, message = 'Core framework not available' } end
+    if not QBCore then return { success = false, message = L('officers.core_unavailable') } end
     local Player = QBCore.Functions.GetPlayerByCitizenId(cid)
     if Player then
         return { callsign = tostring(Player.PlayerData.metadata.callsign or '') }
@@ -68,20 +68,20 @@ end)
 -- Set Radio Frequency
 ps.registerCallback(resourceName .. ':server:setRadio', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('officers.unauthorized') } end
  
     payload = payload or {}
     local cid = payload.citizenid or payload.cid
     local newRadio = payload.radio or payload.newradio
  
     if not cid or not newRadio then
-        return { success = false, message = 'Missing citizen ID or radio frequency' }
+        return { success = false, message = L('officers.missing_citizen_or_radio') }
     end
  
-    if not QBCore then return { success = false, message = 'Core framework not available' } end
+    if not QBCore then return { success = false, message = L('officers.core_unavailable') } end
     local targetPlayer = QBCore.Functions.GetPlayerByCitizenId(cid)
     if not targetPlayer then
-        return { success = false, message = 'Officer must be online' }
+        return { success = false, message = L('officers.officer_must_be_online') }
     end
  
     local targetSource = targetPlayer.PlayerData.source
@@ -92,7 +92,7 @@ ps.registerCallback(resourceName .. ':server:setRadio', function(source, payload
     end
  
     TriggerClientEvent(resourceName .. ':client:setRadio', targetSource, newRadio)
-    return { success = true, message = 'Radio set to ' .. newRadio }
+    return { success = true, message = L('officers.radio_updated', { frequency = newRadio }) }
 end)
  
 -- Get Unit Location (GPS to officer)

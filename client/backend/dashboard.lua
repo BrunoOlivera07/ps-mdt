@@ -96,7 +96,7 @@ RegisterNUICallback('signOut', function(_, cb)
     PlayMDTSound('close')
     cb({})
     CloseMDT()
-    ps.notify('Signed out of MDT', 'success')
+    ps.notify(L('client.signed_out'), 'success')
 end)
 
 RegisterNUICallback('toggleDuty', function(_, cb)
@@ -128,7 +128,7 @@ end)
 -- REPORT STATISTICS ---------------------------------------
 RegisterNUICallback('getReportStatistics', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
     local reportStats = ps.callback(resourceName .. ':server:getReportStatistics')
@@ -140,7 +140,7 @@ end)
 -- TIME STATISTICS -----------------------------------------
 RegisterNUICallback('getTimeStatistics', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
     local timeStats = ps.callback(resourceName .. ':server:getTimeStatistics')
@@ -152,7 +152,7 @@ end)
 -- ACTIVE WARRANTS -----------------------------------------
 RegisterNUICallback('getActiveWarrants', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
     local activeWarrants = ps.callback(resourceName .. ':server:getActiveWarrants')
@@ -173,7 +173,7 @@ end)
 -- BULLETIN BOARD ----------------------------------------
 RegisterNUICallback('getBulletins', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
     local bulletins = ps.callback(resourceName .. ':server:getBulletins')
@@ -185,7 +185,7 @@ end)
 RegisterNUICallback('createBulletin', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.content or data.content == '' then
-        cb({ success = false, message = 'Content is required' })
+        cb({ success = false, message = L('client.content_required') })
         return
     end
     local result = ps.callback(resourceName .. ':server:createBulletin', data)
@@ -195,7 +195,7 @@ end)
 RegisterNUICallback('deleteBulletin', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.id then
-        cb({ success = false, message = 'Missing bulletin ID' })
+        cb({ success = false, message = L('client.missing_bulletin') })
         return
     end
     local result = ps.callback(resourceName .. ':server:deleteBulletin', data)
@@ -209,30 +209,30 @@ end)
 
 RegisterNUICallback('saveBulletinCategories', function(data, cb)
     if not data or not data.categories then
-        cb({ success = false, message = 'Invalid data' })
+        cb({ success = false, message = L('client.invalid_data') })
         return
     end
  
     for _, cat in ipairs(data.categories) do
         if type(cat.value) ~= 'string' or type(cat.label) ~= 'string' or type(cat.icon) ~= 'string' then
-            cb({ success = false, message = 'Malformed category entry' })
+            cb({ success = false, message = L('client.malformed_category') })
             return
         end
         if #cat.label > 32 or #cat.icon > 48 then
-            cb({ success = false, message = 'Category label or icon name too long' })
+            cb({ success = false, message = L('client.category_too_long') })
             return
         end
     end
  
     local result = ps.callback('mdt:server:saveBulletinCategories', false, data.categories)
-    cb(result or { success = false, message = 'Server error' })
+    cb(result or { success = false, message = L('client.server_error') })
 end)
 
 -- RECENT REPORTS -------------------------------------
 
 RegisterNUICallback('getRecentReports', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
     local page = data and data.page or nil
@@ -245,7 +245,7 @@ end)
 
 RegisterNUICallback('getActiveBolos', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
     local activeBolos = ps.callback(resourceName .. ':server:getActiveBolos')
@@ -263,7 +263,7 @@ end)
 
 RegisterNUICallback('getActiveUnits', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
     local activeUnits = ps.callback(resourceName .. ':server:getActiveUnits')
@@ -324,6 +324,7 @@ local function providerAttach(dispatchId)
         TriggerServerEvent('cd_dispatch:server:attach', dispatchId)
     elseif p == 'ps' then
         TriggerServerEvent('ps-dispatch:server:attach', dispatchId, buildPlayerData())
+        TriggerServerEvent(resourceName .. ':server:dispatchProviderChanged')
     end
 end
 
@@ -335,6 +336,7 @@ local function providerDetach(dispatchId)
         TriggerServerEvent('cd_dispatch:server:detach', dispatchId)
     elseif p == 'ps' then
         TriggerServerEvent('ps-dispatch:server:detach', dispatchId, buildPlayerData())
+        TriggerServerEvent(resourceName .. ':server:dispatchProviderChanged')
     end
 end
 
@@ -342,6 +344,10 @@ end
 -- resource is running fires its event; the others simply never trigger.
 RegisterNetEvent('ps-dispatch:client:notify', function(data)
     if not MDTOpen or not data then return end
+    SendNUI('updateRecentDispatches', GetRecentDispatch() or {})
+end)
+RegisterNetEvent('ps-dispatch:client:syncCalls', function()
+    if not MDTOpen then return end
     SendNUI('updateRecentDispatches', GetRecentDispatch() or {})
 end)
 RegisterNetEvent('qs-dispatch:client:notify', function()
@@ -355,7 +361,7 @@ end)
 
 RegisterNUICallback('getUsageMetrics', function(_, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -393,19 +399,19 @@ RegisterNUICallback("routeToDispatch", function(data, cb)
     local coords = data.coords or data.origin
     if not coords then
         cb('ok')
-        ps.notify('No location data for this dispatch', 'error')
+        ps.notify(L('client.dispatch_no_location'), 'error')
         return
     end
     local x = tonumber(coords.x) or tonumber(coords[1])
     local y = tonumber(coords.y) or tonumber(coords[2])
     if not x or not y then
         cb('ok')
-        ps.notify('Invalid location data', 'error')
+        ps.notify(L('client.invalid_location'), 'error')
         return
     end
     SetNewWaypoint(x, y)
     cb('ok')
-    ps.notify('Set Route to Dispatch Location', 'success')
+    ps.notify(L('client.route_set'), 'success')
 end)
 -- ---------------------------------------------------------------------------
 -- Dispatcher assignment (runs on the ASSIGNED player's client).
@@ -418,7 +424,7 @@ RegisterNetEvent(resourceName .. ':client:dispatchAssign', function(data)
 
     if data.action == 'detach' then
         if not data.manual then providerDetach(data.id) end
-        ps.notify('Dispatch has removed you from a call', 'inform')
+        ps.notify(L('client.removed_from_call'), 'inform')
         return
     end
 
@@ -433,9 +439,9 @@ RegisterNetEvent(resourceName .. ':client:dispatchAssign', function(data)
 
     local note = type(data.note) == 'string' and data.note ~= '' and data.note or nil
     if note then
-        ps.notify('Dispatch assigned you to a call — waypoint set. Note: ' .. note, 'success')
+        ps.notify(L('client.assigned_with_note', { note = note }), 'success')
     else
-        ps.notify('Dispatch assigned you to a call — waypoint set. No note provided.', 'success')
+        ps.notify(L('client.assigned_without_note'), 'success')
     end
 end)
 
@@ -450,12 +456,12 @@ end)
 RegisterNetEvent(resourceName .. ':client:dispatchNoteNotify', function(data)
     data = data or {}
     local text = type(data.text) == 'string' and data.text or ''
-    ps.notify('Dispatch updated the note on your call: ' .. text, 'inform')
+    ps.notify(L('client.call_note_updated', { note = text }), 'inform')
 end)
 
 -- Dispatcher-side NUI bridge: assign/detach a set of units to a call.
 RegisterNUICallback('assignToDispatch', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:assignToDispatch', data or {})
     cb(result or { success = false })
 end)
@@ -468,19 +474,19 @@ RegisterNetEvent(resourceName .. ':client:dispatchDismissed', function(_)
 end)
 
 RegisterNUICallback('dismissDispatch', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:dismissDispatch', data or {})
     cb(result or { success = false })
 end)
 
 RegisterNUICallback('setDispatchNote', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:setDispatchNote', data or {})
     cb(result or { success = false })
 end)
 
 RegisterNUICallback('deleteDispatchNote', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:deleteDispatchNote', data or {})
     cb(result or { success = false })
 end)
@@ -504,7 +510,7 @@ RegisterNUICallback('resolveDispatchStreet', function(data, cb)
 end)
 
 RegisterNUICallback('createManualDispatch', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     local result = ps.callback(resourceName .. ':server:createManualDispatch', data or {})
     cb(result or { success = false })
 end)

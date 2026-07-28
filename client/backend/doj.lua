@@ -36,7 +36,7 @@ end)
 
 RegisterNUICallback('createCourtCase', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -46,12 +46,12 @@ end)
 
 RegisterNUICallback('updateCourtCase', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.id then
-        cb({ success = false, message = 'Missing case ID' })
+        cb({ success = false, message = L('client.missing_case') })
         return
     end
 
@@ -78,7 +78,7 @@ end)
 
 RegisterNUICallback('createWarrantRequest', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -88,12 +88,12 @@ end)
 
 RegisterNUICallback('reviewWarrantRequest', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, error = 'MDT is not open' })
+        cb({ success = false, error = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.request_id or not data.decision then
-        cb({ success = false, error = 'Missing request_id or decision' })
+        cb({ success = false, error = L('client.missing_request_decision') })
         return
     end
 
@@ -108,12 +108,12 @@ end)
 
 RegisterNUICallback('closeWarrantRequest', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, error = 'MDT is not open' })
+        cb({ success = false, error = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.request_id then
-        cb({ success = false, error = 'Missing request_id' })
+        cb({ success = false, error = L('client.missing_request') })
         return
     end
 
@@ -141,7 +141,7 @@ end)
 
 RegisterNUICallback('createCourtOrder', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -151,12 +151,12 @@ end)
 
 RegisterNUICallback('updateCourtOrder', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.id then
-        cb({ success = false, message = 'Missing order ID' })
+        cb({ success = false, message = L('client.missing_order_id') })
         return
     end
 
@@ -166,12 +166,12 @@ end)
 
 RegisterNUICallback('revokeCourtOrder', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.id then
-        cb({ success = false, message = 'Missing order ID' })
+        cb({ success = false, message = L('client.missing_order_id') })
         return
     end
 
@@ -214,7 +214,7 @@ end)
 
 RegisterNUICallback('createLegalDocument', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -224,12 +224,12 @@ end)
 
 RegisterNUICallback('updateLegalDocument', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.id then
-        cb({ success = false, message = 'Missing document ID' })
+        cb({ success = false, message = L('client.missing_document') })
         return
     end
 
@@ -239,12 +239,12 @@ end)
 
 RegisterNUICallback('deleteLegalDocument', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.id then
-        cb({ success = false, message = 'Missing document ID' })
+        cb({ success = false, message = L('client.missing_document') })
         return
     end
 
@@ -269,11 +269,11 @@ RegisterNUICallback('getWarrantHearing', function(data, cb)
 end)
 
 RegisterNUICallback('scheduleWarrantHearing', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     cb(ps.callback(resourceName .. ':server:scheduleWarrantHearing', data or {}) or { success = false })
 end)
 
 RegisterNUICallback('removeWarrantHearing', function(data, cb)
-    if not MDTOpen then cb({ success = false, error = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, error = L('client.mdt_not_open') }) return end
     cb(ps.callback(resourceName .. ':server:removeWarrantHearing', data or {}) or { success = false })
 end)

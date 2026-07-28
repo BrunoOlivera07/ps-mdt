@@ -86,10 +86,10 @@ end
 ---@return table
 function CleanupPersonnelData(citizenid)
     if not citizenid or citizenid == '' then
-        return { ok = false, error = 'missing citizenid' }
+        return { ok = false, error = L('personnel_cleanup.missing_citizen') }
     end
     if not (Config and Config.PersonnelCleanup and Config.PersonnelCleanup.Enabled) then
-        return { ok = false, error = 'cleanup disabled in config' }
+        return { ok = false, error = L('personnel_cleanup.disabled') }
     end
 
     local cfg = Config.PersonnelCleanup
@@ -190,7 +190,7 @@ function CleanupPersonnelData(citizenid)
     -- Atomic: all-or-nothing so we never leave a partially-cleaned profile.
     local ok = MySQL.transaction.await(queries)
     if not ok then
-        return { ok = false, error = 'transaction failed', steps = #queries }
+        return { ok = false, error = L('personnel_cleanup.transaction_failed'), steps = #queries }
     end
 
     if Config and Config.Debug then

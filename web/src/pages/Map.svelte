@@ -871,12 +871,12 @@
         // Use server-provided flag — no coordinate guessing, no flicker
         const inVehicle = officer.inVehicle ?? false;
         const vehicleBadge = inVehicle
-            ? `<span class="op-badge op-badge--vehicle">🚔 In Vehicle</span>`
-            : `<span class="op-badge op-badge--foot">🦶 On Foot</span>`;
+            ? `<span class="op-badge op-badge--vehicle">🚔 ${t("pages.map.inVehicle")}</span>`
+            : `<span class="op-badge op-badge--foot">🦶 ${t("pages.map.onFoot")}</span>`;
 
         const patrolHtml = patrol
             ? `<span class="op-patrol" style="color:${patrol.color}">● ${patrol.name}</span>`
-            : `<span class="op-patrol op-patrol--none">● Unassigned</span>`;
+            : `<span class="op-patrol op-patrol--none">● ${t("pages.map.unassigned")}</span>`;
 
         // Officer Status (Active/Busy/...) — separate from the existing
         // "Status" row above (which shows In Vehicle/On Foot), so it's
@@ -941,7 +941,7 @@
             <div class="op-wrap veh-wrap">
                 <div class="op-header" style="--op-color:#f97316">
 					<div class="op-name">${plate || t("pages.map.unknownVehicle")}</div>
-                    <div class="op-callsign-badge">VEH</div>
+                    <div class="op-callsign-badge">${t("pages.map.vehicleAbbreviation")}</div>
                 </div>
                 <div class="op-body">
 					<div class="op-row"><span class="op-label">${t("pages.map.status")}</span>${status}</div>
@@ -2406,9 +2406,9 @@
                         </div>
                         <div class="cc-body">
                             <div class="cc-field">
-                                <span class="cc-label">10-Code</span>
+                                <span class="cc-label">{t("pages.map.tenCode")}</span>
                                 <select class="cc-input cc-select" bind:value={ccCode}>
-                                    <option value="">— Select a code —</option>
+                                    <option value="">— {t("pages.map.selectCode")} —</option>
                                     {#each callCodes as c}
                                         <option value={c.code}>{c.code} · {c.label}</option>
                                     {/each}
@@ -2417,7 +2417,7 @@
 
                             <div class="cc-field">
 				<span class="cc-label">{t("pages.map.title")} <span class="cc-optional">{t("pages.map.titleOptional")}</span></span>
-                                <input class="cc-input" bind:value={ccTitle} maxlength="80" placeholder={ccSelectedCode?.label ? `Default: ${ccSelectedCode.label}` : "Short summary…"} />
+								<input class="cc-input" bind:value={ccTitle} maxlength="80" placeholder={ccSelectedCode?.label ? t("pages.map.defaultTitle", { title: ccSelectedCode.label }) : t("pages.map.shortSummary")} />
                             </div>
 
                             <div class="cc-field">
@@ -2619,7 +2619,7 @@
                         <div class="empty-hint">No officers match {statusFilter.size > 0 ? "the selected status" : `"${officerSearch}"`}.</div>
                     {/if}
                     {#if unassignedFiltered.length > 0}
-                        <div class="section-label">Unassigned ({unassignedFiltered.length})</div>
+                        <div class="section-label">{t("pages.map.unassigned")} ({unassignedFiltered.length})</div>
                         {#each unassignedFiltered as officer (officer.citizenid)}
                             {@const sDef = statusDef(officer.status)}
                             <div class="officer-card" class:dragging={drag?.kind === "officer" && drag.id === officer.citizenid && drag.active} class:anim-removed={recentlyRemoved.has(officer.citizenid)} class:officer-selected={selectedOfficerId === officer.citizenid} onmousedown={(e) => canManagePatrols && onMouseDown(e, "officer", officer.citizenid, officer.name)} onclick={() => selectOfficer(officer.citizenid)} style={canManagePatrols ? "cursor:grab" : "cursor:pointer"}>

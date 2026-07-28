@@ -155,9 +155,9 @@
 		window.addEventListener('mouseup',   onGlobalMouseUp);
 		if (isEnvBrowser()) {
 			bulletins = [
-				{ id: 1, content: 'TRAINING: FTO certification renewal is due by end of month.' },
-				{ id: 2, content: 'BOLO REMINDER: Black Kuruma from Pacific Standard is still outstanding.' },
-				{ id: 3, content: 'Radio channel 3 is now reserved for tactical operations.' },
+				{ id: 1, content: t("management.bulletins.samples.trainingRenewal") },
+				{ id: 2, content: t("management.bulletins.samples.boloReminder") },
+				{ id: 3, content: t("management.bulletins.samples.radioChannel") },
 			];
 			return;
 		}

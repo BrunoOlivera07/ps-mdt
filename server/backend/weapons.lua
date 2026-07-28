@@ -141,7 +141,7 @@ ps.registerCallback('ps-mdt:server:getWeapons', function(source)
         -- Resolve owner name: batched mdt_profiles lookup first, then ps_lib fallback
         local ownerName = 'Unknown'
         if v.owner and v.owner ~= '' then
-            ownerName = nameByOwner[v.owner] or ps.getPlayerNameByIdentifier(v.owner) or 'Unknown'
+            ownerName = nameByOwner[v.owner] or ps.getPlayerNameByIdentifier(v.owner) or L('weapons.unknown')
         end
 
         -- Normalize weapon model to lowercase for class table lookup
@@ -167,11 +167,11 @@ ps.registerCallback('ps-mdt:server:getWeapons', function(source)
         table.insert(weaponBolo, {
             id = v.id,
             reportId = v.reportId and tostring(v.reportId) or 'N/A',
-            name = v.subject_name or 'Unknown Weapon',
+            name = v.subject_name or L('weapons.unknown_weapon'),
             type = v.type,
             notes = v.notes or '',
             status = v.status,
-            serial = v.subject_id or 'Unknown',
+            serial = v.subject_id or L('weapons.unknown'),
         })
     end
     return { weapons = newData, bolos = weaponBolo }
@@ -223,14 +223,14 @@ ps.registerCallback(resourceName .. ':server:saveWeaponFlags', function(source, 
     if affected and affected > 0 then
         return { success = true }
     else
-        return { success = false, message = 'Database error' }
+        return { success = false, message = L('weapons.database_error') }
     end
 end)
 
 -- Save/Edit Weapon Info (from NUI)
 ps.registerCallback(resourceName .. ':server:saveWeaponInfo', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('weapons.unauthorized') } end
 
     payload = payload or {}
     local serial = payload.serial
@@ -241,7 +241,7 @@ ps.registerCallback(resourceName .. ':server:saveWeaponInfo', function(source, p
     local weapModel = payload.weapModel or ''
 
     if not serial or serial == '' then
-        return { success = false, message = 'Missing serial number' }
+        return { success = false, message = L('weapons.missing_serial') }
     end
 
     -- Ensure profile exists before insert/update to avoid FK constraint error
@@ -281,20 +281,20 @@ ps.registerCallback(resourceName .. ':server:saveWeaponInfo', function(source, p
         })
     end
 
-    return { success = true, message = existing and 'Weapon info updated' or 'Weapon info created' }
+    return { success = true, message = existing and L('weapons.info_updated') or L('weapons.info_created') }
 end)
 
 -- Delete Weapon Record
 ps.registerCallback(resourceName .. ':server:deleteWeapon', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('weapons.unauthorized') } end
 
     payload = payload or {}
     local id = tonumber(payload.id)
     local serial = payload.serial
 
     if not id and not serial then
-        return { success = false, message = 'Missing weapon ID or serial' }
+        return { success = false, message = L('weapons.missing_id_or_serial') }
     end
 
     local deleted = 0
@@ -310,7 +310,7 @@ ps.registerCallback(resourceName .. ':server:deleteWeapon', function(source, pay
         ps.auditLog(src, 'weapon_deleted', 'weapon', serial or tostring(id), {})
     end
 
-    return { success = deleted and deleted > 0, message = deleted > 0 and 'Weapon deleted' or 'Weapon not found' }
+    return { success = deleted and deleted > 0, message = deleted > 0 and L('weapons.deleted') or L('weapons.not_found') }
 end)
 
 -- Scan player inventory for weapons (for self-register)
@@ -331,7 +331,7 @@ ps.registerCallback(resourceName .. ':server:getWeaponInfo', function(source)
                 if item.name and string.find(item.name, 'WEAPON_') then
                     local invImage = ('https://cfx-nui-ox_inventory/web/images/%s.png'):format(item.name)
                     weaponInfos[#weaponInfos + 1] = {
-                        serialnumber = item.metadata and item.metadata.serial or 'Unknown',
+                        serialnumber = item.metadata and item.metadata.serial or L('weapons.unknown'),
                         owner = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname,
                         weaponmodel = (QBCore.Shared.Items[string.lower(item.name)] and QBCore.Shared.Items[string.lower(item.name)].label) or item.name,
                         weaponurl = invImage,
@@ -346,7 +346,7 @@ ps.registerCallback(resourceName .. ':server:getWeaponInfo', function(source)
             for _, item in pairs(Player.PlayerData.items) do
                 if item.type == 'weapon' then
                     weaponInfos[#weaponInfos + 1] = {
-                        serialnumber = item.info and item.info.serie or 'Unknown',
+                        serialnumber = item.info and item.info.serie or L('weapons.unknown'),
                         owner = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname,
                         weaponmodel = (QBCore.Shared.Items[item.name] and QBCore.Shared.Items[item.name].label) or item.name,
                         weaponurl = item.image or '',
@@ -502,6 +502,6 @@ AddEventHandler(resourceName .. ':server:selfRegisterWeapon', function(serial, i
     end)
 
     if success then
-        ps.notify(src, 'Weapon registered in police database', 'success')
+        ps.notify(src, L('weapons.registered'), 'success')
     end
 end)

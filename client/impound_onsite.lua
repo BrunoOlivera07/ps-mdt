@@ -71,7 +71,7 @@ end
 local function playNotepad()
     return lib.progressBar({
         duration  = seqCfg().NotepadMs or 4500,
-        label     = 'Documenting the vehicle',
+        label     = L('client_impound.documenting'),
         canCancel = true,
         disable   = { move = false, car = true, combat = true },
         anim = {
@@ -92,7 +92,7 @@ end
 local function playRadio()
     return lib.progressBar({
         duration  = seqCfg().RadioMs or 6000,
-        label     = 'Calling in a tow truck',
+        label     = L('client_impound.calling_tow'),
         canCancel = true,
         disable   = { move = false, car = true, combat = true },
         anim = {
@@ -123,17 +123,17 @@ end
 -- it for good.
 local function finishImpound(veh, netId, serverCall, payload)
     if not playRadio() then
-        ps.notify('Impound cancelled', 'error')
+        ps.notify(L('client_impound.cancelled'), 'error')
         return
     end
 
     local res = ps.callback(resourceName .. ':server:' .. serverCall, payload)
     if not res or not res.success then
-        ps.notify((res and res.message) or 'Impound failed', 'error')
+        ps.notify((res and res.message) or L('client_impound.failed'), 'error')
         return
     end
 
-    ps.notify(res.message or 'Vehicle impounded', 'success')
+    ps.notify(res.message or L('client_impound.impounded'), 'success')
 
     if DoesEntityExist(veh) then
         fadeOutVehicle(veh)
@@ -154,20 +154,20 @@ local function runImpound()
 
     local veh = targetVehicle()
     if not veh then
-        ps.notify('No vehicle nearby', 'error')
+        ps.notify(L('client_impound.no_vehicle_nearby'), 'error')
         busy = false
         return
     end
 
     if hasPlayerInside(veh) then
-        ps.notify('There is somebody in that vehicle', 'error')
+        ps.notify(L('client_impound.occupied'), 'error')
         busy = false
         return
     end
 
     local netId = NetworkGetNetworkIdFromEntity(veh)
     if not netId or netId == 0 then
-        ps.notify('That vehicle cannot be impounded', 'error')
+        ps.notify(L('client_impound.cannot_impound'), 'error')
         busy = false
         return
     end
@@ -183,14 +183,14 @@ local function runImpound()
     })
 
     if not res or not res.success then
-        ps.notify((res and res.message) or 'Could not inspect that vehicle', 'error')
+        ps.notify((res and res.message) or L('client_impound.inspect_failed'), 'error')
         busy = false
         return
     end
 
     -- Write it up first, whichever kind of vehicle it turns out to be.
     if not playNotepad() then
-        ps.notify('Impound cancelled', 'error')
+        ps.notify(L('client_impound.cancelled'), 'error')
         busy = false
         return
     end
@@ -235,7 +235,7 @@ end)
 
 RegisterNUICallback('submitOnSiteImpound', function(data, cb)
     if not pending or not data then
-        cb({ success = false, message = 'No vehicle selected' })
+        cb({ success = false, message = L('client_impound.no_vehicle_selected') })
         return
     end
 

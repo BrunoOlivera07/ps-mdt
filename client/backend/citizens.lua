@@ -9,12 +9,12 @@ end)
 RegisterNUICallback('getProperty', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.property_id then
-        cb({ success = false, message = 'Missing property id' })
+        cb({ success = false, message = L('client.missing_property') })
         return
     end
     local result = ps.callback(resourceName .. ':server:getProperty', data.property_id)
     if not result or not result.success then
-        cb(result or { success = false, message = 'Property not found' })
+        cb(result or { success = false, message = L('client.property_not_found') })
         return
     end
     if result.property and result.property.coords then
@@ -98,7 +98,7 @@ end)
 RegisterNUICallback('deleteBolo', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.id then
-        cb({ success = false, message = 'Missing BOLO ID' })
+        cb({ success = false, message = L('client.missing_bolo') })
         return
     end
     local result = ps.callback(resourceName .. ':server:deleteBolo', data)
@@ -108,7 +108,7 @@ end)
 RegisterNUICallback('updateBoloStatus', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.id or not data.status then
-        cb({ success = false, message = 'Missing BOLO ID or status' })
+        cb({ success = false, message = L('client.missing_bolo_status') })
         return
     end
     local result = ps.callback(resourceName .. ':server:updateBoloStatus', data)
@@ -145,7 +145,7 @@ end)
 RegisterNUICallback('getCitizen', function(data, cb)
     if not MDTOpen then cb({}) return end
     if not data or not data.citizenid then
-        cb({ success = false, message = 'Missing citizen id' })
+        cb({ success = false, message = L('client.missing_citizen') })
         return
     end
 
@@ -153,7 +153,7 @@ RegisterNUICallback('getCitizen', function(data, cb)
     if result then
         cb(result)
     else
-        cb({ success = false, message = 'Citizen not found' })
+        cb({ success = false, message = L('client.citizen_not_found') })
     end
 end)
 
@@ -171,9 +171,9 @@ RegisterNUICallback('getCitizenCharges', function(data, cb)
 end)
 
 RegisterNUICallback('updateCitizenLicense', function(data, cb)
-    if not MDTOpen then cb({ success = false, message = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, message = L('client.mdt_not_open') }) return end
     if not data or not data.citizenid or not data.license then
-        cb({ success = false, message = 'Missing citizen id or license' })
+        cb({ success = false, message = L('client.missing_citizen_license') })
         return
     end
 
@@ -181,34 +181,34 @@ RegisterNUICallback('updateCitizenLicense', function(data, cb)
     if result then
         cb(result)
     else
-        cb({ success = false, message = 'Failed to update license' })
+        cb({ success = false, message = L('client.update_license_failed') })
     end
 end)
 
 RegisterNUICallback('updateCitizenCustomLicense', function(data, cb)
-    if not MDTOpen then cb({ success = false, message = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, message = L('client.mdt_not_open') }) return end
     if not data or not data.citizenid or not data.licenseId then
-        cb({ success = false, message = 'Missing citizen id or license id' })
+        cb({ success = false, message = L('client.missing_citizen_license_id') })
         return
     end
     local result = ps.callback(resourceName .. ':server:updateCitizenCustomLicense', data)
-    cb(result or { success = false, message = 'Failed to update custom license' })
+    cb(result or { success = false, message = L('client.update_custom_license_failed') })
 end)
 
 RegisterNUICallback('updateCitizen', function(data, cb)
-    if not MDTOpen then cb({ success = false, message = 'MDT is not open' }) return end
+    if not MDTOpen then cb({ success = false, message = L('client.mdt_not_open') }) return end
     if not data or not data.citizenid then
-        cb({ success = false, message = 'Missing citizen id' })
+        cb({ success = false, message = L('client.missing_citizen') })
         return
     end
     local result = ps.callback(resourceName .. ':server:updateCitizen', data)
-    cb(result or { success = false, message = 'Failed to update citizen' })
+    cb(result or { success = false, message = L('client.update_citizen_failed') })
 end)
 
 RegisterNUICallback('addCitizenTag', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.citizenid or not data.tag then
-        cb({ success = false, message = 'Missing citizen id or tag' })
+        cb({ success = false, message = L('client.missing_citizen_tag') })
         return
     end
     local result = ps.callback(resourceName .. ':server:addCitizenTag', data)
@@ -227,7 +227,7 @@ end)
 RegisterNUICallback('removeCitizenTag', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.citizenid or not data.tag then
-        cb({ success = false, message = 'Missing citizen id or tag' })
+        cb({ success = false, message = L('client.missing_citizen_tag') })
         return
     end
     local result = ps.callback(resourceName .. ':server:removeCitizenTag', data)
@@ -237,7 +237,7 @@ end)
 RegisterNUICallback('addCitizenGallery', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.citizenid or not data.image then
-        cb({ success = false, message = 'Missing citizen id or image' })
+        cb({ success = false, message = L('client.missing_citizen_image') })
         return
     end
     local result = ps.callback(resourceName .. ':server:addCitizenGallery', data)
@@ -247,7 +247,7 @@ end)
 RegisterNUICallback('removeCitizenGallery', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.citizenid or not data.image then
-        cb({ success = false, message = 'Missing citizen id or image' })
+        cb({ success = false, message = L('client.missing_citizen_image') })
         return
     end
     local result = ps.callback(resourceName .. ':server:removeCitizenGallery', data)
@@ -258,7 +258,7 @@ end)
 RegisterNUICallback('updateCitizenFingerprint', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.citizenid then
-        cb({ success = false, message = 'Missing citizen id' })
+        cb({ success = false, message = L('client.missing_citizen') })
         return
     end
     local result = ps.callback(resourceName .. ':server:updateCitizenFingerprint', data.citizenid, data.fingerprint or '')
@@ -269,7 +269,7 @@ end)
 RegisterNUICallback('updateCitizenDNA', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.citizenid then
-        cb({ success = false, message = 'Missing citizen id' })
+        cb({ success = false, message = L('client.missing_citizen') })
         return
     end
     local result = ps.callback(resourceName .. ':server:updateCitizenDNA', data.citizenid, data.dna or '')
@@ -280,25 +280,25 @@ end)
 RegisterNUICallback('addSuspectFingerprint', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.citizenid then
-        cb({ success = false, message = 'Missing citizen id' })
+        cb({ success = false, message = L('client.missing_citizen') })
         return
     end
     local result = ps.callback(resourceName .. ':server:addSuspectFingerprint', data.citizenid)
-    cb(result or { success = false, message = 'Failed to add fingerprint' })
+    cb(result or { success = false, message = L('client.add_fingerprint_failed') })
 end)
 
 -- Capture mugshot from officer's view (hide MDT, screenshot, upload, re-show MDT)
 RegisterNUICallback('triggerSuspectMugshot', function(data, cb)
     if not data or not data.citizenid then
-        cb({ success = false, message = 'Missing citizen id' })
+        cb({ success = false, message = L('client.missing_citizen') })
         return
     end
     CreateThread(function()
         local ok, imageUrl = pcall(CaptureMugshot, data.citizenid)
         if ok and imageUrl then
-            cb({ success = true, message = 'Mugshot captured', imageUrl = imageUrl })
+            cb({ success = true, message = L('client.mugshot_captured'), imageUrl = imageUrl })
         else
-            cb({ success = false, message = 'Failed to capture mugshot' })
+            cb({ success = false, message = L('client.capture_mugshot_failed') })
         end
     end)
 end)
@@ -307,9 +307,9 @@ end)
 RegisterNUICallback('uploadSuspectPhoto', function(data, cb)
     if not MDTOpen then cb({ success = false }) return end
     if not data or not data.citizenid or not data.image then
-        cb({ success = false, message = 'Missing citizen id or image data' })
+        cb({ success = false, message = L('client.missing_citizen_image_data') })
         return
     end
     local result = ps.callback(resourceName .. ':server:uploadSuspectPhoto', data.citizenid, data.image)
-    cb(result or { success = false, message = 'Failed to upload photo' })
+    cb(result or { success = false, message = L('client.upload_photo_failed') })
 end)

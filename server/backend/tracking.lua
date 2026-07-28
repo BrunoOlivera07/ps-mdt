@@ -114,7 +114,7 @@ local function getOfficerInfo(src)
             }
         end
     elseif ps and ps.getIdentifier then
-        local name = (ps.getPlayerName and ps.getPlayerName(src)) or GetPlayerName(src) or 'Unknown'
+        local name = (ps.getPlayerName and ps.getPlayerName(src)) or GetPlayerName(src) or L('tracking.unknown')
         return {
             citizenid = ps.getIdentifier(src),
             name      = name,
@@ -123,7 +123,7 @@ local function getOfficerInfo(src)
             job       = ps.getJobName and ps.getJobName(src) or nil,
         }
     end
-    return { name = GetPlayerName(src) or ('Player #' .. src) }
+    return { name = GetPlayerName(src) or L('server_common.player_number', { id = src }) }
 end
 
 -- Resolve a citizenid -> "Firstname Lastname" without scanning every online
@@ -379,7 +379,7 @@ local function getAllTrackers(matchFn, domain)
             local veh = GetVehiclePedIsIn(ped, false)
             bodycams[#bodycams + 1] = {
                 citizenid = ps.getIdentifier and ps.getIdentifier(playerId) or nil,
-                name      = (ps.getPlayerName and ps.getPlayerName(playerId)) or GetPlayerName(playerId) or 'Unknown',
+                name      = (ps.getPlayerName and ps.getPlayerName(playerId)) or GetPlayerName(playerId) or L('tracking.unknown'),
                 callsign  = ps.getMetadata and ps.getMetadata(playerId, 'callsign') or nil,
                 rank      = ps.getJobGradeName and ps.getJobGradeName(playerId) or 'Officer',
                 coords    = { x = coords.x, y = coords.y, z = coords.z },
@@ -680,7 +680,7 @@ RegisterNetEvent(resourceName .. ":server:reorderPatrols", function(ids)
     -- silently dropped. auditPatrol is (src, action, patrolId, extra).
     auditPatrol(src, 'patrols_reordered', 'order', {
         new_order    = table.concat(nameOrder, ' → '),
-        action_label = 'Reordered patrols: ' .. table.concat(nameOrder, ' → '),
+        action_label = L('tracking.patrols_reordered', { patrols = table.concat(nameOrder, ' → ') }),
     })
 end)
 
@@ -746,7 +746,7 @@ RegisterNetEvent(resourceName .. ":server:removeFromPatrol", function(citizenId)
         auditPatrol(src, 'patrol_officer_removed', citizenId, {
             removed_id   = citizenId,
             removed_from = removedFromPatrol,
-            action_label = ('Removed officer from patrol "%s"'):format(removedFromPatrol),
+            action_label = L('tracking.officer_removed', { patrol = removedFromPatrol }),
         })
     end
 end)
@@ -756,7 +756,7 @@ AddEventHandler("playerDropped", function()
     cacheVehicleCooldowns[src] = nil
 
     local citizenId = nil
-    local officerName = GetPlayerName(src) or ('Player #' .. src)
+    local officerName = GetPlayerName(src) or L('server_common.player_number', { id = src })
 
     local QBCore = getQBCore()
     if QBCore then

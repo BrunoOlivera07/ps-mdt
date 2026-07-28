@@ -65,7 +65,7 @@ function GetActiveWarrantsData(src)
     for _, row in ipairs(rows or {}) do
         local name = ((row.firstname or '') .. ' ' .. (row.lastname or '')):gsub('^%s+', ''):gsub('%s+$', '')
         if name == '' then
-            name = ps.getPlayerNameByIdentifier(row.citizenid) or 'Unknown'
+            name = ps.getPlayerNameByIdentifier(row.citizenid) or L('warrants.unknown')
         end
         results[#results + 1] = {
             reportid = row.reportid,
@@ -97,9 +97,9 @@ end)
 
 ps.registerCallback(resourceName .. ':server:issueWarrant', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('warrants.unauthorized') } end
     if not CheckPermission(src, 'warrants_issue') then
-        return { success = false, error = 'Insufficient permissions' }
+        return { success = false, error = L('warrants.insufficient_permissions') }
     end
 
     data = data or {}
@@ -113,19 +113,19 @@ ps.registerCallback(resourceName .. ':server:issueWarrant', function(source, dat
     end
 
     if not reportId or not citizenid then
-        return { success = false, error = 'Missing required fields' }
+        return { success = false, error = L('warrants.missing_fields') }
     end
 
     -- One warrant per report: refuse if this report already has any active
     -- (non-expired) warrant, regardless of which subject it targets.
     local activeForReport = MySQL.single.await('SELECT 1 AS x FROM mdt_reports_warrants WHERE reportid = ? AND expirydate >= NOW() LIMIT 1', { reportId })
     if activeForReport then
-        return { success = false, error = 'This report already has an active warrant' }
+        return { success = false, error = L('warrants.report_has_active') }
     end
 
     local existing = MySQL.single.await('SELECT reportid FROM mdt_reports_warrants WHERE reportid = ? AND citizenid = ?', { reportId, citizenid })
     if existing and existing.reportid then
-        return { success = false, error = 'An active warrant already exists for this subject on this report' }
+        return { success = false, error = L('warrants.subject_has_active') }
     else
         MySQL.insert.await([[
             INSERT INTO mdt_reports_warrants (reportid, citizenid, felonies, misdemeanors, infractions, expirydate)
@@ -146,16 +146,16 @@ end)
 
 ps.registerCallback(resourceName .. ':server:closeWarrant', function(source, data)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('warrants.unauthorized') } end
     if not CheckPermission(src, 'warrants_close') then
-        return { success = false, error = 'Insufficient permissions' }
+        return { success = false, error = L('warrants.insufficient_permissions') }
     end
 
     data = data or {}
     local reportId = tonumber(data.reportId)
     local citizenid = data.citizenid
     if not reportId or not citizenid then
-        return { success = false, error = 'Missing required fields' }
+        return { success = false, error = L('warrants.missing_fields') }
     end
 
     local updated = MySQL.update.await([[
@@ -178,5 +178,5 @@ ps.registerCallback(resourceName .. ':server:closeWarrant', function(source, dat
         return { success = true }
     end
 
-    return { success = false, error = 'Warrant not found' }
+    return { success = false, error = L('warrants.not_found') }
 end)

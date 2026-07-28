@@ -11,12 +11,15 @@ CreateThread(function()
         if added then
             pcall(MySQL.query.await, [[
                 UPDATE mdt_penal_codes SET category = CASE
-                    WHEN charge_class = 'felony' THEN 'Offenses Against Persons'
-                    WHEN charge_class = 'misdemeanor' THEN 'Offenses Against Public Order'
-                    WHEN charge_class = 'infraction' THEN 'Offenses Against Public Safety'
-                    ELSE 'Uncategorized' END
+                    WHEN charge_class = 'felony' THEN ?
+                    WHEN charge_class = 'misdemeanor' THEN ?
+                    WHEN charge_class = 'infraction' THEN ?
+                    ELSE ? END
                 WHERE category = '' OR category IS NULL
-            ]])
+            ]], {
+                L('charges.categories.persons'), L('charges.categories.public_order'),
+                L('charges.categories.public_safety'), L('charges.categories.uncategorized'),
+            })
         end
     end
 end)
@@ -36,14 +39,17 @@ ps.registerCallback('ps-mdt:getChargeList', function(source)
             fine,
             color,
             COALESCE(NULLIF(category, ''), CASE
-                WHEN charge_class = 'felony' THEN 'Offenses Against Persons'
-                WHEN charge_class = 'misdemeanor' THEN 'Offenses Against Public Order'
-                WHEN charge_class = 'infraction' THEN 'Offenses Against Public Safety'
-                ELSE 'Uncategorized'
+                WHEN charge_class = 'felony' THEN ?
+                WHEN charge_class = 'misdemeanor' THEN ?
+                WHEN charge_class = 'infraction' THEN ?
+                ELSE ?
             END) AS category
         FROM mdt_penal_codes
         ORDER BY category, charge_class, label
-    ]], {})
+    ]], {
+        L('charges.categories.persons'), L('charges.categories.public_order'),
+        L('charges.categories.public_safety'), L('charges.categories.uncategorized'),
+    })
     ps.debug('[getChargeList] rows', rows and #rows or 0)
     if Config and Config.Debug and rows and rows[1] then
         ps.debug('[getChargeList] sample', rows[1])
@@ -56,7 +62,7 @@ end)
 local fineCooldowns = {}
 ps.registerCallback(resourceName .. ':server:processFine', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('charges.unauthorized') } end
 
     payload = payload or {}
     local citizenId = payload.citizenid
@@ -64,7 +70,7 @@ ps.registerCallback(resourceName .. ':server:processFine', function(source, payl
     local reportId = payload.reportId
 
     if not citizenId or not fine or fine ~= fine or fine <= 0 then
-        return { success = false, message = 'Missing citizen ID or invalid fine amount' }
+        return { success = false, message = L('charges.invalid_fine') }
     end
 
     fine = math.floor(fine)
@@ -72,31 +78,31 @@ ps.registerCallback(resourceName .. ':server:processFine', function(source, payl
     local jfConfig = GetJailFinesConfig and GetJailFinesConfig() or {}
     local maxFine = jfConfig.maxFineAmount or (Config and Config.Fines and Config.Fines.MaxAmount) or 100000
     if fine > maxFine then
-        return { success = false, message = 'Fine amount exceeds maximum of $' .. maxFine }
+        return { success = false, message = L('charges.fine_above_max', { amount = maxFine }) }
     end
 
     local now = os.time() * 1000
     local cooldownMs = (Config and Config.Fines and Config.Fines.CooldownMs) or 30000
     if fineCooldowns[src] and (now - fineCooldowns[src]) < cooldownMs then
-        return { success = false, message = 'Fine processing on cooldown' }
+        return { success = false, message = L('charges.cooldown') }
     end
 
     -- Try to get online player first
     local Player = ps.getPlayerByIdentifier(citizenId)
     if not Player then
-        return { success = false, message = 'Player must be online to process fine' }
+        return { success = false, message = L('charges.player_offline') }
     end
 
     -- Remove money from bank
     local removed = ps.removeMoney(Player.source or Player.PlayerData.source, 'bank', fine, 'mdt-fine')
     if removed then
-        ps.notify(Player.source or Player.PlayerData.source, '$' .. fine .. ' fine deducted from your bank account', 'error')
+        ps.notify(Player.source or Player.PlayerData.source, L('charges.fine_deducted', { amount = fine }), 'error')
 
         -- Anti-spam cooldown
         fineCooldowns[src] = os.time() * 1000
 
         if ps.auditLog then
-            local officerName = ps.getPlayerName(src) or 'Unknown Officer'
+            local officerName = ps.getPlayerName(src) or L('charges.unknown_officer')
             ps.auditLog(src, 'fine_processed', 'fine', reportId and tostring(reportId) or nil, {
                 citizenid = citizenId,
                 fine = fine,
@@ -104,22 +110,22 @@ ps.registerCallback(resourceName .. ':server:processFine', function(source, payl
             })
         end
 
-        return { success = true, message = 'Fine of $' .. fine .. ' processed' }
+        return { success = true, message = L('charges.fine_processed', { amount = fine }) }
     else
-        return { success = false, message = 'Failed to remove money - insufficient funds?' }
+        return { success = false, message = L('charges.insufficient_funds') }
     end
 end)
 
 ps.registerCallback(resourceName .. ':server:updateCharge', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('charges.unauthorized') } end
     if not CheckPermission(src, 'charges_edit') then
-        return { success = false, message = 'You do not have permission to edit charges' }
+        return { success = false, message = L('charges.no_edit_permission') }
     end
 
     payload = payload or {}
     if not payload.code then
-        return { success = false, message = 'Missing charge code' }
+        return { success = false, message = L('charges.missing_code') }
     end
 
     local penalUpdates = {}
@@ -163,7 +169,7 @@ ps.registerCallback(resourceName .. ':server:updateCharge', function(source, pay
         and payload.newCode ~= '' and payload.newCode ~= payload.code then
         local clash = MySQL.single.await('SELECT code FROM mdt_penal_codes WHERE code = ?', { payload.newCode })
         if clash then
-            return { success = false, message = 'A charge with that code already exists' }
+            return { success = false, message = L('charges.code_exists') }
         end
         renameCode = payload.newCode
         penalUpdates[#penalUpdates + 1] = 'code = ?'
@@ -202,9 +208,9 @@ local validChargeClass = { felony = true, misdemeanor = true, infraction = true 
 
 ps.registerCallback(resourceName .. ':server:createCharge', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('charges.unauthorized') } end
     if not CheckPermission(src, 'charges_edit') then
-        return { success = false, message = 'You do not have permission to manage charges' }
+        return { success = false, message = L('charges.no_manage_permission') }
     end
 
     payload = payload or {}
@@ -213,15 +219,15 @@ ps.registerCallback(resourceName .. ':server:createCharge', function(source, pay
     local class = payload.type or payload.charge_class
 
     if code == '' or label == '' then
-        return { success = false, message = 'Code and label are required' }
+        return { success = false, message = L('charges.code_label_required') }
     end
     if not validChargeClass[class] then
-        return { success = false, message = 'Invalid charge class' }
+        return { success = false, message = L('charges.invalid_class') }
     end
 
     local clash = MySQL.single.await('SELECT code FROM mdt_penal_codes WHERE code = ?', { code })
     if clash then
-        return { success = false, message = 'A charge with that code already exists' }
+        return { success = false, message = L('charges.code_exists') }
     end
 
     local ok = MySQL.insert.await([[
@@ -246,19 +252,19 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteCharge', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('charges.unauthorized') } end
     if not CheckPermission(src, 'charges_edit') then
-        return { success = false, message = 'You do not have permission to manage charges' }
+        return { success = false, message = L('charges.no_manage_permission') }
     end
 
     payload = payload or {}
     if not payload.code then
-        return { success = false, message = 'Missing charge code' }
+        return { success = false, message = L('charges.missing_code') }
     end
 
     local charge = MySQL.single.await('SELECT code, label FROM mdt_penal_codes WHERE code = ?', { payload.code })
     if not charge then
-        return { success = false, message = 'Charge not found' }
+        return { success = false, message = L('charges.not_found') }
     end
 
     -- Data integrity: reports reference charges by label with ON DELETE CASCADE,
@@ -272,8 +278,7 @@ ps.registerCallback(resourceName .. ':server:deleteCharge', function(source, pay
         return {
             success = false,
             inUse = inUse,
-            message = ('This charge is used in %d report%s. Confirm to delete it everywhere.'):format(
-                inUse, inUse == 1 and '' or 's'),
+            message = L(inUse == 1 and 'charges.in_use_one' or 'charges.in_use_many', { count = inUse }),
         }
     end
 

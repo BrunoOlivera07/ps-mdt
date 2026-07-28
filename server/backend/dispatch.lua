@@ -5,19 +5,19 @@ local dispatchMessages = {}
 -- Send dispatch message
 ps.registerCallback(resourceName .. ':server:sendDispatchMessage', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('dispatch.unauthorized') } end
 
     payload = payload or {}
     local message = payload.message
     local time = payload.time
 
     if not message or message == '' then
-        return { success = false, message = 'Empty message' }
+        return { success = false, message = L('dispatch.empty_message') }
     end
 
     local citizenid = ps.getIdentifier(src)
     local callsign = ps.getMetadata(src, 'callsign') or '000'
-    local name = ps.getPlayerName(src) or 'Unknown'
+    local name = ps.getPlayerName(src) or L('dispatch.unknown')
 
     local pfp = MySQL.scalar.await('SELECT profilepicture FROM mdt_profiles WHERE citizenid = ? LIMIT 1', { citizenid })
 
@@ -70,7 +70,7 @@ ps.registerCallback(resourceName .. ':server:sendCallResponse', function(source,
         return { success = false }
     end
 
-    local name = ps.getPlayerName(src) or 'Unknown'
+    local name = ps.getPlayerName(src) or L('dispatch.unknown')
 
     if GetResourceState('ps-dispatch') == 'started' then
         TriggerEvent('dispatch:sendCallResponse', src, callid, message, time, function(isGood)
@@ -86,7 +86,7 @@ end)
 -- Signal 100 (Panic / Emergency)
 ps.registerCallback(resourceName .. ':server:signal100', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, message = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, message = L('dispatch.unauthorized') } end
 
     payload = payload or {}
     local radio = payload.radio or '1'
@@ -100,7 +100,7 @@ ps.registerCallback(resourceName .. ':server:signal100', function(source, payloa
         ps.auditLog(src, active and 'signal100_activated' or 'signal100_deactivated', 'dispatch', radio, {})
     end
 
-    return { success = true, message = active and 'Signal 100 activated' or 'Signal 100 cleared' }
+    return { success = true, message = active and L('dispatch.signal_100_active') or L('dispatch.signal_100_cleared') }
 end)
 
 -- Attached Units Query

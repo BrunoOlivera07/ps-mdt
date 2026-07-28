@@ -47,7 +47,7 @@ end)
 -- Add a new category
 RegisterNUICallback('addBulletinCategory', function(data, cb)
     if not data or not data.label or data.label == '' then
-        cb({ success = false, error = 'Missing required fields' })
+        cb({ success = false, error = L('client.missing_fields') })
         return
     end
     local result = ps.callback(resourceName .. ':server:addBulletinCategory', data)
@@ -57,7 +57,7 @@ end)
 -- Update an existing category (label, icon, color, sort_order)
 RegisterNUICallback('updateBulletinCategory', function(data, cb)
     if not data or not data.value then
-        cb({ success = false, error = 'Missing category value' })
+        cb({ success = false, error = L('client.missing_category') })
         return
     end
     local result = ps.callback(resourceName .. ':server:updateBulletinCategory', data)
@@ -67,7 +67,7 @@ end)
 -- Remove a category by value
 RegisterNUICallback('removeBulletinCategory', function(data, cb)
     if not data or not data.value then
-        cb({ success = false, error = 'Missing category value' })
+        cb({ success = false, error = L('client.missing_category') })
         return
     end
     local result = ps.callback(resourceName .. ':server:removeBulletinCategory', data)
@@ -77,7 +77,7 @@ end)
 -- Reorder categories (bulk sort_order update)
 RegisterNUICallback('reorderBulletinCategories', function(data, cb)
     if not data or not data.order then
-        cb({ success = false, error = 'Missing order data' })
+        cb({ success = false, error = L('client.missing_order') })
         return
     end
     -- Pass the whole data table so server can read data.order reliably

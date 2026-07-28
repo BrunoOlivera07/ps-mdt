@@ -234,7 +234,7 @@
 		{:else}
 			<PlaceholderContent
 				componentId={activeComponent}
-				message="Component not found"
+				message={t("contentArea.componentNotFound")}
 			/>
 		{/if}
 		{/if}

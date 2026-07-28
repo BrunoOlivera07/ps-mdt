@@ -18,7 +18,7 @@ end
 
 local function getOfficerDisplayName(src)
     local callsign = ps.getMetadata(src, 'callsign')
-    local name = ps.getPlayerName(src) or 'Unknown'
+    local name = ps.getPlayerName(src) or L('cases.unknown')
     if callsign and callsign ~= '' then
         return callsign .. ' ' .. name
     end
@@ -27,10 +27,10 @@ end
 
 ps.registerCallback(resourceName .. ':server:createCase', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     payload = payload or {}
-    local title = payload.title or 'Untitled Case'
+    local title = payload.title or L('cases.untitled')
     local summary = payload.summary or ''
     local status = normalizeStatus(payload.status)
     local priority = payload.priority or 'medium'
@@ -38,7 +38,7 @@ ps.registerCallback(resourceName .. ':server:createCase', function(source, paylo
 
     local citizenid = ps.getIdentifier(src)
     if not citizenid then
-        return { success = false, error = 'Missing citizen id' }
+        return { success = false, error = L('cases.missing_citizen') }
     end
 
     local createdByName = getOfficerDisplayName(src)
@@ -49,7 +49,7 @@ ps.registerCallback(resourceName .. ':server:createCase', function(source, paylo
     ]], { title, summary, status, priority, department, citizenid, createdByName })
 
     if not caseId then
-        return { success = false, error = 'Failed to create case' }
+        return { success = false, error = L('cases.create_failed') }
     end
 
     local caseNumber = buildCaseNumber(caseId)
@@ -122,16 +122,16 @@ end)
 
 ps.registerCallback(resourceName .. ':server:getCase', function(source, caseId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId then
-        return { success = false, error = 'Invalid case id' }
+        return { success = false, error = L('cases.invalid_id') }
     end
 
     local caseRow = MySQL.single.await('SELECT * FROM mdt_cases WHERE id = ?', { caseId })
     if not caseRow then
-        return { success = false, error = 'Case not found' }
+        return { success = false, error = L('cases.not_found') }
     end
 
     local officers = MySQL.query.await([[
@@ -180,18 +180,18 @@ end)
 
 ps.registerCallback(resourceName .. ':server:linkReportToCase', function(source, reportId, caseId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     reportId = tonumber(reportId)
     caseId = tonumber(caseId)
     if not reportId or not caseId then
-        return { success = false, error = 'Invalid report or case' }
+        return { success = false, error = L('cases.invalid_report') }
     end
 
     -- Validate report exists before linking
     local reportExists = MySQL.single.await('SELECT id FROM mdt_reports WHERE id = ?', { reportId })
     if not reportExists then
-        return { success = false, error = 'Report #' .. tostring(reportId) .. ' does not exist' }
+        return { success = false, error = L('cases.report_not_found', { id = reportId }) }
     end
 
     MySQL.insert.await([[
@@ -204,12 +204,12 @@ end)
 
 ps.registerCallback(resourceName .. ':server:unlinkReportFromCase', function(source, reportId, caseId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     reportId = tonumber(reportId)
     caseId = tonumber(caseId)
     if not reportId or not caseId then
-        return { success = false, error = 'Invalid report or case' }
+        return { success = false, error = L('cases.invalid_report') }
     end
 
     MySQL.query.await('DELETE FROM mdt_case_reports WHERE case_id = ? AND report_id = ?', { caseId, reportId })
@@ -218,11 +218,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:getCaseEvidencePage', function(source, caseId, page, limit)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId then
-        return { success = false, error = 'Invalid case id' }
+        return { success = false, error = L('cases.invalid_id') }
     end
 
     page = tonumber(page) or 1
@@ -285,11 +285,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateCase', function(source, caseId, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId then
-        return { success = false, error = 'Invalid case id' }
+        return { success = false, error = L('cases.invalid_id') }
     end
 
     payload = payload or {}
@@ -325,14 +325,14 @@ ps.registerCallback(resourceName .. ':server:updateCase', function(source, caseI
     end
 
     if #updates == 0 then
-        return { success = false, error = 'No updates provided' }
+        return { success = false, error = L('cases.no_updates') }
     end
 
     values[#values + 1] = caseId
     local success = MySQL.update.await(('UPDATE mdt_cases SET %s WHERE id = ?'):format(table.concat(updates, ', ')), values)
 
     if not success then
-        return { success = false, error = 'Failed to update case' }
+        return { success = false, error = L('cases.update_failed') }
     end
 
     if ps.auditLog then
@@ -344,18 +344,18 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteCase', function(source, caseId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId then
-        return { success = false, error = 'Invalid case id' }
+        return { success = false, error = L('cases.invalid_id') }
     end
 
     local caseRow = MySQL.single.await('SELECT title FROM mdt_cases WHERE id = ?', { caseId })
     local success = MySQL.query.await('DELETE FROM mdt_cases WHERE id = ?', { caseId })
 
     if not success then
-        return { success = false, error = 'Failed to delete case' }
+        return { success = false, error = L('cases.delete_failed') }
     end
 
     if ps.auditLog then
@@ -369,11 +369,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:assignCaseOfficer', function(source, caseId, officerCitizenId, role)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId or not officerCitizenId then
-        return { success = false, error = 'Invalid case or officer' }
+        return { success = false, error = L('cases.invalid_officer') }
     end
 
     role = role or 'assisting'
@@ -384,7 +384,7 @@ ps.registerCallback(resourceName .. ':server:assignCaseOfficer', function(source
     ]], { caseId, officerCitizenId, role, ps.getIdentifier(src) })
 
     if not insertId then
-        return { success = false, error = 'Failed to assign officer' }
+        return { success = false, error = L('cases.assign_failed') }
     end
 
     if ps.auditLog then
@@ -399,11 +399,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:removeCaseOfficer', function(source, caseId, officerCitizenId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId or not officerCitizenId then
-        return { success = false, error = 'Invalid case or officer' }
+        return { success = false, error = L('cases.invalid_officer') }
     end
 
     local success = MySQL.query.await([[
@@ -411,7 +411,7 @@ ps.registerCallback(resourceName .. ':server:removeCaseOfficer', function(source
     ]], { caseId, officerCitizenId })
 
     if not success then
-        return { success = false, error = 'Failed to remove officer' }
+        return { success = false, error = L('cases.remove_officer_failed') }
     end
 
     if ps.auditLog then
@@ -425,11 +425,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:addCaseAttachment', function(source, caseId, attachment)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId or not attachment or not attachment.url then
-        return { success = false, error = 'Invalid attachment' }
+        return { success = false, error = L('cases.invalid_attachment') }
     end
 
     local attachmentId = MySQL.insert.await([[
@@ -444,7 +444,7 @@ ps.registerCallback(resourceName .. ':server:addCaseAttachment', function(source
     })
 
     if not attachmentId then
-        return { success = false, error = 'Failed to add attachment' }
+        return { success = false, error = L('cases.attachment_add_failed') }
     end
 
     if ps.auditLog then
@@ -456,11 +456,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:addCaseAttachmentUpload', function(source, caseId, attachment)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId or not attachment or not attachment.data or not attachment.filename then
-        return { success = false, error = 'Invalid attachment payload' }
+        return { success = false, error = L('cases.invalid_attachment_payload') }
     end
 
     local data = attachment.data
@@ -478,17 +478,17 @@ ps.registerCallback(resourceName .. ':server:addCaseAttachmentUpload', function(
             end
         end
         if not allowed then
-            return { success = false, error = 'Unsupported attachment type' }
+            return { success = false, error = L('cases.unsupported_attachment') }
         end
     end
 
     if not FiveManageUpload then
-        return { success = false, error = 'FiveManage upload not available' }
+        return { success = false, error = L('cases.upload_unavailable') }
     end
 
     local publicUrl, uploadError = FiveManageUpload(data, filename)
     if not publicUrl then
-        return { success = false, error = 'Upload failed: ' .. (uploadError or 'Unknown error') }
+        return { success = false, error = L('cases.upload_failed', { error = uploadError or L('cases.unknown_error') }) }
     end
 
     local attachmentId = MySQL.insert.await([[
@@ -503,7 +503,7 @@ ps.registerCallback(resourceName .. ':server:addCaseAttachmentUpload', function(
     })
 
     if not attachmentId then
-        return { success = false, error = 'Failed to save attachment' }
+        return { success = false, error = L('cases.attachment_save_failed') }
     end
 
     if ps.auditLog then
@@ -519,18 +519,18 @@ end)
 
 ps.registerCallback(resourceName .. ':server:removeCaseAttachment', function(source, attachmentId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     attachmentId = tonumber(attachmentId)
     if not attachmentId then
-        return { success = false, error = 'Invalid attachment id' }
+        return { success = false, error = L('cases.invalid_attachment_id') }
     end
 
     local attachment = MySQL.single.await('SELECT url, case_id FROM mdt_case_attachments WHERE id = ?', { attachmentId })
     local success = MySQL.query.await('DELETE FROM mdt_case_attachments WHERE id = ?', { attachmentId })
 
     if not success then
-        return { success = false, error = 'Failed to remove attachment' }
+        return { success = false, error = L('cases.attachment_remove_failed') }
     end
 
     if attachment and attachment.url and attachment.url:find('^/ps%-mdt%-v3/uploads/') then
@@ -551,7 +551,7 @@ end)
 
 ps.registerCallback(resourceName .. ':server:addEvidenceItem', function(source, payload)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     payload = payload or {}
     local caseId = tonumber(payload.caseId)
@@ -559,7 +559,7 @@ ps.registerCallback(resourceName .. ':server:addEvidenceItem', function(source, 
     local evidence = payload.evidence or payload
 
     if not evidence or not evidence.title then
-        return { success = false, error = 'Invalid evidence: title is required' }
+        return { success = false, error = L('evidence.title_required') }
     end
 
     if caseId then
@@ -595,7 +595,7 @@ ps.registerCallback(resourceName .. ':server:addEvidenceItem', function(source, 
     })
 
     if not evidenceId then
-        return { success = false, error = 'Failed to add evidence' }
+        return { success = false, error = L('evidence.add_failed') }
     end
 
     MySQL.insert.await([[
@@ -612,17 +612,17 @@ end)
 
 ps.registerCallback(resourceName .. ':server:removeEvidenceImage', function(source, imageId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     imageId = tonumber(imageId)
     if not imageId then
-        return { success = false, error = 'Invalid image id' }
+        return { success = false, error = L('evidence.invalid_image_id') }
     end
 
     local image = MySQL.single.await('SELECT url, evidence_id FROM mdt_evidence_images WHERE id = ?', { imageId })
     local success = MySQL.query.await('DELETE FROM mdt_evidence_images WHERE id = ?', { imageId })
     if not success then
-        return { success = false, error = 'Failed to remove image' }
+        return { success = false, error = L('evidence.image_remove_failed') }
     end
 
     if image and image.url and image.url:find('^/ps%-mdt%-v3/uploads/') then
@@ -643,11 +643,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:updateEvidenceItem', function(source, evidenceId, evidence)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     evidenceId = tonumber(evidenceId)
     if not evidenceId or not evidence then
-        return { success = false, error = 'Invalid evidence' }
+        return { success = false, error = L('evidence.invalid') }
     end
 
     local updates = {}
@@ -683,7 +683,7 @@ ps.registerCallback(resourceName .. ':server:updateEvidenceItem', function(sourc
     end
 
     if #updates == 0 then
-        return { success = false, error = 'No updates provided' }
+        return { success = false, error = L('evidence.no_updates') }
     end
 
     updates[#updates + 1] = 'last_holder = ?'
@@ -693,7 +693,7 @@ ps.registerCallback(resourceName .. ':server:updateEvidenceItem', function(sourc
 
     local success = MySQL.update.await(('UPDATE mdt_evidence_items SET %s WHERE id = ?'):format(table.concat(updates, ', ')), values)
     if not success then
-        return { success = false, error = 'Failed to update evidence' }
+        return { success = false, error = L('evidence.update_failed') }
     end
 
     MySQL.insert.await([[
@@ -710,11 +710,11 @@ end)
 
 ps.registerCallback(resourceName .. ':server:transferEvidenceItem', function(source, evidenceId, toCitizenId, notes)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     evidenceId = tonumber(evidenceId)
     if not evidenceId or not toCitizenId then
-        return { success = false, error = 'Invalid evidence transfer' }
+        return { success = false, error = L('evidence.invalid_transfer') }
     end
 
     local fromCitizenId = ps.getIdentifier(src)
@@ -737,16 +737,16 @@ end)
 
 ps.registerCallback(resourceName .. ':server:deleteEvidenceItem', function(source, evidenceId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     evidenceId = tonumber(evidenceId)
     if not evidenceId then
-        return { success = false, error = 'Invalid evidence id' }
+        return { success = false, error = L('evidence.invalid_id') }
     end
 
     local success = MySQL.query.await('DELETE FROM mdt_evidence_items WHERE id = ?', { evidenceId })
     if not success then
-        return { success = false, error = 'Failed to delete evidence' }
+        return { success = false, error = L('evidence.delete_failed') }
     end
 
     if ps.auditLog then
@@ -778,16 +778,16 @@ end)
 -- Add a note to a case
 ps.registerCallback(resourceName .. ':server:addCaseNote', function(source, caseId, content)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     caseId = tonumber(caseId)
     if not caseId or not content or content == '' then
-        return { success = false, error = 'Invalid case or empty note' }
+        return { success = false, error = L('cases.invalid_note') }
     end
 
     local citizenId = ps.getIdentifier(src)
     local profile = MySQL.single.await('SELECT fullname FROM mdt_profiles WHERE citizenid = ?', { citizenId })
-    local authorName = profile and profile.fullname or 'Unknown'
+    local authorName = profile and profile.fullname or L('cases.unknown')
 
     MySQL.insert.await([[
         INSERT INTO mdt_case_notes (case_id, content, author_citizenid, author_name)
@@ -800,12 +800,12 @@ end)
 -- Delete a note from a case
 ps.registerCallback(resourceName .. ':server:deleteCaseNote', function(source, noteId, caseId)
     local src = source
-    if not CheckAuth(src) then return { success = false, error = 'Unauthorized' } end
+    if not CheckAuth(src) then return { success = false, error = L('cases.unauthorized') } end
 
     noteId = tonumber(noteId)
     caseId = tonumber(caseId)
     if not noteId or not caseId then
-        return { success = false, error = 'Invalid note or case' }
+        return { success = false, error = L('cases.invalid_note_case') }
     end
 
     MySQL.query.await('DELETE FROM mdt_case_notes WHERE id = ? AND case_id = ?', { noteId, caseId })

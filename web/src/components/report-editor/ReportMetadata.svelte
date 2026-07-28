@@ -10,7 +10,7 @@
 	import { getReportTypesForJob } from "../../constants/index";
 	import { formatDate as fmtDate, formatTime as fmtTime } from "../../utils/datetime";
 	import type { JobType } from "../../interfaces/IUser";
-	import { t } from "../../lib/i18n";
+	import { t, translateReportType } from "../../lib/i18n";
 
 	interface Props {
 		title: string;
@@ -72,9 +72,6 @@
 		return fmtTime(timestamp);
 	}
 
-	function reportTypeLabel(reportType: string): string {
-		return t(`reportEditor.metadata.types.${reportType.toLowerCase().replace(/\s+/g, "_")}`);
-	}
 </script>
 
 <div class="report-info">
@@ -114,7 +111,7 @@
 				class="type-select"
 			>
 				{#each reportTypes as reportType}
-					<option value={reportType}>{reportTypeLabel(reportType)}</option>
+					<option value={reportType}>{translateReportType(reportType)}</option>
 				{/each}
 			</select>
 		</div>

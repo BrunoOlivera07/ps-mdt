@@ -67,7 +67,7 @@
 				resetForm();
 				await loadLicenses();
 			} else {
-				showStatus(result?.message || t("common.status.failedSave"), "error");
+				showStatus(result?.message || t("management.licenses.failedSave"), "error");
 			}
 		} catch {
 			showStatus(t("management.licenses.failedSave"), "error");
@@ -168,7 +168,7 @@
 				<span class="row-name">{t("management.licenses.state.driver")}</span>
 				<span class="row-desc">{t("management.licenses.state.driverDesc")}</span>
 				</div>
-				<span class="row-badge state-badge">STATE</span>
+				<span class="row-badge state-badge">{t("management.licenses.badges.state")}</span>
 			</div>
 			<div class="license-row state">
 				<span class="material-icons row-icon">verified</span>

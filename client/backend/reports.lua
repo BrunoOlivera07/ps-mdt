@@ -1,8 +1,28 @@
 local resourceName = tostring(GetCurrentResourceName())
+local pendingSearchCallbacks = {}
+
+-- ps_lib indexes pending callbacks only by name. Serialize identical searches
+-- so rapid typing cannot overwrite a pending promise and leave the NUI hanging.
+local function runSearchCallback(callbackName, query)
+    while pendingSearchCallbacks[callbackName] do
+        Wait(0)
+    end
+
+    pendingSearchCallbacks[callbackName] = true
+    local ok, result = pcall(ps.callback, resourceName .. ':server:' .. callbackName, query)
+    pendingSearchCallbacks[callbackName] = nil
+
+    if not ok then
+        ps.error(('[%s] Search callback failed: %s'):format(callbackName, tostring(result)))
+        return {}
+    end
+
+    return result or {}
+end
 
 RegisterNUICallback('getReports', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -25,7 +45,7 @@ end)
 
 RegisterNUICallback('getReportAnalytics', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -36,12 +56,12 @@ end)
 
 RegisterNUICallback('getReport', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.reportId then
-        cb({ success = false, message = 'Missing report ID' })
+        cb({ success = false, message = L('client.missing_report') })
         return
     end
 
@@ -49,19 +69,19 @@ RegisterNUICallback('getReport', function(data, cb)
     if report then
         cb({ success = true, data = report })
     else
-        cb({ success = false, message = 'Report not found or access denied' })
+        cb({ success = false, message = L('client.report_access_denied') })
     end
 end)
 
 RegisterNUICallback('saveReport', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data or not data.reportId then
-        ps.error('Missing report data in request')
-        cb({ success = false, message = 'Missing report data' })
+        ps.error(L('client.missing_report_request'))
+        cb({ success = false, message = L('client.missing_report_data') })
         return
     end
 
@@ -192,19 +212,19 @@ RegisterNUICallback('saveReport', function(data, cb)
     else
         cb({
             success = false,
-            message = result and result.error or 'Failed to save report'
+            message = result and result.error or L('client.save_report_failed')
         })
     end
 end)
 
 RegisterNUICallback('updateReportContent', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data.content then
-        cb({ success = false, message = 'Missing content' })
+        cb({ success = false, message = L('client.missing_content') })
         return
     end
 
@@ -219,19 +239,19 @@ RegisterNUICallback('updateReportContent', function(data, cb)
     else
         cb({
             success = false,
-            message = result and result.error or 'Failed to update content'
+            message = result and result.error or L('client.update_content_failed')
         })
     end
 end)
 
 RegisterNUICallback('deleteReport', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
     if not data.reportId then
-        cb({ success = false, message = 'Missing report ID' })
+        cb({ success = false, message = L('client.missing_report') })
         return
     end
 
@@ -245,14 +265,14 @@ RegisterNUICallback('deleteReport', function(data, cb)
     else
         cb({
             success = false,
-            message = result and result.error or 'Failed to delete report'
+            message = result and result.error or L('client.delete_report_failed')
         })
     end
 end)
 
 RegisterNUICallback('getAvailableTags', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -262,13 +282,13 @@ RegisterNUICallback('getAvailableTags', function(data, cb)
     if tags then
         cb({ success = true, data = tags })
     else
-        cb({ success = false, message = 'Failed to fetch available tags' })
+        cb({ success = false, message = L('client.fetch_tags_failed') })
     end
 end)
 
 RegisterNUICallback('generateReportId', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open' })
+        cb({ success = false, message = L('client.mdt_not_open') })
         return
     end
 
@@ -281,31 +301,29 @@ RegisterNUICallback('generateReportId', function(data, cb)
     else
         cb({
             success = false,
-            message = result and result.error or 'Failed to generate report ID'
+            message = result and result.error or L('client.generate_report_id_failed')
         })
     end
 end)
 
 RegisterNUICallback('searchOfficers', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open', data = {} })
+        cb({ success = false, message = L('client.mdt_not_open'), data = {} })
         return
     end
 
     local query = data and data.query or ''
-    local result = ps.callback(resourceName .. ':server:searchOfficers', query)
-    cb(result or {})
+    cb(runSearchCallback('searchOfficers', query))
 end)
 
 RegisterNUICallback('searchPlayers', function(data, cb)
     if not MDTOpen then
-        cb({ success = false, message = 'MDT is not open', data = {} })
+        cb({ success = false, message = L('client.mdt_not_open'), data = {} })
         return
     end
 
     local query = data and data.query or ''
-    local result = ps.callback(resourceName .. ':server:searchPlayers', query)
-    cb(result or {})
+    cb(runSearchCallback('searchPlayers', query))
 end)
 
 RegisterNUICallback('searchVehiclesForReport', function(data, cb)
@@ -320,6 +338,5 @@ RegisterNUICallback('searchVehiclesForReport', function(data, cb)
         return
     end
 
-    local result = ps.callback(resourceName .. ':server:searchVehiclesForReport', query)
-    cb(result or {})
+    cb(runSearchCallback('searchVehiclesForReport', query))
 end)
