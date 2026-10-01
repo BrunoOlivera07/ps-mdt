@@ -118,14 +118,22 @@ function OpenMDT()
     local isCivilian = type(authResult) == 'table' and authResult.isCivilian
     if not authResult and not isCivilian then return end
 
+    local ped = PlayerPedId()
+
     -- Don't allow if player is dead
-    if ps.isDead() then
+    local isDead = IsEntityDead(ped) or LocalPlayer.state.isDead or LocalPlayer.state.dead
+    if not isDead then
+        pcall(function()
+            isDead = ps.isDead()
+        end)
+    end
+
+    if isDead then
         ps.notify(L('client_keys.cannot_open'), 'error')
         return
     end
 
     -- Don't allow if swimming
-    local ped = PlayerPedId()
     if IsPedSwimming(ped) then
         ps.notify(L('client_keys.cannot_open'), 'error')
         return
