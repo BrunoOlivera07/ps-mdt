@@ -475,6 +475,7 @@ Config.Impound = {
 --Configurações de trabalho
 Config.PoliceJobType = "leo"
 Config.PoliceJobs = {
+    'police',
     'lspd',
     'bcso',
     'sahp',
