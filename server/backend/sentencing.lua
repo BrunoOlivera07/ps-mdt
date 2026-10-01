@@ -55,7 +55,7 @@ ps.registerCallback(resourceName .. ':server:sendToJail', function(source, paylo
         -- Fallback to server event if the export is missing or fails (common in older pickle_prisons versions)
         if not exportOk then
             ps.warn(('[Sentencing] pickle_prisons export failed, trying server event fallback... Error: %s'):format(tostring(exportErr)))
-            TriggerEvent(pickleResource .. ':jailPlayer', targetSource, math.floor(sentence), prisonIndex)
+            TriggerClientEvent(resourceName .. ':client:fallbackPickleJail', src, pickleResource, targetSource, math.floor(sentence), prisonIndex)
         end
 
         if ps.auditLog then

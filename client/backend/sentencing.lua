@@ -19,6 +19,13 @@ RegisterNetEvent(resourceName .. ':client:sendToPPoliceJail', function(targetSou
     ))
 end)
 
+RegisterNetEvent(resourceName .. ':client:fallbackPickleJail', function(pickleResource, targetSource, sentence, prisonIndex)
+    targetSource = tonumber(targetSource)
+    sentence = tonumber(sentence)
+    if not pickleResource or not targetSource or not sentence or sentence <= 0 then return end
+    TriggerServerEvent(pickleResource .. ':jailPlayer', targetSource, math.floor(sentence), prisonIndex)
+end)
+
 -- Send to Jail
 RegisterNUICallback('sendToJail', function(data, cb)
     if not MDTOpen then
