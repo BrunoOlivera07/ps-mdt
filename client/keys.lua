@@ -17,9 +17,19 @@ local RegisterNUICallback = RegisterNUICallback
 
 -- Permissions check ------------------------------------------
 
+local lastAuthTime = 0
+local cachedAuth = nil
+
 -- Check Job Authorization (returns true, false, or { isCivilian = true })
 function CheckAuth()
+    if GetGameTimer() - lastAuthTime < 2000 and cachedAuth ~= nil then
+        return cachedAuth
+    end
+
     local result = ps.callback(resourceName..':server:checkAuth')
+    cachedAuth = result
+    lastAuthTime = GetGameTimer()
+
     if type(result) == 'table' and result.isCivilian then
         return result
     end

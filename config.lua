@@ -33,6 +33,7 @@ Config.Sharing = {
             'warrants'
         },
         departments = {
+            'police',
             'lspd',
             'bcso',
             'sahp'
@@ -48,6 +49,7 @@ Config.Sharing = {
                 'gov'
             },
             targets = {
+                'police',
                 'lspd',
                 'bcso',
                 'sahp'
@@ -67,7 +69,7 @@ Config.Sharing = {
 Config.Keys = {
     --https://docs.fivem.net/docs/game-references/controls/| QWERTY padrão
     OpenMDT = {
-        enabled = true, --Ativar/desativar atalho de teclado (booleano)
+        enabled = false, --Ativar/desativar atalho de teclado (booleano)
         key = 'F11', --Chave para abrir o MDT (string)
     },
 }
@@ -76,7 +78,7 @@ Config.Keys = {
 Config.Commands = {
     Open = {
         enabled = true, --Comando ativar/desativar (booleano)
-        command = 'mdt', --Comando para abrir o MDT (string)
+        command = 'mdt', -- Command to open MDT (string)
     },
     MessageOfTheDay = {
         enabled = true, --Comando ativar/desativar (booleano)

@@ -93,3 +93,7 @@ if GetResourceState('baseevents') == 'started' then
         end
     end)
 end
+
+RegisterNetEvent('ps-mdt:client:open', function()
+    OpenMDT()
+end)
