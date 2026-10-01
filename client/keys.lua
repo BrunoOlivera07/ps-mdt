@@ -122,11 +122,6 @@ function OpenMDT()
 
     -- Don't allow if player is dead
     local isDead = IsEntityDead(ped) or LocalPlayer.state.isDead or LocalPlayer.state.dead
-    if not isDead then
-        pcall(function()
-            isDead = ps.isDead()
-        end)
-    end
 
     if isDead then
         ps.notify(L('client_keys.cannot_open'), 'error')
